@@ -15,4 +15,4 @@ spring:
     hibernate:
       ddl-auto: update
 
-server-uri: ENC(jgsJ45DJjgj8Egexcf98aKjZtNq5aROIzUu3ljcYc30KJ60oe7Rt0w==)
+server-uri: ENC(pitqB0FTjbgREG33LepbDH3Pobg/8eTTzP882D0V14EEt9fTr1cv+w==)
