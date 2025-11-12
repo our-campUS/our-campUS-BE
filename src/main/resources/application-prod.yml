@@ -14,3 +14,5 @@ spring:
         default_batch_fetch_size: 100
     hibernate:
       ddl-auto: update
+
+server-uri: ENC(jgsJ45DJjgj8Egexcf98aKjZtNq5aROIzUu3ljcYc30KJ60oe7Rt0w==)
