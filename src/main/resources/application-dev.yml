@@ -2,9 +2,9 @@ spring:
   application:
     name: campus-be
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ENC(K6pFdZmIH8oKa2T6aENIsiZJtZISk38mUg5zhlC2c4kF7gqOg9WaEXC3qkkz4oFK)
+    username: ENC(xhIcr0c/P58Ncy/HjZ6bwA==)
+    password: ENC(6Hn9BDx9NqK+CepfjQvO8w==)
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
