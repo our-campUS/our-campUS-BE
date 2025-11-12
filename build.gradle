@@ -34,6 +34,8 @@ dependencies {
 
     implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
 
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -41,6 +43,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
