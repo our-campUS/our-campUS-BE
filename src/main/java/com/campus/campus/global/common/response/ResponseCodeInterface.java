@@ -1,4 +1,4 @@
-package com.campus.campus.global.response;
+package com.campus.campus.global.common.response;
 
 import org.springframework.http.HttpStatus;
 
