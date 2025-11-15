@@ -2,9 +2,9 @@ spring:
   application:
     name: campus-be
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ENC(iNWspP3aG2ofUHQ+N37My/J8thQ1P83FTPIFd6atCBUjAaaCJf1JGJO/Q81yMz1sukrNGVrYBJI=)
+    username: ENC(xhIcr0c/P58Ncy/HjZ6bwA==)
+    password: ENC(6Hn9BDx9NqK+CepfjQvO8w==)
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
@@ -14,3 +14,5 @@ spring:
         default_batch_fetch_size: 100
     hibernate:
       ddl-auto: update
+
+server-uri: ENC(ZrgPccnQ3mEqVQTFEvGn6hzhP4xcNn6ISnp3TbBcd1J3jpZPb3hlzQ==)
