@@ -14,5 +14,18 @@ spring:
         default_batch_fetch_size: 100
     hibernate:
       ddl-auto: update
+oauth:
+  kakao:
+    client-id: ${REST_API_KEY}
+    client-secret: ${CLIENT_SECRET}
+    redirect-uri: "http://localhost:8080/auth/login/kakao"
+
+jwt:
+  access:
+    secret: ${JWT_ACCESS}
+    expiration-seconds: 3600
+  refresh:
+    secret: ${JWT_SECRET}
+    expiration-seconds: 1209600
 
 server-uri: http://localhost:8080
