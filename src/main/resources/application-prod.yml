@@ -14,5 +14,18 @@ spring:
         default_batch_fetch_size: 100
     hibernate:
       ddl-auto: update
+oauth:
+  kakao:
+    client-id: ENC(G6gZHtP5QYz7+G6herJ1QCSbdVYgjtGnx8MhBSxLDFx26Yh0YQQ+uZ6RQ7wbvS17)
+    client-secret: ENC(CG823WHRi6g4ybTc/VEOfd43c/RxVnIAE+AVpYWqrE/2xnGkvtjKkVSVVOXkXBXo)
+    redirect-uri: "https://138.2.121.208.nip.io/auth/login/kakao"
+
+jwt:
+  access:
+    secret: ENC(HRdBEGHmHvvI35Lz/vKF10ebVY66Zs4NThHIEvq0QNMBHURjZWwdpF9FgxIrREuM2I3D7QJqZuxfwt5jpVJbEfFckR7hzJWhTL2yqUYB/gOUUlXL461poK2rRM03aErRjJakPA7FTj4=)
+    expiration-seconds: 3600
+  refresh:
+    secret: ENC(NA1bOcQ0y9gfI/dkw+6VaMnEwckOGj4jHWl2DHHCIx6yILCnvpZj59hpqg+Stp2JYqJw5MTxNUVqGX3L9NX+Hr7sExWsdaySqGeYKGNmUBodzSfqfxm5FaGjOc2K4oLE0i09xTXQIXk=)
+    expiration-seconds: 1209600
 
 server-uri: ENC(pitqB0FTjbgREG33LepbDH3Pobg/8eTTzP882D0V14EEt9fTr1cv+w==)
