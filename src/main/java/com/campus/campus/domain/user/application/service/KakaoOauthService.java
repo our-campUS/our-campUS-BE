@@ -2,6 +2,7 @@ package com.campus.campus.domain.user.application.service;
 
 import org.springframework.stereotype.Service;
 
+import com.campus.campus.domain.user.application.mapper.UserLoginMapper;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.auth.application.dto.KakaoTokenResponse;
@@ -29,6 +30,8 @@ public class KakaoOauthService {
 	private final UserRepository userRepository;
 	private final JwtProvider jwtProvider;
 
+	private final UserLoginMapper userLoginMapper;
+
 	@Transactional
 	public OauthLoginResponse login(String authorizationCode) {
 		KakaoTokenResponse kakaoToken = getToken(authorizationCode);
@@ -39,7 +42,7 @@ public class KakaoOauthService {
 		String accessToken = jwtProvider.createAccessToken(user.getId());
 		String refreshToken = jwtProvider.createRefreshToken(user.getId());
 
-		return OauthLoginResponse.from(user, accessToken, refreshToken);
+		return userLoginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
 	}
 
 	private KakaoTokenResponse getToken(String authorizationCode) {
