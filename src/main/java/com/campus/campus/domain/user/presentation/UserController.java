@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
+import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.service.UserService;
 import com.campus.campus.global.auth.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -20,10 +21,10 @@ public class UserController {
 	private final UserService userService;
 
 	@PatchMapping("/profile")
-	public CommonResponse<Void> createUserProfile(@CurrentUserId Long userId,
+	public CommonResponse<UserFirstProfileResponse> createUserProfile(@CurrentUserId Long userId,
 		@RequestBody @Valid UserProfileRequest userProfileRequest) {
-		userService.writeUserProfile(userId, userProfileRequest);
+		UserFirstProfileResponse userFirstProfileResponse = userService.writeUserProfile(userId, userProfileRequest);
 
-		return CommonResponse.success(UserResponseCode.FIRST_PROFILE_WRITE);
+		return CommonResponse.success(UserResponseCode.FIRST_PROFILE_WRITE, userFirstProfileResponse);
 	}
 }
