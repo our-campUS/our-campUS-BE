@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
-import com.campus.campus.domain.user.domain.entity.School;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 
@@ -27,6 +26,6 @@ public class UserService {
 			throw new UserNotFirstLoginException();
 		}
 
-		user.updateProfile(userProfileRequest.school(), userProfileRequest.major(), userProfileRequest.college());
+		user.updateProfile(userProfileRequest.school(), userProfileRequest.college(), userProfileRequest.major());
 	}
 }
