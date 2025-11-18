@@ -2,9 +2,12 @@ package com.campus.campus.domain.school.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,17 +16,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "schools")
+@Table(name = "majors")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class University {
+public class Major {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "school_id")
-	private Integer schoolId;
+	@Column(name = "major_id")
+	private Long departmentId;
 
-	@Column(name = "school_name")
-	private String schoolName;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "school_id", nullable = false)
+	private School school;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "college_id", nullable = false)
+	private College college;
+
+	@Column(name = "major_name")
+	private String majorName;
 }

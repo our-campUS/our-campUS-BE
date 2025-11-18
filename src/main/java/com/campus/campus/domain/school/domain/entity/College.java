@@ -24,12 +24,12 @@ import lombok.NoArgsConstructor;
 public class College {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+	@Column(name = "college_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "school_id", nullable = false)
-	private University university;
+	private School school;
 
 	@Column(name = "college_name", nullable = false)
 	private String collegeName;
