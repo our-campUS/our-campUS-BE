@@ -2,6 +2,8 @@ package com.campus.campus.domain.user.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,4 +37,30 @@ public class User {
 
 	@Column(name = "profile_image")
 	private String profileImage;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "school")
+	private School school;
+
+	@Column(name = "college")
+	private String college;
+
+	@Column(name = "major")
+	private String major;
+
+	public void updateSchool(School school) {
+		this.school = school;
+	}
+
+	public void updateCollege(String college) {
+		this.college = college;
+	}
+
+	public void updateMajor(String major) {
+		this.major = major;
+	}
+
+	public boolean isProfileNotCompleted() {
+		return this.school == null;
+	}
 }
