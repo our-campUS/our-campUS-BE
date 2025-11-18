@@ -1,7 +1,5 @@
 package com.campus.campus.domain.school.application.exception;
 
-import org.springframework.http.HttpStatus;
-
 import com.campus.campus.global.common.exception.ApplicationException;
 
 public class SchoolMajorNotSameException extends ApplicationException {
