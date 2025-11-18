@@ -2,7 +2,7 @@ package com.campus.campus.domain.user.application.service;
 
 import org.springframework.stereotype.Service;
 
-import com.campus.campus.domain.user.application.mapper.LoginMapper;
+import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;

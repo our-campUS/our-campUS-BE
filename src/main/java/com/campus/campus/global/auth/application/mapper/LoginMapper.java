@@ -1,4 +1,4 @@
-package com.campus.campus.domain.user.application.mapper;
+package com.campus.campus.global.auth.application.mapper;
 
 import org.springframework.stereotype.Component;
 
