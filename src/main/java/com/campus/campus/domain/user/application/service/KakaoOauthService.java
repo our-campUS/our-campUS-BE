@@ -2,7 +2,8 @@ package com.campus.campus.domain.user.application.service;
 
 import org.springframework.stereotype.Service;
 
-import com.campus.campus.domain.user.application.mapper.UserLoginMapper;
+import com.campus.campus.domain.user.application.mapper.LoginMapper;
+import com.campus.campus.domain.user.application.mapper.UserMapper;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.auth.application.dto.KakaoTokenResponse;
@@ -30,7 +31,8 @@ public class KakaoOauthService {
 	private final UserRepository userRepository;
 	private final JwtProvider jwtProvider;
 
-	private final UserLoginMapper userLoginMapper;
+	private final LoginMapper loginMapper;
+	private final UserMapper userMapper;
 
 	@Transactional
 	public OauthLoginResponse login(String authorizationCode) {
@@ -42,7 +44,7 @@ public class KakaoOauthService {
 		String accessToken = jwtProvider.createAccessToken(user.getId());
 		String refreshToken = jwtProvider.createRefreshToken(user.getId());
 
-		return userLoginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
+		return loginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
 	}
 
 	private KakaoTokenResponse getToken(String authorizationCode) {
@@ -96,7 +98,7 @@ public class KakaoOauthService {
 
 		return userRepository.findByKakaoId(kakaoId)
 			.orElseGet(() -> {
-				User newUser = User.createUser(kakaoId, nickname, email, profileImage);
+				User newUser = userMapper.createUser(kakaoId, nickname, email, profileImage);
 				return userRepository.save(newUser);
 			});
 	}

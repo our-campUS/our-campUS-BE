@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class UserLoginMapper {
+public class LoginMapper {
 	public OauthLoginResponse toOauthLoginResponse(User user, String accessToken, String refreshToken) {
 		return new OauthLoginResponse(
 			accessToken,

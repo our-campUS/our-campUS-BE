@@ -35,13 +35,4 @@ public class User {
 
 	@Column(name = "profile_image")
 	private String profileImage;
-
-	public static User createUser(Long kakaoId, String nickname, String email, String profileImage) {
-		return User.builder()
-			.kakaoId(kakaoId)
-			.nickname(nickname)
-			.email(email)
-			.profileImage(profileImage)
-			.build();
-	}
 }
