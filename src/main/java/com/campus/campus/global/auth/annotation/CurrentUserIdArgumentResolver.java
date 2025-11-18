@@ -17,10 +17,9 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
-		// @CurrentUserId 가 붙어 있고 타입이 long/Long 인 파라미터에만 동작
 		boolean hasAnnotation = parameter.hasParameterAnnotation(CurrentUserId.class);
 		boolean hasSupportedType =
-			Long.class.isAssignableFrom(parameter.getParameterType()) ||
+			Long.class.equals(parameter.getParameterType()) ||
 				long.class.equals(parameter.getParameterType());
 
 		return hasAnnotation && hasSupportedType;
@@ -33,27 +32,32 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 		NativeWebRequest webRequest,
 		WebDataBinderFactory binderFactory
 	) {
-		CurrentUserId currentUserId = parameter.getParameterAnnotation(CurrentUserId.class);
-		boolean required = currentUserId == null || currentUserId.required();
+		CurrentUserId anno = parameter.getParameterAnnotation(CurrentUserId.class);
+		boolean required = anno == null || anno.required();
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		// 인증 정보가 없거나, 익명 사용자면
-		if (authentication == null || !authentication.isAuthenticated()
-			|| "anonymousUser".equals(authentication.getPrincipal())) {
-
+		// 1) 인증 자체가 없거나, 인증 안된 경우
+		if (authentication == null || !authentication.isAuthenticated()) {
 			if (required) {
 				throw new UnAuthorizedException();
 			}
-			return null; // required=false 이면 null 주입
+			return null;
 		}
 
 		Object principal = authentication.getPrincipal();
 
+		// 2) JwtAuthenticationFilter 에서 principal 을 User 로 넣어뒀음
 		if (principal instanceof User user) {
-			return user.getId();
+			Long id = user.getId();
+			if (id == null && required) {
+				// 이 상황은 거의 없겠지만, 방어 코드
+				throw new UnAuthorizedException();
+			}
+			return id;
 		}
 
+		// 3) principal 타입이 예상과 다름 (예: String "anonymousUser" 등)
 		if (required) {
 			throw new UnAuthorizedException();
 		}
