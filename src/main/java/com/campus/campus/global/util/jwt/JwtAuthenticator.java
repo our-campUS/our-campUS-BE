@@ -65,7 +65,7 @@ public class JwtAuthenticator {
 			parseAccessToken(token);
 		} catch (SignatureException | DeserializationException | MalformedJwtException e) {
 			throw new InvalidJwtException();
-		} catch (ExpireJwtException e) {
+		} catch (ExpiredJwtException e) {
 			throw new ExpireJwtException();
 		}
 	}
