@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LoginMapper {
 	public OauthLoginResponse toOauthLoginResponse(User user, String accessToken, String refreshToken) {
+		boolean isProfileNotCompleted = user.isProfileNotCompleted();
+
 		return new OauthLoginResponse(
 			accessToken,
 			refreshToken,
@@ -18,7 +20,8 @@ public class LoginMapper {
 			user.getId(),
 			user.getKakaoId(),
 			user.getEmail(),
-			user.getProfileImage()
+			user.getProfileImage(),
+			isProfileNotCompleted
 		);
 	}
 }

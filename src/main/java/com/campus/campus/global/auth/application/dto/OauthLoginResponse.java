@@ -7,6 +7,7 @@ public record OauthLoginResponse(
 	Long userId,
 	Long kakaoId,
 	String email,
-	String profileImage
+	String profileImage,
+	boolean isProfileNotCompleted
 ) {
 }

@@ -48,15 +48,9 @@ public class User {
 	@Column(name = "major")
 	private String major;
 
-	public void updateSchool(School school) {
+	public void updateProfile(School school, String college, String major) {
 		this.school = school;
-	}
-
-	public void updateCollege(String college) {
 		this.college = college;
-	}
-
-	public void updateMajor(String major) {
 		this.major = major;
 	}
 
