@@ -51,7 +51,6 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 		if (principal instanceof UserPrincipal userPrincipal) {
 			Long id = userPrincipal.getUserId();
 			if (id == null && required) {
-				// 이 상황은 거의 없겠지만, 방어 코드
 				throw new UnAuthorizedException();
 			}
 			return id;
