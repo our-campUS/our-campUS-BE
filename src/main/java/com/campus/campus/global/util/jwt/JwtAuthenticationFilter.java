@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -35,36 +36,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		HttpServletResponse response,
 		FilterChain filterChain
 	) throws ServletException, IOException {
+		String token = resolveToken(request);
 
-		String authHeader = request.getHeader("Authorization");
-
-		if (authHeader != null && authHeader.startsWith("Bearer ")) {
-			String token = authHeader.substring(7);
-
+		if (token != null) {
 			try {
-				jwtAuthenticator.verifyAccessToken(token);
+				Authentication authentication = createAuthentication(token, request);
 
-				Long userId = jwtProvider.getUserIdFromAccessToken(token);
-				User user = userRepository.findById(userId)
-					.orElse(null);
-
-				if (user != null) {
-					UsernamePasswordAuthenticationToken authentication =
-						new UsernamePasswordAuthenticationToken(
-							user, // principal
-							null,
-							List.of(new SimpleGrantedAuthority("ROLE_USER"))
-						);
-					authentication.setDetails(
-						new WebAuthenticationDetailsSource().buildDetails(request)
-					);
+				if (authentication != null) {
 					SecurityContextHolder.getContext().setAuthentication(authentication);
 				}
 			} catch (InvalidJwtException | ExpireJwtException e) {
-				// 필요하면 여기서 로그 찍거나, 401 응답으로 끊어도 됨
+
 			}
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	private String resolveToken(HttpServletRequest request) {
+		String authHeader = request.getHeader("Authorization");
+
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+			return null;
+		}
+
+		return authHeader.substring(7);
+	}
+
+	private Authentication createAuthentication(String token, HttpServletRequest request) {
+		jwtAuthenticator.verifyAccessToken(token);
+
+		Long userId = jwtProvider.getUserIdFromAccessToken(token);
+
+		User user = userRepository.findById(userId)
+			.orElse(null);
+
+		if (user == null) {
+			return null;
+		}
+
+		UsernamePasswordAuthenticationToken authentication =
+			new UsernamePasswordAuthenticationToken(
+				user, // principal
+				null,
+				List.of(new SimpleGrantedAuthority("ROLE_USER"))
+			);
+
+		authentication.setDetails(
+			new WebAuthenticationDetailsSource().buildDetails(request)
+		);
+
+		return authentication;
 	}
 }
