@@ -9,7 +9,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import com.campus.campus.domain.user.domain.entity.User;
+import com.campus.campus.global.util.jwt.UserPrincipal;
 import com.campus.campus.global.util.jwt.exception.UnAuthorizedException;
 
 @Component
@@ -47,9 +47,9 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 
 		Object principal = authentication.getPrincipal();
 
-		// 2) JwtAuthenticationFilter 에서 principal 을 User 로 넣어뒀음
-		if (principal instanceof User user) {
-			Long id = user.getId();
+		// 2) JwtAuthenticationFilter 에서 principal 을 UserPrincipal 로 넣어뒀음
+		if (principal instanceof UserPrincipal userPrincipal) {
+			Long id = userPrincipal.getUserId();
 			if (id == null && required) {
 				// 이 상황은 거의 없겠지만, 방어 코드
 				throw new UnAuthorizedException();

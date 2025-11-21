@@ -1,16 +1,15 @@
 package com.campus.campus.global.util.jwt;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.util.jwt.exception.ExpireJwtException;
@@ -69,17 +68,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		Long userId = jwtProvider.getUserIdFromAccessToken(token);
 
 		User user = userRepository.findById(userId)
-			.orElse(null);
+			.orElseThrow(UserNotFoundException::new);
 
-		if (user == null) {
-			return null;
-		}
+		UserPrincipal userPrincipal = UserPrincipal.from(user);
 
 		UsernamePasswordAuthenticationToken authentication =
 			new UsernamePasswordAuthenticationToken(
-				user, // principal
+				userPrincipal,
 				null,
-				List.of(new SimpleGrantedAuthority("ROLE_USER"))
+				userPrincipal.getAuthorities()
 			);
 
 		authentication.setDetails(
