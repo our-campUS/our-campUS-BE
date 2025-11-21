@@ -18,10 +18,10 @@ oauth:
 
 jwt:
   access:
-    secret: VvnL2N33cbYOuhiCT1wDD4YA4Tzq/z9Wc0ZrlEUBK4KeguIBIcDjs9N6Ox09vbVhhI1+GKZ1n0GSHuqllHl8SQ==
+    secret: qaed2N33cbYOuhiCT1wDD4YA4Tzq/z9Wc0ZrlEUBK4KeguIBIcDjs9N6Ox09vbVhhI1zxsd1n0GSHuqllHl8SQ==
     expiration-seconds: 3600
   refresh:
-    secret: /QuR112ZbztBLHlZSdb1pJWutiBYEbjRmxf4AyGcPDq9WOMEDzean8abRxTxvWdLLEjF+cMCKAkEF5atidssJA==
+    secret: /QuR112ZbzLQwelZSdb1pJWutiBYEbjRmxf4AyGcPDq9rtyuDzean8abRxTxvWdvbghF+cMCKAkEF5atidssJA==
     expiration-seconds: 1209600
 
 server-uri: http://localhost
