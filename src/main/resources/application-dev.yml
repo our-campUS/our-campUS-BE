@@ -22,10 +22,10 @@ oauth:
 
 jwt:
   access:
-    secret: ENC(HRdBEGHmHvvI35Lz/vKF10ebVY66Zs4NThHIEvq0QNMBHURjZWwdpF9FgxIrREuM2I3D7QJqZuxfwt5jpVJbEfFckR7hzJWhTL2yqUYB/gOUUlXL461poK2rRM03aErRjJakPA7FTj4=)
+    secret: ENC(tUKvUNUtOcUOMRXyiFLGqmF/Wo8omGaHtXJGtqUfyiAJeNF7qmp1TpdlwYymqTbUY1kJl468BGaIahNzUGbgOvcEKhpxgkBkrkH9vNQLWRTiQbXvZtTrU+7Hl7aU0Dv0Zzx4ea9ADv4=)
     expiration-seconds: 3600
   refresh:
-    secret: ENC(NA1bOcQ0y9gfI/dkw+6VaMnEwckOGj4jHWl2DHHCIx6yILCnvpZj59hpqg+Stp2JYqJw5MTxNUVqGX3L9NX+Hr7sExWsdaySqGeYKGNmUBodzSfqfxm5FaGjOc2K4oLE0i09xTXQIXk=)
+    secret: ENC(9CJkZOxQcIIyeYZgy6nLMcwZfh/zzdzzveWEE9BMxPe8PXiCxEqs6uICqTeYJSC76OOOvjClj0V2SSMxGjCa+HAveQ9hFWN2x/ZmgV4zWkH6mKMmHdQjNcezY3KWRzj0dtdgl0AH+js=)
     expiration-seconds: 1209600
 
 server-uri: ENC(ZrgPccnQ3mEqVQTFEvGn6hzhP4xcNn6ISnp3TbBcd1J3jpZPb3hlzQ==)
