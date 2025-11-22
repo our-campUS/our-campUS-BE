@@ -10,9 +10,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.campus.campus.global.util.jwt.JwtAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +27,7 @@ public class SecurityConfig {
 	private final PermitUrlConfig permitUrlConfig;
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 		http
 			.cors(Customizer.withDefaults())
 			.csrf(AbstractHttpConfigurer::disable)
@@ -33,8 +36,9 @@ public class SecurityConfig {
 			.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(permitUrlConfig.getPublicUrl()).permitAll()
-				.anyRequest().permitAll()
-			);
+				.anyRequest().authenticated()
+			)
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
 

@@ -10,5 +10,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+oauth:
+  kakao:
+    client-id: 2fb31q4aeb2877d3408aac80b3ddb2c5
+    client-secret: vMAvuShaneiT1Kovp8CclDJRDOFczt12
+    redirect-uri: "http://localhost:8080/auth/login/kakao"
+
+jwt:
+  access:
+    secret: qaed2N33cbYOuhiCT1wDD4YA4Tzq/z9Wc0ZrlEUBK4KeguIBIcDjs9N6Ox09vbVhhI1zxsd1n0GSHuqllHl8SQ==
+    expiration-seconds: 3600
+  refresh:
+    secret: /QuR112ZbzLQwelZSdb1pJWutiBYEbjRmxf4AyGcPDq9rtyuDzean8abRxTxvWdvbghF+cMCKAkEF5atidssJA==
+    expiration-seconds: 1209600
 
 server-uri: http://localhost
