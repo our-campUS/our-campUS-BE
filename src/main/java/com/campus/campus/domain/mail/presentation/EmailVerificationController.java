@@ -22,7 +22,7 @@ public class EmailVerificationController {
 
 	@PostMapping("/code")
 	@Operation(summary = "이메일 인증 코드 전송")
-	CommonResponse<Void> sendSignupVerificationCodeEmail(
+	public CommonResponse<Void> sendSignupVerificationCodeEmail(
 		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
 	) {
 		emailVerificationService.sendVerificationCode(emailVerificationRequest.email());
@@ -32,7 +32,7 @@ public class EmailVerificationController {
 
 	@PostMapping("/code/verify")
 	@Operation(summary = "인증 코드 검증")
-	CommonResponse<Void> verifyVerificationCode(
+	public CommonResponse<Void> verifyVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
 		emailVerificationService.verifyCode(emailVerificationConfirmRequest);

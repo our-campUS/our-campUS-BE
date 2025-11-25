@@ -23,7 +23,7 @@ public class StudentCouncilLoginController {
 
 	@PostMapping("/signup")
 	@Operation(summary = "학생회 회원가입")
-	CommonResponse<StudentCouncilLoginResponse> Signup(
+	public CommonResponse<StudentCouncilLoginResponse> Signup(
 		@Valid @RequestBody StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
 		StudentCouncilLoginResponse response = councilLoginService.signUp(studentCouncilSignUpRequest);
 
@@ -32,7 +32,7 @@ public class StudentCouncilLoginController {
 
 	@PostMapping("/login")
 	@Operation(summary = "학생회 로그인")
-	CommonResponse<StudentCouncilLoginResponse> Login(
+	public CommonResponse<StudentCouncilLoginResponse> Login(
 		@Valid @RequestBody StudentCouncilLoginRequest studentCouncilLoginRequest) {
 		StudentCouncilLoginResponse response = councilLoginService.login(studentCouncilLoginRequest);
 
