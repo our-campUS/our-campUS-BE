@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
+import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.InvalidCouncilScopeException;
 import com.campus.campus.domain.council.application.exception.LoginIdAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.PasswordNotCollectException;
@@ -45,6 +46,9 @@ public class CouncilLoginService {
 
 	@Transactional
 	public StudentCouncilLoginResponse signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
+		if (studentCouncilRepository.existsByEmail(studentCouncilSignUpRequest.email())) {
+			throw new EmailAlreadyExistsException();
+		}
 		checkVerifiedEmail(studentCouncilSignUpRequest.email());
 
 		if (studentCouncilRepository.existsByLoginId(studentCouncilSignUpRequest.loginId())) {

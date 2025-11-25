@@ -10,4 +10,6 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 	Optional<StudentCouncil> findByLoginId(String loginId);
 
 	boolean existsByLoginId(String loginId);
+
+	boolean existsByEmail(String email);
 }
