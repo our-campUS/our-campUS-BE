@@ -14,6 +14,8 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.mail.application.exception.EmailNotVerifiedException;
+import com.campus.campus.domain.mail.domain.repository.EmailVerificationRepository;
 import com.campus.campus.domain.school.application.exception.CollegeNotFoundException;
 import com.campus.campus.domain.school.application.exception.MajorNotFoundException;
 import com.campus.campus.domain.school.application.exception.SchoolCollegeNotSameException;
@@ -37,11 +39,14 @@ public class CouncilLoginService {
 	private final CollegeRepository collegeRepository;
 	private final MajorRepository majorRepository;
 	private final StudentCouncilLoginMapper studentCouncilLoginMapper;
+	private final EmailVerificationRepository emailVerificationRepository;
 	private final JwtProvider jwtProvider;
 	private final PasswordEncoder passwordEncoder;
 
 	@Transactional
 	public StudentCouncilLoginResponse signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
+		checkVerifiedEmail(studentCouncilSignUpRequest.email());
+
 		if (studentCouncilRepository.existsByLoginId(studentCouncilSignUpRequest.loginId())) {
 			throw new LoginIdAlreadyExistsException();
 		}
@@ -129,5 +134,14 @@ public class CouncilLoginService {
 				yield new CouncilScope(college, major);
 			}
 		};
+	}
+
+	private void checkVerifiedEmail(String email) {
+		boolean exists = emailVerificationRepository
+			.existsByEmailAndVerifiedIsTrue(email);
+
+		if (!exists) {
+			throw new EmailNotVerifiedException();
+		}
 	}
 }
