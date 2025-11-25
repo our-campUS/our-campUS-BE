@@ -10,7 +10,7 @@ import com.campus.campus.domain.council.application.dto.response.StudentCouncilL
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.InvalidCouncilScopeException;
 import com.campus.campus.domain.council.application.exception.LoginIdAlreadyExistsException;
-import com.campus.campus.domain.council.application.exception.PasswordNotCollectException;
+import com.campus.campus.domain.council.application.exception.PasswordNotCorrectException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
@@ -76,7 +76,7 @@ public class CouncilLoginService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!passwordEncoder.matches(studentCouncilLoginRequest.password(), studentCouncil.getPassword())) {
-			throw new PasswordNotCollectException();
+			throw new PasswordNotCorrectException();
 		}
 
 		String accessToken = jwtProvider.createCouncilAccessToken(studentCouncil.getId());
