@@ -16,8 +16,11 @@ public record StudentCouncilLoginResponse(
 	@Schema(description = "학생회 ID", example = "1")
 	Long councilId,
 
-	@Schema(description = "로그인 이메일", example = "council@gachon.ac.kr")
+	@Schema(description = "로그인 id", example = "dede1234")
 	String loginId,
+
+	@Schema(description = "인증 이메일", example = "campus@campus.com")
+	String email,
 
 	@Schema(description = "학생회 타입", example = "SCHOOL_COUNCIL")
 	CouncilType councilType,

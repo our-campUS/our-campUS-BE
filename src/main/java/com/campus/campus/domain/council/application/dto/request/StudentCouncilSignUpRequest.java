@@ -7,13 +7,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record StudentCouncilSignUpRequest(
-	@Schema(description = "회원가입할 이메일(id)", example = "campus@campus.com")
+	@Schema(description = "회원가입 id", example = "dede1234")
 	@NotBlank
 	String loginId,
 
 	@Schema(description = "비밀번호", example = "qwerqwer")
 	@NotBlank
 	String password,
+
+	@Schema(description = "인증 이메일", example = "campus@campus.com")
+	@NotBlank
+	String email,
 
 	@Schema(description = "학생회 종류", example = "SCHOOL_COUNCIL")
 	@NotNull

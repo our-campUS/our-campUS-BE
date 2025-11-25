@@ -24,6 +24,7 @@ public class StudentCouncilLoginMapper {
 		return StudentCouncil.builder()
 			.loginId(studentCouncilSignUpRequest.loginId())
 			.password(encodedPassword)
+			.email(studentCouncilSignUpRequest.email())
 			.councilType(studentCouncilSignUpRequest.councilType())
 			.school(school)
 			.college(college)
@@ -38,6 +39,7 @@ public class StudentCouncilLoginMapper {
 			refreshToken,
 			studentCouncil.getId(),
 			studentCouncil.getLoginId(),
+			studentCouncil.getEmail(),
 			studentCouncil.getCouncilType(),
 			studentCouncil.getSchool().getSchoolName(),
 			studentCouncil.getCollege() != null ? studentCouncil.getCollege().getCollegeName() : null,

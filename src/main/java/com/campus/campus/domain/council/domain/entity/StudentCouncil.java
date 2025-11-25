@@ -40,6 +40,9 @@ public class StudentCouncil {
 	@Column(name = "password")
 	private String password;
 
+	@Column(name = "email")
+	private String email;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "council_type", nullable = false)
 	private CouncilType councilType;
