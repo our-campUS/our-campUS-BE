@@ -10,6 +10,7 @@ import com.campus.campus.domain.mail.application.dto.request.EmailVerificationRe
 import com.campus.campus.domain.mail.application.service.EmailVerificationService;
 import com.campus.campus.global.common.response.CommonResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +21,7 @@ public class EmailVerificationController {
 	private final EmailVerificationService emailVerificationService;
 
 	@PostMapping("/code")
+	@Operation(summary = "이메일 인증 코드 전송")
 	CommonResponse<Void> sendSignupVerificationCodeEmail(
 		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
 	) {
@@ -29,6 +31,7 @@ public class EmailVerificationController {
 	}
 
 	@PostMapping("/code/verify")
+	@Operation(summary = "인증 코드 검증")
 	CommonResponse<Void> verifyVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {

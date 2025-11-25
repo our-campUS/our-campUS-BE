@@ -11,6 +11,7 @@ import com.campus.campus.domain.council.application.dto.response.StudentCouncilL
 import com.campus.campus.domain.council.application.service.CouncilLoginService;
 import com.campus.campus.global.common.response.CommonResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,7 @@ public class StudentCouncilLoginController {
 	private final CouncilLoginService councilLoginService;
 
 	@PostMapping("/signup")
+	@Operation(summary = "학생회 회원가입")
 	CommonResponse<StudentCouncilLoginResponse> Signup(
 		@Valid @RequestBody StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
 		StudentCouncilLoginResponse response = councilLoginService.signUp(studentCouncilSignUpRequest);
@@ -29,6 +31,7 @@ public class StudentCouncilLoginController {
 	}
 
 	@PostMapping("/login")
+	@Operation(summary = "학생회 로그인")
 	CommonResponse<StudentCouncilLoginResponse> Login(
 		@Valid @RequestBody StudentCouncilLoginRequest studentCouncilLoginRequest) {
 		StudentCouncilLoginResponse response = councilLoginService.login(studentCouncilLoginRequest);
