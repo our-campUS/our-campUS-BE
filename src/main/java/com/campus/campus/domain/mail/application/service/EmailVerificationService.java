@@ -49,7 +49,7 @@ public class EmailVerificationService {
 				
 				인증 코드 : %s
 				
-				10분 이내에 입력해주세요.
+				5분 이내에 입력해주세요.
 				""".formatted(code)
 		);
 
