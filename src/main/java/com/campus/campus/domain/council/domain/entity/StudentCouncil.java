@@ -3,6 +3,7 @@ package com.campus.campus.domain.council.domain.entity;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
+import com.campus.campus.global.entity.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,7 +29,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class StudentCouncil {
+public class StudentCouncil extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "student_council_id")
