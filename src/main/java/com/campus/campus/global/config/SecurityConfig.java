@@ -29,7 +29,8 @@ public class SecurityConfig {
 	private final PermitUrlConfig permitUrlConfig;
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http,
+		JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 		http
 			.cors(Customizer.withDefaults())
 			.csrf(AbstractHttpConfigurer::disable)
@@ -48,7 +49,8 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfig() {
 		CorsConfiguration cfg = new CorsConfiguration();
 		cfg.setAllowedOrigins(
-			List.of("http://localhost:3000", "http://localhost:5173", "https://138.2.121.208.nip.io"));
+			List.of("http://localhost:3000", "http://localhost:5173", "https://138.2.121.208.nip.io",
+				"http://158.179.193.224:8080"));
 		cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		cfg.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 		cfg.setExposedHeaders(List.of("Authorization", "RefreshToken"));
