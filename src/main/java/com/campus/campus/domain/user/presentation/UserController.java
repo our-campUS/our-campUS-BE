@@ -11,6 +11,7 @@ import com.campus.campus.domain.user.application.service.UserService;
 import com.campus.campus.global.auth.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,7 @@ public class UserController {
 	private final UserService userService;
 
 	@PatchMapping("/profile")
+	@Operation(summary = "최초 로그인 사용자 학적정보 입력")
 	public CommonResponse<UserFirstProfileResponse> createUserProfile(@CurrentUserId Long userId,
 		@RequestBody @Valid UserProfileRequest userProfileRequest) {
 		UserFirstProfileResponse userFirstProfileResponse = userService.writeUserProfile(userId, userProfileRequest);

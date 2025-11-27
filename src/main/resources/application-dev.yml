@@ -14,11 +14,23 @@ spring:
         default_batch_fetch_size: 100
     hibernate:
       ddl-auto: update
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: illta.campus
+    password: ENC(bpaxv19TGzpHFiIiKCYIvuITX5WPYgjfmryQ0riUFvg=)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 oauth:
   kakao:
     client-id: ENC(G6gZHtP5QYz7+G6herJ1QCSbdVYgjtGnx8MhBSxLDFx26Yh0YQQ+uZ6RQ7wbvS17)
     client-secret: ENC(CG823WHRi6g4ybTc/VEOfd43c/RxVnIAE+AVpYWqrE/2xnGkvtjKkVSVVOXkXBXo)
-    redirect-uri: "http://localhost:3000/auth/login/kakao"
+    redirect-uri: "http://158.179.193.224:8080/auth/login/kakao"
 
 jwt:
   access:

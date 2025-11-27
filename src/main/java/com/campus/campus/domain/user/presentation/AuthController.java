@@ -9,6 +9,7 @@ import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.domain.user.application.service.KakaoOauthService;
 import com.campus.campus.global.common.response.CommonResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -18,6 +19,7 @@ public class AuthController {
 	private final KakaoOauthService kakaoOauthService;
 
 	@PostMapping("/kakao")
+	@Operation(summary = "카카오 로그인")
 	public CommonResponse<OauthLoginResponse> kakaoLogin(@RequestParam("code") String code) {
 		OauthLoginResponse response = kakaoOauthService.login(code);
 
