@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public record SchoolFindResponse(
 	@Schema(description = "학교 id", example = "3")
-	String schoolId,
+	Long schoolId,
 
 	@Schema(description = "학교 이름", example = "가천대학교")
 	String schoolName
