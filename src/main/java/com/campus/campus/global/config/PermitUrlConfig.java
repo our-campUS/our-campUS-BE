@@ -14,7 +14,8 @@ public class PermitUrlConfig {
 			"/auth/council/signup",
 			"/auth/council/login",
 			"/auth/council/signup/email/code",
-			"/auth/council/signup/email/code/verify"
+			"/auth/council/signup/email/code/verify",
+			"/schools/search"
 		};
 	}
 }
