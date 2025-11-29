@@ -10,6 +10,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: illta.campus
+    password: abcd efgh ijkl mnop
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 oauth:
   kakao:
     client-id: 2fb31q4aeb2877d3408aac80b3ddb2c5
@@ -25,3 +37,8 @@ jwt:
     expiration-seconds: 1209600
 
 server-uri: http://localhost
+
+management:
+  health:
+    mail:
+      enabled: false

@@ -1,4 +1,4 @@
-package com.campus.campus.domain.user.domain.entity;
+package com.campus.campus.domain.council.domain.entity;
 
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
@@ -7,63 +7,56 @@ import com.campus.campus.global.entity.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "users")
+@Table(name = "student_councils")
 @Getter
 @SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class User extends BaseEntity {
+public class StudentCouncil extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_id")
+	@Column(name = "student_council_id")
 	private Long id;
 
-	@Column(name = "kakao_id")
-	private Long kakaoId;
+	@Column(name = "login_id")
+	private String loginId;
 
-	@Column(name = "name")
-	private String nickname;
+	@Column(name = "password")
+	private String password;
 
 	@Column(name = "email")
 	private String email;
 
-	@Column(name = "profile_image")
-	private String profileImage;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "council_type", nullable = false)
+	private CouncilType councilType;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "school_id")
+	@JoinColumn(name = "school_id", nullable = false)
 	private School school;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "college_id")
 	private College college;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "major_id")
 	private Major major;
-
-	public void updateProfile(School school, College college, Major major) {
-		this.school = school;
-		this.college = college;
-		this.major = major;
-	}
-
-	public boolean isProfileNotCompleted() {
-		return this.school == null || this.major == null;
-	}
 }
