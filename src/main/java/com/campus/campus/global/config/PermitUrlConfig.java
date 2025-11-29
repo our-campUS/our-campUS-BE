@@ -16,6 +16,7 @@ public class PermitUrlConfig {
 			"/auth/council/signup/email/code",
 			"/auth/council/signup/email/code/verify",
 			"/search/schools",
+			"/search/colleges",
 			"/search/majors"
 		};
 	}

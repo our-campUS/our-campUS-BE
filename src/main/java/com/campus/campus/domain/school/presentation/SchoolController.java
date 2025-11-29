@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.school.application.dto.response.CollegeFindResponse;
 import com.campus.campus.domain.school.application.dto.response.MajorFindResponse;
 import com.campus.campus.domain.school.application.dto.response.SchoolFindResponse;
 import com.campus.campus.domain.school.application.service.SchoolService;
@@ -30,6 +31,16 @@ public class SchoolController {
 		List<SchoolFindResponse> schoolFindResponses = schoolService.searchSchools(keyword);
 
 		return CommonResponse.success(SchoolResponseCode.SCHOOL_FIND_SUCCESS, schoolFindResponses);
+	}
+
+	@GetMapping("/colleges")
+	@Operation(summary = "단과대 검색")
+	public CommonResponse<List<CollegeFindResponse>> searchColleges(
+		@Valid @RequestParam Long schoolId, @Valid @RequestParam String keyword
+	) {
+		List<CollegeFindResponse> collegeFindResponses = schoolService.searchColleges(schoolId, keyword);
+
+		return CommonResponse.success(SchoolResponseCode.COLLEGE_FIND_SUCCESS, collegeFindResponses);
 	}
 
 	@GetMapping("/majors")

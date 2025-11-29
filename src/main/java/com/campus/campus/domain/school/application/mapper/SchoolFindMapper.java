@@ -4,8 +4,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.domain.school.application.dto.response.CollegeFindResponse;
 import com.campus.campus.domain.school.application.dto.response.MajorFindResponse;
 import com.campus.campus.domain.school.application.dto.response.SchoolFindResponse;
+import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
 
@@ -21,6 +23,19 @@ public class SchoolFindMapper {
 		return new SchoolFindResponse(
 			school.getSchoolId(),
 			school.getSchoolName()
+		);
+	}
+
+	public List<CollegeFindResponse> toCollegeFindResponseList(List<College> colleges) {
+		return colleges.stream()
+			.map(this::toCollegeFindResponse)
+			.toList();
+	}
+
+	public CollegeFindResponse toCollegeFindResponse(College college) {
+		return new CollegeFindResponse(
+			college.getCollegeId(),
+			college.getCollegeName()
 		);
 	}
 

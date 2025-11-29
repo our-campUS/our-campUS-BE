@@ -11,6 +11,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum SchoolResponseCode implements ResponseCodeInterface {
 	SCHOOL_FIND_SUCCESS(200, HttpStatus.OK, "학교가 성공적으로 검색되었습니다."),
+	COLLEGE_FIND_SUCCESS(200, HttpStatus.OK, "단과대가 성공적으로 검색되었습니다."),
 	MAJOR_FIND_SUCCESS(200, HttpStatus.OK, "학과가 성공적으로 검색되었습니다.");
 
 	private final int code;
