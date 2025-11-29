@@ -4,11 +4,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PermitUrlConfig {
-	public String[] getPublicUrl() {
-		return new String[]{
-			"/v3/api-docs/**",
-			"/swagger-ui/**",
-			"/health-check"
-		};
-	}
+    public String[] getPublicUrl() {
+        return new String[]{
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/health-check",
+                "/actuator/health",
+                "/auth/login/kakao",
+                "/school/ocr/student-card"
+        };
+    }
 }
