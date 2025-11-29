@@ -11,16 +11,18 @@ import com.campus.campus.domain.school.application.dto.response.SchoolFindRespon
 import com.campus.campus.domain.school.application.service.SchoolService;
 import com.campus.campus.global.common.response.CommonResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/schools")
+@RequestMapping("/search")
 public class SchoolController {
 	private final SchoolService schoolService;
 
-	@GetMapping("/search")
+	@GetMapping("/schools")
+	@Operation(summary = "학교 검색")
 	public CommonResponse<List<SchoolFindResponse>> searchSchools(
 		@Valid @RequestParam String keyword
 	) {
