@@ -18,6 +18,7 @@ public record StudentCardInfoDto(
         @Schema(description = "학과 또는 학부명", example = "정치국제학과")
         String department,
 
-        @Schema(description = "OCR 전체 텍스트 리스트", example = "[\"서울여자대학교\", \"정치국제학과\", \"2021111111\", \"최서연\", \"4학년\"]")
+        @Schema(description = "OCR 전체 텍스트 리스트",
+                example = "[\"서울여자대학교\", \"정치국제학과\", \"2021111111\", \"최서연\", \"4학년\"]")
         List<String> rawTexts
 ) {}

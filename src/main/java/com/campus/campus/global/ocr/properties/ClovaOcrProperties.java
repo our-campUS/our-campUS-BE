@@ -1,4 +1,4 @@
-package com.campus.campus.global.properties;
+package com.campus.campus.global.ocr.properties;
 
 import lombok.Getter;
 import lombok.Setter;

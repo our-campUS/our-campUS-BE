@@ -29,7 +29,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 
     implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
@@ -43,6 +43,16 @@ dependencies {
 
     // mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // ⭐ OCI SDK BOM - 버전 정리용
+    implementation platform('com.oracle.oci.sdk:oci-java-sdk-bom:3.31.0')
+
+    // ⭐ OCI ObjectStorage + 공통
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage'
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-common'
+
+    // ⭐ HTTP 클라이언트: Jakarta EE 9 / Jersey 3 (Spring Boot 3랑 맞음)
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3'
 
 
     compileOnly 'org.projectlombok:lombok'

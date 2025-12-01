@@ -1,20 +1,21 @@
 package com.campus.campus.domain.school.application.dto.response;
 
 import java.util.List;
-import lombok.Data;
 
-@Data
-public class ClovaOcrResponseDto {
+public record ClovaOcrResponseDto(
+        String version,
+        String requestId,
+        long timestamp,
+        List<Image> images
+) {
+    public record Image(
+            String uid,
+            String name,
+            List<Field> fields
+    ) {}
 
-    private List<ImageResult> images;
-
-    @Data
-    public static class ImageResult {
-        private List<Field> fields;
-    }
-
-    @Data
-    public static class Field {
-        private String inferText;
-    }
+    public record Field(
+            String inferText,
+            Double inferConfidence
+    ) {}
 }
