@@ -6,6 +6,8 @@ import com.campus.campus.global.entity.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -30,6 +32,10 @@ public class EmailVerification extends BaseEntity {
 
 	@Column(name = "email", nullable = false)
 	private String email;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "verification_type", nullable = false)
+	private VerificationType verificationType;
 
 	@Column(name = "code", nullable = false, length = 6)
 	private String code;

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.mail.application.dto.request.EmailVerificationRequest;
 import com.campus.campus.domain.mail.domain.entity.EmailVerification;
+import com.campus.campus.domain.mail.domain.entity.VerificationType;
 
 @Component
 public class EmailVerificationMapper {
@@ -13,6 +14,7 @@ public class EmailVerificationMapper {
 		LocalDateTime expireTime) {
 		return EmailVerification.builder()
 			.email(email)
+			.verificationType(VerificationType.SIGNUP)
 			.code(code)
 			.expiresAt(expireTime)
 			.verified(false)

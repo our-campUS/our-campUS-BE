@@ -36,10 +36,10 @@ public class EmailVerificationService {
 		EmailVerification emailVerification = emailVerificationMapper.createEmailVerification(email, code, expireTime);
 		emailVerificationRepository.save(emailVerification);
 
-		senSignUpVerificationMail(email, code);
+		sendSignUpVerificationMail(email, code);
 	}
 
-	public void senSignUpVerificationMail(String to, String code) {
+	public void sendSignUpVerificationMail(String to, String code) {
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setTo(to);
 		message.setSubject("[Campus] 학생회 회원가입 이메일 인증 코드");

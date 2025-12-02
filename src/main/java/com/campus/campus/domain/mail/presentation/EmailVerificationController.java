@@ -16,12 +16,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth/council/signup/email")
+@RequestMapping("/auth/council")
 public class EmailVerificationController {
 	private final EmailVerificationService emailVerificationService;
 
-	@PostMapping("/code")
-	@Operation(summary = "이메일 인증 코드 전송")
+	@PostMapping("/signup/email/code")
+	@Operation(summary = "회원가입 이메일 인증 코드 전송")
 	public CommonResponse<Void> sendSignupVerificationCodeEmail(
 		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
 	) {
@@ -30,9 +30,9 @@ public class EmailVerificationController {
 		return CommonResponse.success(EmailVerificationResponseCode.EMAIL_SEND_SUCCESS);
 	}
 
-	@PostMapping("/code/verify")
-	@Operation(summary = "인증 코드 검증")
-	public CommonResponse<Void> verifyVerificationCode(
+	@PostMapping("/signup/email/code/verify")
+	@Operation(summary = "회원가입 인증 코드 검증")
+	public CommonResponse<Void> verifySignupVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
 		emailVerificationService.verifyCode(emailVerificationConfirmRequest);

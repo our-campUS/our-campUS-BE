@@ -16,6 +16,7 @@ import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMa
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.mail.application.exception.EmailNotVerifiedException;
+import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.domain.mail.domain.repository.EmailVerificationRepository;
 import com.campus.campus.domain.school.application.exception.CollegeNotFoundException;
 import com.campus.campus.domain.school.application.exception.MajorNotFoundException;
@@ -142,7 +143,7 @@ public class CouncilLoginService {
 
 	private void checkVerifiedEmail(String email) {
 		boolean exists = emailVerificationRepository
-			.existsByEmailAndVerifiedIsTrue(email);
+			.existsByEmailAndVerificationTypeAndVerifiedIsTrue(email, VerificationType.SIGNUP);
 
 		if (!exists) {
 			throw new EmailNotVerifiedException();
