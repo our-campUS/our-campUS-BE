@@ -13,6 +13,7 @@ public class PermitUrlConfig {
 			"/auth/login/kakao",
 			"/auth/council/signup",
 			"/auth/council/login",
+			"/auth/council/find/id",
 			"/auth/council/signup/email/code",
 			"/auth/council/signup/email/code/verify",
 			"/auth/council/find/id/email/code",
