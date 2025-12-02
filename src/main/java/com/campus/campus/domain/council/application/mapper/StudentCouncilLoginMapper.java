@@ -48,9 +48,9 @@ public class StudentCouncilLoginMapper {
 		);
 	}
 
-	public StudentCouncilFindIdResponse toStudentCouncilFindIdResponse(String email) {
+	public StudentCouncilFindIdResponse toStudentCouncilFindIdResponse(String loginId) {
 		return new StudentCouncilFindIdResponse(
-			email
+			loginId
 		);
 	}
 }

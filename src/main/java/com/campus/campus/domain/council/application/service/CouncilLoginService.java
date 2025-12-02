@@ -98,7 +98,10 @@ public class CouncilLoginService {
 		}
 		checkVerifiedEmail(email, VerificationType.FIND_ID);
 
-		return studentCouncilLoginMapper.toStudentCouncilFindIdResponse(email);
+		StudentCouncil studentCouncil = studentCouncilRepository.findByEmail(email)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		return studentCouncilLoginMapper.toStudentCouncilFindIdResponse(studentCouncil.getLoginId());
 	}
 
 	@Transactional
