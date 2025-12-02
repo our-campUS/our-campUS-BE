@@ -44,7 +44,7 @@ public class StudentCouncilLoginController {
 		return CommonResponse.success(StudentCouncilResponseCode.LOGIN_SUCCESS, response);
 	}
 
-	@GetMapping("find/id")
+	@GetMapping("/find/id")
 	@Operation(summary = "학생회 대표자 아이디 찾기")
 	public CommonResponse<StudentCouncilFindIdResponse> findId(@Valid @RequestParam String email) {
 		StudentCouncilFindIdResponse response = councilLoginService.findId(email);
@@ -52,7 +52,7 @@ public class StudentCouncilLoginController {
 		return CommonResponse.success(StudentCouncilResponseCode.FIND_ID_SUCCESS, response);
 	}
 
-	@PatchMapping("find/password")
+	@PatchMapping("/find/password")
 	@Operation(summary = "학생회 대표자 비밀번호 찾기 - 비밀번호 재설정")
 	public CommonResponse<Void> findId(
 		@Valid @RequestBody StudentCouncilFindPasswordRequest studentCouncilFindPasswordRequest) {
