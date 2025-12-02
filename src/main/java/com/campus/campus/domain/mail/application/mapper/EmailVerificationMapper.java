@@ -10,11 +10,22 @@ import com.campus.campus.domain.mail.domain.entity.VerificationType;
 
 @Component
 public class EmailVerificationMapper {
-	public EmailVerification createEmailVerification(String email, String code,
+	public EmailVerification createSignupEmailVerification(String email, String code,
 		LocalDateTime expireTime) {
 		return EmailVerification.builder()
 			.email(email)
 			.verificationType(VerificationType.SIGNUP)
+			.code(code)
+			.expiresAt(expireTime)
+			.verified(false)
+			.build();
+	}
+
+	public EmailVerification createFindIdEmailVerification(String email, String code,
+		LocalDateTime expireTime) {
+		return EmailVerification.builder()
+			.email(email)
+			.verificationType(VerificationType.FIND_ID)
 			.code(code)
 			.expiresAt(expireTime)
 			.verified(false)

@@ -39,4 +39,25 @@ public class EmailVerificationController {
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}
+
+	@PostMapping("/find/id/email/code")
+	@Operation(summary = "학생대표자 아이디 찾기 이메일 인증 코드 전송")
+	public CommonResponse<Void> sendFindIdVerificationEmail(
+		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
+	) {
+		emailVerificationService.sendFindIdVerificationCode(emailVerificationRequest.email());
+
+		return CommonResponse.success(EmailVerificationResponseCode.EMAIL_SEND_SUCCESS);
+	}
+
+	@PostMapping("/find/id/email/code/verify")
+	@Operation(summary = "학생대표자 아이디 찾기 인증 코드 검증")
+	public CommonResponse<Void> verifyFindIdVerificationCode(
+		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
+	) {
+		emailVerificationService.verifyCode(emailVerificationConfirmRequest);
+
+		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
+	}
+
 }

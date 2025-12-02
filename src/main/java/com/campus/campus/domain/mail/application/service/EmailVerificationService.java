@@ -33,7 +33,8 @@ public class EmailVerificationService {
 		String code = createCode();
 		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
 
-		EmailVerification emailVerification = emailVerificationMapper.createEmailVerification(email, code, expireTime);
+		EmailVerification emailVerification = emailVerificationMapper
+			.createSignupEmailVerification(email, code, expireTime);
 		emailVerificationRepository.save(emailVerification);
 
 		sendSignUpVerificationMail(email, code);
@@ -46,6 +47,35 @@ public class EmailVerificationService {
 		message.setText(
 			"""
 				Campus 학생회 회원가입을 위한 이메일 인증 코드입니다.
+				
+				인증 코드 : %s
+				
+				5분 이내에 입력해주세요.
+				""".formatted(code)
+		);
+
+		javaMailSender.send(message);
+	}
+
+	@Transactional
+	public void sendFindIdVerificationCode(String email) {
+		String code = createCode();
+		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
+
+		EmailVerification emailVerification = emailVerificationMapper
+			.createFindIdEmailVerification(email, code, expireTime);
+		emailVerificationRepository.save(emailVerification);
+
+		sendFindIdVerificationMail(email, code);
+	}
+
+	public void sendFindIdVerificationMail(String to, String code) {
+		SimpleMailMessage message = new SimpleMailMessage();
+		message.setTo(to);
+		message.setSubject("[Campus] 학생대표자 아이디 찾기 이메일 인증 코드");
+		message.setText(
+			"""
+				Campus 학생대표자 아이디 찾기를 위한 이메일 인증 코드입니다.
 				
 				인증 코드 : %s
 				
