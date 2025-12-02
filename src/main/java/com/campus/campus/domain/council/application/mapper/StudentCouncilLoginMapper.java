@@ -3,6 +3,7 @@ package com.campus.campus.domain.council.application.mapper;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.school.domain.entity.College;
@@ -44,6 +45,12 @@ public class StudentCouncilLoginMapper {
 			studentCouncil.getSchool().getSchoolName(),
 			studentCouncil.getCollege() != null ? studentCouncil.getCollege().getCollegeName() : null,
 			studentCouncil.getMajor() != null ? studentCouncil.getMajor().getMajorName() : null
+		);
+	}
+
+	public StudentCouncilFindIdResponse toStudentCouncilFindIdResponse(String email) {
+		return new StudentCouncilFindIdResponse(
+			email
 		);
 	}
 }

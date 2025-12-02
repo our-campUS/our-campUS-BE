@@ -1,12 +1,15 @@
 package com.campus.campus.domain.council.presentation;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.service.CouncilLoginService;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -37,5 +40,13 @@ public class StudentCouncilLoginController {
 		StudentCouncilLoginResponse response = councilLoginService.login(studentCouncilLoginRequest);
 
 		return CommonResponse.success(StudentCouncilResponseCode.LOGIN_SUCCESS, response);
+	}
+
+	@GetMapping("find/id")
+	@Operation(summary = "학생회 대표자 아이디 찾기")
+	public CommonResponse<StudentCouncilFindIdResponse> findId(@Valid @RequestParam String email) {
+		StudentCouncilFindIdResponse response = councilLoginService.findId(email);
+
+		return CommonResponse.success(StudentCouncilResponseCode.FIND_ID_SUCCESS, response);
 	}
 }
