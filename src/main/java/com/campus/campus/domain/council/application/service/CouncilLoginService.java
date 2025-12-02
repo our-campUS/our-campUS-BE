@@ -4,10 +4,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
+import com.campus.campus.domain.council.application.exception.CouncilIdAndVerifiedEmailInvalidException;
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.InvalidCouncilScopeException;
 import com.campus.campus.domain.council.application.exception.LoginIdAlreadyExistsException;
@@ -30,6 +32,7 @@ import com.campus.campus.domain.school.domain.entity.School;
 import com.campus.campus.domain.school.domain.repository.CollegeRepository;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
+import com.campus.campus.global.config.SecurityConfig;
 import com.campus.campus.global.util.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -45,6 +48,7 @@ public class CouncilLoginService {
 	private final StudentCouncilLoginMapper studentCouncilLoginMapper;
 	private final EmailVerificationRepository emailVerificationRepository;
 	private final JwtProvider jwtProvider;
+	private final SecurityConfig securityConfig;
 	private final PasswordEncoder passwordEncoder;
 
 	@Transactional
@@ -95,6 +99,23 @@ public class CouncilLoginService {
 		checkVerifiedEmail(email, VerificationType.FIND_ID);
 
 		return studentCouncilLoginMapper.toStudentCouncilFindIdResponse(email);
+	}
+
+	@Transactional
+	public void findPassword(StudentCouncilFindPasswordRequest studentCouncilFindPasswordRequest) {
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByLoginId(studentCouncilFindPasswordRequest.loginId())
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		if (!studentCouncilFindPasswordRequest.email().equals(studentCouncil.getEmail())) {
+			throw new CouncilIdAndVerifiedEmailInvalidException();
+		}
+		checkVerifiedEmail(studentCouncilFindPasswordRequest.email(), VerificationType.FIND_PASSWORD);
+
+		String newPassword = securityConfig.passwordEncoder().encode(studentCouncilFindPasswordRequest.password());
+		studentCouncil.changePassword(newPassword);
+
+		studentCouncilRepository.save(studentCouncil);
 	}
 
 	private record CouncilScope(

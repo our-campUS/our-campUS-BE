@@ -1,12 +1,14 @@
 package com.campus.campus.domain.council.presentation;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
@@ -48,5 +50,14 @@ public class StudentCouncilLoginController {
 		StudentCouncilFindIdResponse response = councilLoginService.findId(email);
 
 		return CommonResponse.success(StudentCouncilResponseCode.FIND_ID_SUCCESS, response);
+	}
+
+	@PatchMapping("find/password")
+	@Operation(summary = "학생회 대표자 비밀번호 찾기 - 비밀번호 재설정")
+	public CommonResponse<Void> findId(
+		@Valid @RequestBody StudentCouncilFindPasswordRequest studentCouncilFindPasswordRequest) {
+		councilLoginService.findPassword(studentCouncilFindPasswordRequest);
+
+		return CommonResponse.success(StudentCouncilResponseCode.FIND_PASSWORD_SUCCESS);
 	}
 }
