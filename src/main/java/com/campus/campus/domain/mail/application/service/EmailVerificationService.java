@@ -87,6 +87,35 @@ public class EmailVerificationService {
 	}
 
 	@Transactional
+	public void sendFindPasswordVerificationCode(String email) {
+		String code = createCode();
+		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
+
+		EmailVerification emailVerification = emailVerificationMapper
+			.createFindPasswordEmailVerification(email, code, expireTime);
+		emailVerificationRepository.save(emailVerification);
+
+		sendFindPasswordVerificationMail(email, code);
+	}
+
+	public void sendFindPasswordVerificationMail(String to, String code) {
+		SimpleMailMessage message = new SimpleMailMessage();
+		message.setTo(to);
+		message.setSubject("[Campus] 학생대표자 비밀번호 찾기 이메일 인증 코드");
+		message.setText(
+			"""
+				Campus 학생대표자 비밀번호 찾기를 위한 이메일 인증 코드입니다.
+				
+				인증 코드 : %s
+				
+				5분 이내에 입력해주세요.
+				""".formatted(code)
+		);
+
+		javaMailSender.send(message);
+	}
+
+	@Transactional
 	public void verifyCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest) {
 		EmailVerification emailVerification = emailVerificationRepository.
 			findTopByEmailOrderByEmailVerificationIdDesc(emailVerificationConfirmRequest.email())

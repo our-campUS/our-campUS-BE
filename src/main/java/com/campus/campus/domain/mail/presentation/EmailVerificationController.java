@@ -60,4 +60,24 @@ public class EmailVerificationController {
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}
 
+	@PostMapping("/find/password/email/code")
+	@Operation(summary = "학생대표자 비밀번호 찾기 이메일 인증 코드 전송")
+	public CommonResponse<Void> sendFindPasswordVerificationEmail(
+		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
+	) {
+		emailVerificationService.sendFindPasswordVerificationCode(emailVerificationRequest.email());
+
+		return CommonResponse.success(EmailVerificationResponseCode.EMAIL_SEND_SUCCESS);
+	}
+
+	@PostMapping("/find/password/email/code/verify")
+	@Operation(summary = "학생대표자 비밀번호 찾기 인증 코드 검증")
+	public CommonResponse<Void> verifyFindPasswordVerificationCode(
+		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
+	) {
+		emailVerificationService.verifyCode(emailVerificationConfirmRequest);
+
+		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
+	}
+
 }

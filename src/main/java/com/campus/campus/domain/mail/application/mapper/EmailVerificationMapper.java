@@ -31,4 +31,15 @@ public class EmailVerificationMapper {
 			.verified(false)
 			.build();
 	}
+
+	public EmailVerification createFindPasswordEmailVerification(String email, String code,
+		LocalDateTime expireTime) {
+		return EmailVerification.builder()
+			.email(email)
+			.verificationType(VerificationType.FIND_PASSWORD)
+			.code(code)
+			.expiresAt(expireTime)
+			.verified(false)
+			.build();
+	}
 }
