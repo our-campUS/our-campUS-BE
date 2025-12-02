@@ -59,4 +59,8 @@ public class StudentCouncil extends BaseEntity {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "major_id")
 	private Major major;
+
+	public void changePassword(String newPassword) {
+		this.password = newPassword;
+	}
 }
