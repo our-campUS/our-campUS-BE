@@ -25,7 +25,7 @@ public class EmailVerificationController {
 	public CommonResponse<Void> sendSignupVerificationCodeEmail(
 		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
 	) {
-		emailVerificationService.sendVerificationCode(emailVerificationRequest.email());
+		emailVerificationService.sendSignUpVerificationCode(emailVerificationRequest.email());
 
 		return CommonResponse.success(EmailVerificationResponseCode.EMAIL_SEND_SUCCESS);
 	}

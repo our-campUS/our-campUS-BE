@@ -29,17 +29,17 @@ public class EmailVerificationService {
 	private final EmailVerificationRepository emailVerificationRepository;
 
 	@Transactional
-	public void sendVerificationCode(String email) {
+	public void sendSignUpVerificationCode(String email) {
 		String code = createCode();
 		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
 
 		EmailVerification emailVerification = emailVerificationMapper.createEmailVerification(email, code, expireTime);
 		emailVerificationRepository.save(emailVerification);
 
-		sendMail(email, code);
+		senSignUpVerificationMail(email, code);
 	}
 
-	public void sendMail(String to, String code) {
+	public void senSignUpVerificationMail(String to, String code) {
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setTo(to);
 		message.setSubject("[Campus] 학생회 회원가입 이메일 인증 코드");
