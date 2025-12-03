@@ -35,7 +35,7 @@ public class EmailVerificationController {
 	public CommonResponse<Void> verifySignupVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
-		emailVerificationService.verifyCode(emailVerificationConfirmRequest);
+		emailVerificationService.verifySignUpCode(emailVerificationConfirmRequest);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}
@@ -55,7 +55,7 @@ public class EmailVerificationController {
 	public CommonResponse<Void> verifyFindIdVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
-		emailVerificationService.verifyCode(emailVerificationConfirmRequest);
+		emailVerificationService.verifyFindIdCode(emailVerificationConfirmRequest);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}
@@ -75,7 +75,7 @@ public class EmailVerificationController {
 	public CommonResponse<Void> verifyFindPasswordVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
-		emailVerificationService.verifyCode(emailVerificationConfirmRequest);
+		emailVerificationService.verifyFindPasswordCode(emailVerificationConfirmRequest);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}
