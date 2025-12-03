@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus.domain.mail.application.dto.request.EmailVerificationConfirmRequest;
 import com.campus.campus.domain.mail.application.dto.request.EmailVerificationRequest;
 import com.campus.campus.domain.mail.application.service.EmailVerificationService;
+import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +36,7 @@ public class EmailVerificationController {
 	public CommonResponse<Void> verifySignupVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
-		emailVerificationService.verifySignUpCode(emailVerificationConfirmRequest);
+		emailVerificationService.verifyCode(emailVerificationConfirmRequest, VerificationType.SIGNUP);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}
@@ -55,7 +56,7 @@ public class EmailVerificationController {
 	public CommonResponse<Void> verifyFindIdVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
-		emailVerificationService.verifyFindIdCode(emailVerificationConfirmRequest);
+		emailVerificationService.verifyCode(emailVerificationConfirmRequest, VerificationType.FIND_ID);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}
@@ -75,7 +76,7 @@ public class EmailVerificationController {
 	public CommonResponse<Void> verifyFindPasswordVerificationCode(
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
-		emailVerificationService.verifyFindPasswordCode(emailVerificationConfirmRequest);
+		emailVerificationService.verifyCode(emailVerificationConfirmRequest, VerificationType.FIND_PASSWORD);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}

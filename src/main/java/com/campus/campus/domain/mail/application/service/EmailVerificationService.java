@@ -59,25 +59,6 @@ public class EmailVerificationService {
 	}
 
 	@Transactional
-	public void verifySignUpCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest) {
-		EmailVerification emailVerification = emailVerificationRepository.
-			findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(emailVerificationConfirmRequest.email(),
-				VerificationType.SIGNUP)
-			.orElseThrow(EmailVerificationNotFoundException::new);
-
-		if (emailVerification.isExpired()) {
-			emailVerificationRepository.delete(emailVerification);
-			throw new VerificationCodeExpiredException();
-		}
-
-		if (!emailVerification.getCode().equals(emailVerificationConfirmRequest.code())) {
-			throw new VerificationCodeNotMatchException();
-		}
-
-		emailVerification.verify();
-	}
-
-	@Transactional
 	public void sendFindIdVerificationCode(String email) {
 		String code = createCode();
 		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
@@ -104,25 +85,6 @@ public class EmailVerificationService {
 		);
 
 		javaMailSender.send(message);
-	}
-
-	@Transactional
-	public void verifyFindIdCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest) {
-		EmailVerification emailVerification = emailVerificationRepository.
-			findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(emailVerificationConfirmRequest.email(),
-				VerificationType.FIND_ID)
-			.orElseThrow(EmailVerificationNotFoundException::new);
-
-		if (emailVerification.isExpired()) {
-			emailVerificationRepository.delete(emailVerification);
-			throw new VerificationCodeExpiredException();
-		}
-
-		if (!emailVerification.getCode().equals(emailVerificationConfirmRequest.code())) {
-			throw new VerificationCodeNotMatchException();
-		}
-
-		emailVerification.verify();
 	}
 
 	@Transactional
@@ -155,10 +117,11 @@ public class EmailVerificationService {
 	}
 
 	@Transactional
-	public void verifyFindPasswordCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest) {
+	public void verifyCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
+		VerificationType verificationType) {
 		EmailVerification emailVerification = emailVerificationRepository.
 			findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(emailVerificationConfirmRequest.email(),
-				VerificationType.FIND_PASSWORD)
+				verificationType)
 			.orElseThrow(EmailVerificationNotFoundException::new);
 
 		if (emailVerification.isExpired()) {
