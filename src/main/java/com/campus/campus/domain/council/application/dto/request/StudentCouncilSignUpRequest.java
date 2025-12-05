@@ -5,6 +5,7 @@ import com.campus.campus.domain.council.domain.entity.CouncilType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record StudentCouncilSignUpRequest(
 	@Schema(description = "회원가입 id", example = "dede1234")
@@ -13,6 +14,7 @@ public record StudentCouncilSignUpRequest(
 
 	@Schema(description = "비밀번호", example = "qwerqwer")
 	@NotBlank
+	@Size(min = 8, message = "비밀번호는 최소 8자 이상이어야 합니다.")
 	String password,
 
 	@Schema(description = "인증 이메일", example = "campus@campus.com")
