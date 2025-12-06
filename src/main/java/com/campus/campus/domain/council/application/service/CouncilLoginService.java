@@ -4,18 +4,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
+import com.campus.campus.domain.council.application.exception.CouncilIdAndVerifiedEmailInvalidException;
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.InvalidCouncilScopeException;
 import com.campus.campus.domain.council.application.exception.LoginIdAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.PasswordNotCorrectException;
+import com.campus.campus.domain.council.application.exception.SignupEmailNotFoundException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.mail.application.exception.EmailNotVerifiedException;
+import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.domain.mail.domain.repository.EmailVerificationRepository;
 import com.campus.campus.domain.school.application.exception.CollegeNotFoundException;
 import com.campus.campus.domain.school.application.exception.MajorNotFoundException;
@@ -27,6 +32,7 @@ import com.campus.campus.domain.school.domain.entity.School;
 import com.campus.campus.domain.school.domain.repository.CollegeRepository;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
+import com.campus.campus.global.config.SecurityConfig;
 import com.campus.campus.global.util.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +48,7 @@ public class CouncilLoginService {
 	private final StudentCouncilLoginMapper studentCouncilLoginMapper;
 	private final EmailVerificationRepository emailVerificationRepository;
 	private final JwtProvider jwtProvider;
+	private final SecurityConfig securityConfig;
 	private final PasswordEncoder passwordEncoder;
 
 	@Transactional
@@ -49,7 +56,7 @@ public class CouncilLoginService {
 		if (studentCouncilRepository.existsByEmail(studentCouncilSignUpRequest.email())) {
 			throw new EmailAlreadyExistsException();
 		}
-		checkVerifiedEmail(studentCouncilSignUpRequest.email());
+		checkVerifiedEmail(studentCouncilSignUpRequest.email(), VerificationType.SIGNUP);
 
 		if (studentCouncilRepository.existsByLoginId(studentCouncilSignUpRequest.loginId())) {
 			throw new LoginIdAlreadyExistsException();
@@ -83,6 +90,35 @@ public class CouncilLoginService {
 		String refreshToken = jwtProvider.createCouncilRefreshToken(studentCouncil.getId());
 
 		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
+	}
+
+	public StudentCouncilFindIdResponse findId(String email) {
+		if (!studentCouncilRepository.existsByEmail(email)) {
+			throw new SignupEmailNotFoundException();
+		}
+		checkVerifiedEmail(email, VerificationType.FIND_ID);
+
+		StudentCouncil studentCouncil = studentCouncilRepository.findByEmail(email)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		return studentCouncilLoginMapper.toStudentCouncilFindIdResponse(studentCouncil.getLoginId());
+	}
+
+	@Transactional
+	public void findPassword(StudentCouncilFindPasswordRequest studentCouncilFindPasswordRequest) {
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByLoginId(studentCouncilFindPasswordRequest.loginId())
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		if (!studentCouncilFindPasswordRequest.email().equals(studentCouncil.getEmail())) {
+			throw new CouncilIdAndVerifiedEmailInvalidException();
+		}
+		checkVerifiedEmail(studentCouncilFindPasswordRequest.email(), VerificationType.FIND_PASSWORD);
+
+		String newPassword = securityConfig.passwordEncoder().encode(studentCouncilFindPasswordRequest.password());
+		studentCouncil.changePassword(newPassword);
+
+		studentCouncilRepository.save(studentCouncil);
 	}
 
 	private record CouncilScope(
@@ -140,9 +176,9 @@ public class CouncilLoginService {
 		};
 	}
 
-	private void checkVerifiedEmail(String email) {
+	private void checkVerifiedEmail(String email, VerificationType verificationType) {
 		boolean exists = emailVerificationRepository
-			.existsByEmailAndVerifiedIsTrue(email);
+			.existsByEmailAndVerificationTypeAndVerifiedIsTrue(email, verificationType);
 
 		if (!exists) {
 			throw new EmailNotVerifiedException();
