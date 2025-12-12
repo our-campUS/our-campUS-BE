@@ -31,6 +31,7 @@ oauth:
     client-id: ${REST_API_KEY}
     client-secret: ${CLIENT_SECRET}
     redirect-uri: "http://localhost:8080/auth/login/kakao"
+    admin-key: ${ADMIN_KEY}
 
 jwt:
   access:
