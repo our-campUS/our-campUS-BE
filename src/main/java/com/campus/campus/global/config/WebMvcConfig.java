@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.campus.campus.global.auth.annotation.CurrentUserIdArgumentResolver;
+import com.campus.campus.global.annotation.CurrentUserIdArgumentResolver;
 
 import lombok.RequiredArgsConstructor;
 

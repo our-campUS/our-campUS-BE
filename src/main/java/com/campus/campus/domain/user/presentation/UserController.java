@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.service.UserService;
-import com.campus.campus.global.auth.annotation.CurrentUserId;
+import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
