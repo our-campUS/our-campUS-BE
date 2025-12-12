@@ -11,7 +11,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum UserResponseCode implements ResponseCodeInterface {
 	LOGIN_SUCCESS(200, HttpStatus.OK, "로그인에 성공했습니다."),
-	FIRST_PROFILE_WRITE(200, HttpStatus.OK, " 프로필(학교 정보) 입력에 성공했습니다.");
+	FIRST_PROFILE_WRITE(200, HttpStatus.OK, " 프로필(학교 정보) 입력에 성공했습니다."),
+	WITHDRAW_SUCCESS(200, HttpStatus.OK, "회원탈퇴에 성공했습니다.");
 
 	private final int code;
 	private final HttpStatus status;
