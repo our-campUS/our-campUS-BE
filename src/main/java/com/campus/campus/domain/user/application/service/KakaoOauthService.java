@@ -2,6 +2,7 @@ package com.campus.campus.domain.user.application.service;
 
 import org.springframework.stereotype.Service;
 
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -26,6 +27,7 @@ public class KakaoOauthService {
 
 	private static final String KAUTH_BASE_URL = "https://kauth.kakao.com";
 	private static final String KAPI_BASE_URL = "https://kapi.kakao.com";
+	private static final String UNLINK_URL = "https://kapi.kakao.com/v1/user/unlink";
 
 	private final KakaoOauthProperty kakaoOauthProperty;
 	private final UserRepository userRepository;
@@ -45,6 +47,18 @@ public class KakaoOauthService {
 		String refreshToken = jwtProvider.createRefreshToken(user.getId());
 
 		return loginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
+	}
+
+	@Transactional
+	public void withdraw(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (user.getKakaoId() != null) {
+			unlink(user.getKakaoId());
+		}
+
+		userRepository.delete(user);
 	}
 
 	private KakaoTokenResponse getToken(String authorizationCode) {
@@ -101,5 +115,25 @@ public class KakaoOauthService {
 				User newUser = userMapper.createUser(kakaoId, nickname, email, profileImage);
 				return userRepository.save(newUser);
 			});
+	}
+
+	private void unlink(Long kakaoId) {
+		RestClient client = RestClient.create();
+
+		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+		body.add("target_id_type", "user_id");
+		body.add("target_id", String.valueOf(kakaoId));
+
+		try {
+			client.post()
+				.uri(UNLINK_URL)
+				.header("Authorization", "KakaoAK " + kakaoOauthProperty.getAdminKey())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(body)
+				.retrieve()
+				.toBodilessEntity();
+		} catch (Exception e) {
+			System.err.println("카카오 연결 끊기 실패: " + e.getMessage());
+		}
 	}
 }
