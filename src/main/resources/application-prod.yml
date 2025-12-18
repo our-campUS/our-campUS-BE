@@ -25,6 +25,11 @@ spring:
           auth: true
           starttls:
             enable: true
+  data:
+    redis:
+      host: ENC(wMI0GBAvI1WHsnAjmwy3xA==)
+      port: 6379
+      password: ENC(df0ygTKEnYXV+nE10pYblw==)
 
 oauth:
   kakao:
