@@ -1,5 +1,6 @@
 package com.campus.campus.domain.user.application.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -11,6 +12,7 @@ import com.campus.campus.global.auth.application.dto.KakaoTokenResponse;
 import com.campus.campus.global.auth.application.dto.KakaoUserResponse;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.property.KakaoOauthProperty;
+import com.campus.campus.global.util.jwt.logout.application.RedisTokenService;
 import com.campus.campus.global.util.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -32,9 +34,13 @@ public class KakaoOauthService {
 	private final KakaoOauthProperty kakaoOauthProperty;
 	private final UserRepository userRepository;
 	private final JwtProvider jwtProvider;
+	private final RedisTokenService redisTokenService;
 
 	private final LoginMapper loginMapper;
 	private final UserMapper userMapper;
+
+	@Value("${jwt.refresh.expiration-seconds}") // yml에서 값 가져오기
+	private long refreshTokenExpirationSeconds;
 
 	@Transactional
 	public OauthLoginResponse login(String authorizationCode) {
@@ -45,6 +51,8 @@ public class KakaoOauthService {
 
 		String accessToken = jwtProvider.createAccessToken(user.getId());
 		String refreshToken = jwtProvider.createRefreshToken(user.getId());
+
+		redisTokenService.setRefreshToken("USER", String.valueOf(user.getId()), refreshToken, refreshTokenExpirationSeconds);
 
 		return loginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
 	}

@@ -16,6 +16,7 @@ import com.campus.campus.domain.council.domain.repository.StudentCouncilReposito
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.util.jwt.logout.application.RedisTokenService;
 import com.campus.campus.global.util.jwt.exception.ExpireJwtException;
 import com.campus.campus.global.util.jwt.exception.InvalidJwtException;
 
@@ -34,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtProvider jwtProvider;
 	private final UserRepository userRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
+	private final RedisTokenService redisTokenService;
 
 	@Override
 	protected void doFilterInternal(
@@ -44,6 +46,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String token = resolveToken(request);
 
 		if (token != null) {
+			if (redisTokenService.hasKeyBlackList(token)) {
+				throw new InvalidJwtException();
+			}
 			try {
 				Authentication authentication = createAuthentication(token, request);
 

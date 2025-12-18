@@ -8,6 +8,7 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.global.util.jwt.application.dto.AuthenticationInfo;
 import com.campus.campus.global.util.jwt.exception.InvalidJwtException;
 
 import io.jsonwebtoken.Claims;
@@ -98,5 +99,20 @@ public class JwtProvider {
 			throw new InvalidJwtException();
 		}
 		return Long.valueOf(claims.getSubject());
+	}
+
+	public Long getAccessTokenExpiration(String accessToken) {
+		Date expiration = jwtAuthenticator.parseAccessToken(accessToken).getPayload().getExpiration();
+		long now = new Date().getTime();
+		return (expiration.getTime() - now);
+	}
+
+	public AuthenticationInfo getAuthenticationInfo(String token) {
+		Claims claims = jwtAuthenticator.parseAccessToken(token).getPayload();
+
+		Long id = Long.valueOf(claims.getSubject());
+		String role = claims.get("role", String.class);
+
+		return new AuthenticationInfo(id, role);
 	}
 }
