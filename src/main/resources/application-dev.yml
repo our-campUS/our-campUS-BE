@@ -29,7 +29,7 @@ spring:
     redis:
       host: ENC(wMI0GBAvI1WHsnAjmwy3xA==)
       port: 6379
-      password: ENC(df0ygTKEnYXV+nE10pYblw==)
+      password: ENC(Ix+lo7WCNZdyhr3vfXPd3A==)
 
 oauth:
   kakao:
