@@ -12,7 +12,7 @@ import com.campus.campus.global.auth.application.dto.KakaoTokenResponse;
 import com.campus.campus.global.auth.application.dto.KakaoUserResponse;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.property.KakaoOauthProperty;
-import com.campus.campus.global.util.jwt.logout.application.RedisTokenService;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 import com.campus.campus.global.util.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;

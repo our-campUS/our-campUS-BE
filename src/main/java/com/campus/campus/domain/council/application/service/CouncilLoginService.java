@@ -34,7 +34,7 @@ import com.campus.campus.domain.school.domain.repository.CollegeRepository;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
 import com.campus.campus.global.config.SecurityConfig;
-import com.campus.campus.global.util.jwt.logout.application.RedisTokenService;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 import com.campus.campus.global.util.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;

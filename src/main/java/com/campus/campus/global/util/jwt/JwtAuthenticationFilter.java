@@ -16,7 +16,7 @@ import com.campus.campus.domain.council.domain.repository.StudentCouncilReposito
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
-import com.campus.campus.global.util.jwt.logout.application.RedisTokenService;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 import com.campus.campus.global.util.jwt.exception.ExpireJwtException;
 import com.campus.campus.global.util.jwt.exception.InvalidJwtException;
 

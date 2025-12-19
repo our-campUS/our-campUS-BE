@@ -14,7 +14,6 @@ import com.campus.campus.global.util.jwt.application.mapper.TokenReissueMapper;
 import com.campus.campus.global.util.jwt.JwtAuthenticator;
 import com.campus.campus.global.util.jwt.JwtProvider;
 import com.campus.campus.global.util.jwt.exception.InvalidJwtException;
-import com.campus.campus.global.util.jwt.logout.application.RedisTokenService;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;

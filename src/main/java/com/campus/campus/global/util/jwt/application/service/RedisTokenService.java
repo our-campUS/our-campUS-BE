@@ -1,4 +1,4 @@
-package com.campus.campus.global.util.jwt.logout.application;
+package com.campus.campus.global.util.jwt.application.service;
 
 import java.util.concurrent.TimeUnit;
 
