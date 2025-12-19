@@ -1,4 +1,4 @@
-package com.campus.campus.global.auth.annotation;
+package com.campus.campus.global.annotation;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;

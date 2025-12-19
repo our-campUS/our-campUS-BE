@@ -23,7 +23,8 @@ public class PermitUrlConfig {
 			"/auth/council/find/password/email/code/verify",
 			"/search/schools",
 			"/search/colleges",
-			"/search/majors"
+			"/search/majors",
+			"/jwt/token/reissue"
 		};
 	}
 }

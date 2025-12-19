@@ -1,4 +1,4 @@
-package com.campus.campus.global.auth.annotation;
+package com.campus.campus.global.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,5 +1,6 @@
 package com.campus.campus.domain.council.application.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ import com.campus.campus.domain.school.domain.repository.CollegeRepository;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
 import com.campus.campus.global.config.SecurityConfig;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 import com.campus.campus.global.util.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -50,6 +52,10 @@ public class CouncilLoginService {
 	private final JwtProvider jwtProvider;
 	private final SecurityConfig securityConfig;
 	private final PasswordEncoder passwordEncoder;
+	private final RedisTokenService redisTokenService;
+
+	@Value("${jwt.refresh.expiration-seconds}")
+	private long refreshTokenExpirationSeconds;
 
 	@Transactional
 	public StudentCouncilLoginResponse signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
@@ -75,6 +81,9 @@ public class CouncilLoginService {
 		String accessToken = jwtProvider.createCouncilAccessToken(studentCouncil.getId());
 		String refreshToken = jwtProvider.createCouncilRefreshToken(studentCouncil.getId());
 
+		redisTokenService.setRefreshToken("COUNCIL", String.valueOf(studentCouncil.getId()), refreshToken,
+			refreshTokenExpirationSeconds);
+
 		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
 	}
 
@@ -88,6 +97,9 @@ public class CouncilLoginService {
 
 		String accessToken = jwtProvider.createCouncilAccessToken(studentCouncil.getId());
 		String refreshToken = jwtProvider.createCouncilRefreshToken(studentCouncil.getId());
+
+		redisTokenService.setRefreshToken("COUNCIL", String.valueOf(studentCouncil.getId()), refreshToken,
+			refreshTokenExpirationSeconds);
 
 		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
 	}
