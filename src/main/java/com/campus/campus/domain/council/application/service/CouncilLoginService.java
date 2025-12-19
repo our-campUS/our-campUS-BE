@@ -98,6 +98,9 @@ public class CouncilLoginService {
 		String accessToken = jwtProvider.createCouncilAccessToken(studentCouncil.getId());
 		String refreshToken = jwtProvider.createCouncilRefreshToken(studentCouncil.getId());
 
+		redisTokenService.setRefreshToken("COUNCIL", String.valueOf(studentCouncil.getId()), refreshToken,
+			refreshTokenExpirationSeconds);
+
 		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
 	}
 
