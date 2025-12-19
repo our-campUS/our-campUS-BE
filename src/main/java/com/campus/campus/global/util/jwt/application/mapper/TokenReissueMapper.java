@@ -6,7 +6,7 @@ import com.campus.campus.global.util.jwt.application.dto.response.TokenReissueRe
 
 @Component
 public class TokenReissueMapper {
-	public TokenReissueResponse toOauthLoginResponse(String accessToken, String refreshToken) {
+	public TokenReissueResponse toTokenReissueResponse(String accessToken, String refreshToken) {
 		return new TokenReissueResponse(accessToken, refreshToken);
 	}
 }

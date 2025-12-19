@@ -65,7 +65,7 @@ public class TokenReissueService {
 
 		redisTokenService.setRefreshToken(role, subject, newRefreshToken, refreshTokenExpirationSeconds);
 
-		return tokenReissueMapper.toOauthLoginResponse(newAccessToken, newRefreshToken);
+		return tokenReissueMapper.toTokenReissueResponse(newAccessToken, newRefreshToken);
 	}
 
 	private void checkUserExists(String role, Long id) {
