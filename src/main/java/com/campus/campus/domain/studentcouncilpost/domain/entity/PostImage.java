@@ -2,7 +2,14 @@ package com.campus.campus.domain.studentcouncilpost.domain.entity;
 
 import static jakarta.persistence.FetchType.LAZY;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,10 +39,5 @@ public class PostImage {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "post_id")
     private StudentCouncilPost post;
-
-    public void markFinal(String finalUrl) {
-        this.finalUrl = finalUrl;
-        this.status = ImageStatus.FINAL;
-    }
 
 }

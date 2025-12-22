@@ -61,35 +61,6 @@ public class OciPresignedUrlService {
         }
     }
 
-    /**
-     * temp -> final 이동
-     */
-    public String moveTempToFinal(String tempUrl, Long postId) {
-
-        String tempObjectName = extractObjectNameFromUrl(tempUrl);
-
-        if (!tempObjectName.startsWith("temp/")) {
-            throw new IllegalArgumentException("Temp 이미지가 아닙니다: " + tempUrl);
-        }
-
-        String fileName = tempObjectName.substring("temp/".length());
-        String finalObjectName = "posts/" + postId + "/" + fileName;
-
-        try {
-            copyObject(tempObjectName, finalObjectName);
-            deleteObject(tempObjectName);
-        } catch (OciObjectCopyFailException | OciObjectDeleteFailException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error(">>> MOVE ERROR: {}", e.getMessage(), e);
-            throw new OciImageMoveFailException();
-        }
-
-        return ociConfig.fullObjectUrl(finalObjectName);
-    }
-    /**
-     * 이미지 삭제 (URL 기반)
-     */
     public void deleteImage(String imageUrl) {
         if (imageUrl == null || imageUrl.isEmpty()) {
             return;
@@ -125,18 +96,12 @@ public class OciPresignedUrlService {
 
         return ociConfig.fullObjectUrl(finalObjectName);
     }
-    /**
-     * presignedUrl → objectName 추출
-     */
     private String extractObjectNameFromUrl(String url) {
         int idx = url.indexOf("/o/");
         if (idx == -1) throw new IllegalArgumentException("올바르지 않은 URL: " + url);
         return url.substring(idx + 3);
     }
 
-    /**
-     * COPY
-     */
     private void copyObject(String source, String destination) {
         try {
             CopyObjectDetails details = CopyObjectDetails.builder()
@@ -156,7 +121,6 @@ public class OciPresignedUrlService {
             objectStorage.copyObject(request);
 
         } catch (BmcException e) {
-            // OCI SDK가 던지는 상세 에러 메시지를 로그로 찍습니다.
             log.error(">>> OCI SDK ERROR: Status={}, Code={}, Message={}",
                     e.getStatusCode(), e.getServiceCode(), e.getMessage());
             throw new OciObjectCopyFailException();

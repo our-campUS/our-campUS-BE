@@ -3,7 +3,6 @@ package com.campus.campus.domain.studentcouncilpost.presentation;
 import com.campus.campus.global.common.response.ResponseCodeInterface;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 @Getter
