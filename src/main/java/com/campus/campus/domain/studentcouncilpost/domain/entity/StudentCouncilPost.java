@@ -21,9 +21,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class StudentCouncilPost extends BaseEntity {
 
     @Id
@@ -75,4 +75,9 @@ public class StudentCouncilPost extends BaseEntity {
         if (thumbnailIcon != null)
             this.thumbnailIcon = thumbnailIcon;
     }
+
+    public void updateThumbnail(String finalUrl) {
+        this.thumbnailImageUrl = finalUrl;
+    }
+
 }

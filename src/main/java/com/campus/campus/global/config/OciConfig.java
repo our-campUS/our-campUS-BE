@@ -113,4 +113,15 @@ public class OciConfig {
             throw new RuntimeException("Failed to create temp PEM file", e);
         }
     }
+
+    public String fullObjectUrl(String objectName) {
+        return String.format(
+                "https://objectstorage.%s.oraclecloud.com/n/%s/b/%s/o/%s",
+                region,
+                namespace,
+                bucketName,
+                objectName
+        );
+    }
+
 }

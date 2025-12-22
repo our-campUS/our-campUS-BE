@@ -4,7 +4,7 @@ import com.campus.campus.global.common.exception.ApplicationException;
 
 public class OciPresignedUrlCreateFailException extends ApplicationException {
 
-    public OciPresignedUrlCreateFailException(String s) {
+    public OciPresignedUrlCreateFailException() {
         super(ErrorCode.OCI_PRESIGNED_URL_CREATE_FAILED);
     }
 }
