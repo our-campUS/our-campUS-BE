@@ -118,6 +118,9 @@ public class StudentCouncilPostService {
                 .category(dto.getCategory())
                 .title(dto.getTitle())
                 .content(dto.getContent())
+                .place(dto.getPlace())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
                 .thumbnailIcon(dto.getThumbnailIcon())
                 .build();
     }
