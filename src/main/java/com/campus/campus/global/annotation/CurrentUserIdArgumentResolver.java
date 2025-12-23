@@ -1,4 +1,4 @@
-package com.campus.campus.global.auth.annotation;
+package com.campus.campus.global.annotation;
 
 import com.campus.campus.global.util.jwt.StudentCouncilPrincipal;
 import org.springframework.core.MethodParameter;

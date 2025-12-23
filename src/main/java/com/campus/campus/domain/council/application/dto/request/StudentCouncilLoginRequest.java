@@ -2,6 +2,7 @@ package com.campus.campus.domain.council.application.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public record StudentCouncilLoginRequest(
 	@Schema(description = "회원가입할 이메일(id)", example = "campus@campus.com")

@@ -16,6 +16,7 @@ import com.campus.campus.domain.council.domain.repository.StudentCouncilReposito
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 import com.campus.campus.global.util.jwt.exception.ExpireJwtException;
 import com.campus.campus.global.util.jwt.exception.InvalidJwtException;
 
@@ -25,15 +26,18 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtAuthenticator jwtAuthenticator;
 	private final JwtProvider jwtProvider;
 	private final UserRepository userRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
+	private final RedisTokenService redisTokenService;
 
 	@Override
 	protected void doFilterInternal(
@@ -45,11 +49,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		if (token != null) {
 			try {
+				if (redisTokenService.hasKeyBlackList(token)) {
+					throw new InvalidJwtException();
+				}
 				Authentication authentication = createAuthentication(token, request);
 
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			} catch (InvalidJwtException | ExpireJwtException e) {
-
+				log.warn("JWT validation failed: {}", e.getMessage());
 			}
 		}
 

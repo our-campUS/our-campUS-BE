@@ -25,12 +25,18 @@ spring:
           auth: true
           starttls:
             enable: true
+  data:
+    redis:
+      host: ENC(wMI0GBAvI1WHsnAjmwy3xA==)
+      port: 6379
+      password: ENC(Ix+lo7WCNZdyhr3vfXPd3A==)
 
 oauth:
   kakao:
     client-id: ENC(G6gZHtP5QYz7+G6herJ1QCSbdVYgjtGnx8MhBSxLDFx26Yh0YQQ+uZ6RQ7wbvS17)
     client-secret: ENC(CG823WHRi6g4ybTc/VEOfd43c/RxVnIAE+AVpYWqrE/2xnGkvtjKkVSVVOXkXBXo)
     redirect-uri: "http://158.179.193.224:8080/auth/login/kakao"
+    admin-key: ENC(9UKWct9u8LPS0tNvuWSgqYHNN/2vvqDCYE4hRaqXsHJGCGMQY4/N1IOcbmi4IJTt)
 
 jwt:
   access:

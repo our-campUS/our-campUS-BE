@@ -1,7 +1,9 @@
 package com.campus.campus.domain.user.application.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -10,6 +12,7 @@ import com.campus.campus.global.auth.application.dto.KakaoTokenResponse;
 import com.campus.campus.global.auth.application.dto.KakaoUserResponse;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.property.KakaoOauthProperty;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 import com.campus.campus.global.util.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -26,13 +29,18 @@ public class KakaoOauthService {
 
 	private static final String KAUTH_BASE_URL = "https://kauth.kakao.com";
 	private static final String KAPI_BASE_URL = "https://kapi.kakao.com";
+	private static final String UNLINK_URL = "https://kapi.kakao.com/v1/user/unlink";
 
 	private final KakaoOauthProperty kakaoOauthProperty;
 	private final UserRepository userRepository;
 	private final JwtProvider jwtProvider;
+	private final RedisTokenService redisTokenService;
 
 	private final LoginMapper loginMapper;
 	private final UserMapper userMapper;
+
+	@Value("${jwt.refresh.expiration-seconds}") // yml에서 값 가져오기
+	private long refreshTokenExpirationSeconds;
 
 	@Transactional
 	public OauthLoginResponse login(String authorizationCode) {
@@ -44,7 +52,21 @@ public class KakaoOauthService {
 		String accessToken = jwtProvider.createAccessToken(user.getId());
 		String refreshToken = jwtProvider.createRefreshToken(user.getId());
 
+		redisTokenService.setRefreshToken("USER", String.valueOf(user.getId()), refreshToken, refreshTokenExpirationSeconds);
+
 		return loginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
+	}
+
+	@Transactional
+	public void withdraw(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (user.getKakaoId() != null) {
+			unlink(user.getKakaoId());
+		}
+
+		userRepository.delete(user);
 	}
 
 	private KakaoTokenResponse getToken(String authorizationCode) {
@@ -101,5 +123,25 @@ public class KakaoOauthService {
 				User newUser = userMapper.createUser(kakaoId, nickname, email, profileImage);
 				return userRepository.save(newUser);
 			});
+	}
+
+	private void unlink(Long kakaoId) {
+		RestClient client = RestClient.create();
+
+		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+		body.add("target_id_type", "user_id");
+		body.add("target_id", String.valueOf(kakaoId));
+
+		try {
+			client.post()
+				.uri(UNLINK_URL)
+				.header("Authorization", "KakaoAK " + kakaoOauthProperty.getAdminKey())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(body)
+				.retrieve()
+				.toBodilessEntity();
+		} catch (Exception e) {
+			System.err.println("카카오 연결 끊기 실패: " + e.getMessage());
+		}
 	}
 }

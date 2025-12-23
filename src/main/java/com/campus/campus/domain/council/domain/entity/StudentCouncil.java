@@ -60,12 +60,15 @@ public class StudentCouncil extends BaseEntity {
 	@JoinColumn(name = "major_id")
 	private Major major;
 
-
-	public String getFullCouncilName() {
-		StringBuilder fullName = new StringBuilder();
-		if (school != null) fullName.append(school.getSchoolName());
-		if (college != null) fullName.append(" ").append(college.getCollegeName());
-		if (major != null) fullName.append(" ").append(major.getMajorName());
-		return fullName.append(" 학생회").toString().trim();
+	public void changePassword(String newPassword) {
+		this.password = newPassword;
 	}
+
+    public String getFullCouncilName() {
+        StringBuilder fullName = new StringBuilder();
+        if (school != null) fullName.append(school.getSchoolName());
+        if (college != null) fullName.append(" ").append(college.getCollegeName());
+        if (major != null) fullName.append(" ").append(major.getMajorName());
+        return fullName.append(" 학생회").toString().trim();
+    }
 }
