@@ -42,4 +42,15 @@ public class EmailVerificationMapper {
 			.verified(false)
 			.build();
 	}
+
+	public EmailVerification changeEmailVerification(String email, String code,
+		LocalDateTime expireTime) {
+		return EmailVerification.builder()
+			.email(email)
+			.verificationType(VerificationType.CHANGE_EMAIL)
+			.code(code)
+			.expiresAt(expireTime)
+			.verified(false)
+			.build();
+	}
 }

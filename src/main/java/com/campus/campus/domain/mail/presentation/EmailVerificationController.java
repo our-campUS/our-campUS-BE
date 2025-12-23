@@ -1,5 +1,6 @@
 package com.campus.campus.domain.mail.presentation;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -77,6 +78,28 @@ public class EmailVerificationController {
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
 		emailVerificationService.verifyCode(emailVerificationConfirmRequest, VerificationType.FIND_PASSWORD);
+
+		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
+	}
+
+	@PreAuthorize("hasRole('COUNCIL')")
+	@PostMapping("/change/email/code")
+	@Operation(summary = "학생회 이메일 변경 인증 코드 전송")
+	public CommonResponse<Void> sendChangeEmailVerificationCodeEmail(
+		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
+	) {
+		emailVerificationService.sendChangeEmailVerificationCode(emailVerificationRequest.email());
+
+		return CommonResponse.success(EmailVerificationResponseCode.EMAIL_SEND_SUCCESS);
+	}
+
+	@PreAuthorize("hasRole('COUNCIL')")
+	@PostMapping("/change/email/code/verify")
+	@Operation(summary = "학생회 이메일 변경 코드 검증")
+	public CommonResponse<Void> verifyChangeEmailVerificationCode(
+		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
+	) {
+		emailVerificationService.verifyCode(emailVerificationConfirmRequest, VerificationType.CHANGE_EMAIL);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}

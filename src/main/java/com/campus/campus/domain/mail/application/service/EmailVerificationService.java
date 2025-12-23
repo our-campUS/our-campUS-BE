@@ -120,6 +120,36 @@ public class EmailVerificationService {
 	}
 
 	@Transactional
+	public void sendChangeEmailVerificationCode(String email) {
+		validateSchoolEmail(email);
+		String code = createCode();
+		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
+
+		EmailVerification emailVerification = emailVerificationMapper
+			.changeEmailVerification(email, code, expireTime);
+		emailVerificationRepository.save(emailVerification);
+
+		sendChangeEmailVerificationMail(email, code);
+	}
+
+	public void sendChangeEmailVerificationMail(String to, String code) {
+		SimpleMailMessage message = new SimpleMailMessage();
+		message.setTo(to);
+		message.setSubject("[Campus] 학생회 계정 이메일 변경 이메일 인증 코드");
+		message.setText(
+			"""
+				Campus 학생회 계정 이메일 변경을 위한 이메일 인증 코드입니다.
+				
+				인증 코드 : %s
+				
+				5분 이내에 입력해주세요.
+				""".formatted(code)
+		);
+
+		javaMailSender.send(message);
+	}
+
+	@Transactional
 	public void verifyCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
 		VerificationType verificationType) {
 		EmailVerification emailVerification = emailVerificationRepository.
