@@ -8,20 +8,13 @@ import com.campus.campus.global.oci.application.dto.response.PresignedUrlRespons
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,11 +26,8 @@ public class OciController {
     private final OciConfig ociConfig;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * Presigned PUT URL 생성 (FINAL 업로드 전용)
-     */
     @PostMapping("/presigned")
-    @Operation(summary = "이미지 업로드용 Presigned URL 생성")
+    @Operation(summary = "공통 이미지 업로드용 Presigned URL 생성")
     public CommonResponse<PresignedUrlResponseDto> createPresignedUrl(
             @RequestBody @Valid PresignedUrlRequestDto request
     ) {
@@ -72,37 +62,5 @@ public class OciController {
         );
     }
 
-    /**
-     * Presigned URL 업로드 테스트 (Swagger 전용)
-     * 실제 서비스 로직에서는 사용하지 않음
-     */
-    @PostMapping(
-            value = "/test-upload",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    @Operation(summary = "Presigned URL 업로드 테스트 (Swagger 전용)")
-    public CommonResponse<String> uploadImageTest(
-            @RequestParam String presignedUrl,
-            @RequestParam MultipartFile file
-    ) throws IOException {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(file.getContentType()));
-
-        HttpEntity<byte[]> requestEntity =
-                new HttpEntity<>(file.getBytes(), headers);
-
-        restTemplate.exchange(
-                presignedUrl,
-                HttpMethod.PUT,
-                requestEntity,
-                String.class
-        );
-
-        return CommonResponse.success(
-                OciResponseCode.PRESIGNED_URL_SUCCESS,
-                "업로드 성공"
-        );
-    }
 }
 

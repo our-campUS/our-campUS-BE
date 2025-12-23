@@ -51,12 +51,13 @@ public class StudentCouncilPostService {
                 ? dto.imageUrls()
                 : new ArrayList<>();
 
-        for (int i = 0; i < imageUrls.size(); i++) {
-            postImageRepository.save(PostImage.builder()
-                    .post(post)
-                    .imageUrl(imageUrls.get(i))
-                    .sequence(i + 1)
-                    .build());
+        for (String imageUrl : imageUrls) {
+            postImageRepository.save(
+                    PostImage.builder()
+                            .post(post)
+                            .imageUrl(imageUrl)
+                            .build()
+            );
         }
 
         return StudentCouncilPostMapper.toDetail(post, imageUrls, councilId);
@@ -141,12 +142,13 @@ public class StudentCouncilPostService {
                 ? dto.imageUrls()
                 : new ArrayList<>();
 
-        for (int i = 0; i < newUrls.size(); i++) {
-            postImageRepository.save(PostImage.builder()
-                    .post(post)
-                    .imageUrl(newUrls.get(i))
-                    .sequence(i + 1)
-                    .build());
+        for (String imageUrl : newUrls) {
+            postImageRepository.save(
+                    PostImage.builder()
+                            .post(post)
+                            .imageUrl(imageUrl)
+                            .build()
+            );
         }
 
         if (oldThumbnailUrl != null &&
@@ -189,7 +191,7 @@ public class StudentCouncilPostService {
 
     private List<String> getPostImageUrls(StudentCouncilPost post) {
         return postImageRepository
-                .findAllByPostOrderBySequenceAsc(post)
+                .findAllByPostOrderByIdAsc(post)
                 .stream()
                 .map(PostImage::getImageUrl)
                 .collect(Collectors.toList());

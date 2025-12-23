@@ -28,7 +28,6 @@ public class PostImage {
 
     @Column(nullable = false)
     private String imageUrl;
-    private int sequence;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "post_id")
