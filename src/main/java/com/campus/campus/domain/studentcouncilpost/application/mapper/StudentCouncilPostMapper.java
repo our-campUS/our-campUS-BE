@@ -7,7 +7,10 @@ import java.util.List;
 
 public class StudentCouncilPostMapper {
 
-    public static PostListItemResponseDto toListItem(StudentCouncilPost post) {
+    public static PostListItemResponseDto toListItem(
+            StudentCouncilPost post,
+            Long currentUserId
+    ) {
         return PostListItemResponseDto.builder()
                 .id(post.getId())
                 .category(post.getCategory())
@@ -16,13 +19,22 @@ public class StudentCouncilPostMapper {
                 .endDate(post.getEndDate())
                 .thumbnailImageUrl(post.getThumbnailImageUrl())
                 .thumbnailIcon(post.getThumbnailIcon())
+                .isWriter(post.getWriter().getId().equals(currentUserId))
                 .build();
     }
 
-    public static PostResponseDto toDetail(StudentCouncilPost post, List<String> finalImages) {
+    public static PostResponseDto toDetail(
+            StudentCouncilPost post,
+            List<String> finalImages,
+            Long currentUserId
+    ) {
+        var writer = post.getWriter();
+
         return PostResponseDto.builder()
                 .id(post.getId())
-                .writerId(post.getWriter().getId())
+                .writerId(writer.getId())
+                .writerName(writer.getFullCouncilName())
+                .isWriter(writer.getId().equals(currentUserId))
                 .category(post.getCategory())
                 .title(post.getTitle())
                 .content(post.getContent())

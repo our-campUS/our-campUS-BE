@@ -76,8 +76,4 @@ public class StudentCouncilPost extends BaseEntity {
             this.thumbnailIcon = thumbnailIcon;
     }
 
-    public void updateThumbnail(String finalUrl) {
-        this.thumbnailImageUrl = finalUrl;
-    }
-
 }

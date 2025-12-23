@@ -3,7 +3,6 @@ package com.campus.campus.domain.studentcouncilpost.application.service;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
-import com.campus.campus.domain.studentcouncilpost.application.dto.PostImageProcessEvent;
 import com.campus.campus.domain.studentcouncilpost.application.dto.PostListItemResponseDto;
 import com.campus.campus.domain.studentcouncilpost.application.dto.PostRequestDto;
 import com.campus.campus.domain.studentcouncilpost.application.dto.PostResponseDto;
@@ -21,11 +20,8 @@ import com.campus.campus.global.oci.OciPresignedUrlService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,17 +35,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class StudentCouncilPostService {
 
-    private static final int MIN_PAGE_INDEX = 0;
-    private static final int FIRST_SEQUENCE = 1;
-    private static final String TEMP_PATH = "/temp/";
-    private static final String POSTS_PATH_FORMAT = "/posts/%d/";
-
     private final StudentCouncilPostRepository postRepository;
     private final StudentCouncilRepository studentCouncilRepository;
     private final PostImageRepository postImageRepository;
     private final OciPresignedUrlService presignedUrlService;
-    private final ApplicationEventPublisher eventPublisher;
-
 
     @Transactional
     public PostResponseDto create(Long councilId, PostRequestDto dto) {
@@ -59,29 +48,54 @@ public class StudentCouncilPostService {
         StudentCouncilPost post = createPost(writer, dto);
         post = postRepository.save(post);
 
-        updatePostThumbnail(post, dto.getThumbnailImageUrl());
-        List<String> finalImageUrls = savePostImages(post, dto.getImageUrls());
+        List<String> imageUrls = dto.getImageUrls() != null
+                ? dto.getImageUrls()
+                : new ArrayList<>();
 
-        publishImageProcessEvent(post.getId(), dto.getThumbnailImageUrl(), dto.getImageUrls());
+        for (int i = 0; i < imageUrls.size(); i++) {
+            postImageRepository.save(PostImage.builder()
+                    .post(post)
+                    .imageUrl(imageUrls.get(i))
+                    .sequence(i + 1)
+                    .build());
+        }
 
-        return StudentCouncilPostMapper.toDetail(post, finalImageUrls);
+        return StudentCouncilPostMapper.toDetail(post, imageUrls, councilId);
+    }
+
+
+    @Transactional(readOnly = true)
+    public PostResponseDto findById(Long postId, Long currentUserId) {
+        StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        List<String> imageUrls = getPostImageUrls(post);
+
+        return StudentCouncilPostMapper.toDetail(post, imageUrls, currentUserId);
     }
 
     @Transactional(readOnly = true)
-    public PostResponseDto findById(Long postId) {
-        StudentCouncilPost post = findPost(postId);
-        List<String> finalImageUrls = getFinalImageUrls(post);
+    public Page<PostListItemResponseDto> findAll(
+            PostCategory category,
+            int page,
+            int size,
+            Long currentUserId
+    ) {
+        Pageable pageable = PageRequest.of(
+                Math.max(page - 1, 0),
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
 
-        return StudentCouncilPostMapper.toDetail(post, finalImageUrls);
+        Page<StudentCouncilPost> posts = (category == null)
+                ? postRepository.findAll(pageable)
+                : postRepository.findAllByCategory(category, pageable);
+
+        return posts.map(post ->
+                StudentCouncilPostMapper.toListItem(post, currentUserId)
+        );
     }
 
-    @Transactional(readOnly = true)
-    public Page<PostListItemResponseDto> findAll(PostCategory category, int page, int size) {
-        Pageable pageable = createPageable(page, size);
-        Page<StudentCouncilPost> posts = findPostsByCategory(category, pageable);
-
-        return posts.map(StudentCouncilPostMapper::toListItem);
-    }
 
     @Transactional
     public void delete(Long councilId, Long postId) {
@@ -90,27 +104,65 @@ public class StudentCouncilPostService {
 
         List<PostImage> postImages = postImageRepository.findAllByPost(post);
 
-        deleteImagesFromBucket(post.getThumbnailImageUrl(), postImages);
-        deletePostFromDatabase(post, postImages);
+        // 버킷에서 실제 파일 삭제
+        deleteImageSafely(post.getThumbnailImageUrl());
+        postImages.forEach(img -> deleteImageSafely(img.getImageUrl()));
 
-        log.info("게시글 및 관련 이미지 삭제 완료 - Post ID: {}", postId);
+        postImageRepository.deleteAll(postImages);
+        postRepository.delete(post);
     }
 
     @Transactional
-    public PostResponseDto update(Long councilId, Long postId, PostRequestDto dto) {
+    public PostResponseDto update(
+            Long councilId,
+            Long postId,
+            PostRequestDto dto
+    ) {
         StudentCouncilPost post = findPost(postId);
         validateWriter(councilId, post);
         validateThumbnail(dto);
 
-        ImageUpdateContext context = prepareImageUpdateContext(post);
-        updatePostContent(post, dto);
-        List<String> finalImageUrls = updatePostImages(post, dto.getImageUrls());
-        cleanupOldImages(context, post.getThumbnailImageUrl(), finalImageUrls);
+        String oldThumbnailUrl = post.getThumbnailImageUrl();
+        List<PostImage> oldImages = postImageRepository.findAllByPost(post);
 
-        publishImageProcessEvent(post.getId(), dto.getThumbnailImageUrl(), dto.getImageUrls());
+        post.update(
+                dto.getTitle(),
+                dto.getContent(),
+                dto.getPlace(),
+                dto.getStartDate(),
+                dto.getEndDate(),
+                dto.getThumbnailImageUrl(),
+                dto.getThumbnailIcon(),
+                dto.getCategory()
+        );
 
-        return StudentCouncilPostMapper.toDetail(post, finalImageUrls);
+        postImageRepository.deleteByPost(post);
+
+        List<String> newUrls = dto.getImageUrls() != null
+                ? dto.getImageUrls()
+                : new ArrayList<>();
+
+        for (int i = 0; i < newUrls.size(); i++) {
+            postImageRepository.save(PostImage.builder()
+                    .post(post)
+                    .imageUrl(newUrls.get(i))
+                    .sequence(i + 1)
+                    .build());
+        }
+
+        if (oldThumbnailUrl != null &&
+                !oldThumbnailUrl.equals(dto.getThumbnailImageUrl())) {
+            deleteImageSafely(oldThumbnailUrl);
+        }
+
+        oldImages.stream()
+                .map(PostImage::getImageUrl)
+                .filter(url -> !newUrls.contains(url))
+                .forEach(this::deleteImageSafely);
+
+        return StudentCouncilPostMapper.toDetail(post, newUrls, councilId);
     }
+
 
     private StudentCouncilPost createPost(StudentCouncil writer, PostRequestDto dto) {
         return StudentCouncilPost.builder()
@@ -121,167 +173,44 @@ public class StudentCouncilPostService {
                 .place(dto.getPlace())
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
+                .thumbnailImageUrl(dto.getThumbnailImageUrl())
                 .thumbnailIcon(dto.getThumbnailIcon())
                 .build();
     }
 
-    private void updatePostThumbnail(StudentCouncilPost post, String thumbnailUrl) {
-        String finalThumbnailUrl = convertToFinalUrl(thumbnailUrl, post.getId());
-        post.updateThumbnail(finalThumbnailUrl);
-    }
-
-    private List<String> savePostImages(StudentCouncilPost post, List<String> imageUrls) {
-        if (imageUrls == null || imageUrls.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        List<String> finalImageUrls = new ArrayList<>();
-        for (int i = 0; i < imageUrls.size(); i++) {
-            String finalUrl = convertToFinalUrl(imageUrls.get(i), post.getId());
-
-            postImageRepository.save(createPostImage(post, finalUrl, i + FIRST_SEQUENCE));
-            finalImageUrls.add(finalUrl);
-        }
-
-        return finalImageUrls;
-    }
-
-    private PostImage createPostImage(StudentCouncilPost post, String finalUrl, int sequence) {
-        return PostImage.builder()
-                .post(post)
-                .finalUrl(finalUrl)
-                .sequence(sequence)
-                .status(ImageStatus.FINAL)
-                .build();
-    }
-
-    private List<String> getFinalImageUrls(StudentCouncilPost post) {
-        return postImageRepository
-                .findAllByPostAndStatusOrderBySequenceAsc(post, ImageStatus.FINAL)
-                .stream()
-                .map(PostImage::getFinalUrl)
-                .collect(Collectors.toList());
-    }
-
-    private Pageable createPageable(int page, int size) {
-        int pageIndex = Math.max(page - 1, MIN_PAGE_INDEX);
-        return PageRequest.of(pageIndex, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-    }
-
-    private Page<StudentCouncilPost> findPostsByCategory(PostCategory category, Pageable pageable) {
-        return (category == null)
-                ? postRepository.findAll(pageable)
-                : postRepository.findAllByCategory(category, pageable);
-    }
-
-    private void deleteImagesFromBucket(String thumbnailUrl, List<PostImage> postImages) {
-        deleteImageSafely(thumbnailUrl);
-
-        postImages.stream()
-                .map(PostImage::getFinalUrl)
-                .forEach(this::deleteImageSafely);
-    }
-
     private void deleteImageSafely(String imageUrl) {
-        if (imageUrl == null) {
-            return;
-        }
-
+        if (imageUrl == null || imageUrl.isBlank()) return;
         try {
             presignedUrlService.deleteImage(imageUrl);
         } catch (Exception e) {
-            log.warn("OCI 파일 삭제 실패: {}", imageUrl, e);
+            log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
         }
     }
 
-    private void deletePostFromDatabase(StudentCouncilPost post, List<PostImage> postImages) {
-        postImageRepository.deleteAll(postImages);
-        postRepository.delete(post);
-    }
 
-    private ImageUpdateContext prepareImageUpdateContext(StudentCouncilPost post) {
-        List<PostImage> oldImages = postImageRepository.findAllByPost(post);
-        String oldThumbnailUrl = post.getThumbnailImageUrl();
-
-        return new ImageUpdateContext(oldThumbnailUrl, oldImages);
-    }
-
-    private void updatePostContent(StudentCouncilPost post, PostRequestDto dto) {
-        String finalThumbnailUrl = convertToFinalUrl(dto.getThumbnailImageUrl(), post.getId());
-
-        post.update(
-                dto.getTitle(),
-                dto.getContent(),
-                dto.getPlace(),
-                dto.getStartDate(),
-                dto.getEndDate(),
-                finalThumbnailUrl,
-                dto.getThumbnailIcon(),
-                dto.getCategory()
-        );
-    }
-
-    private List<String> updatePostImages(StudentCouncilPost post, List<String> imageUrls) {
-        postImageRepository.deleteByPost(post);
-        return savePostImages(post, imageUrls);
-    }
-
-    private void cleanupOldImages(ImageUpdateContext context, String newThumbnailUrl, List<String> newImageUrls) {
-        cleanupOldThumbnail(context.getOldThumbnailUrl(), newThumbnailUrl);
-        cleanupOldPostImages(context.getOldImages(), newImageUrls);
-    }
-
-    private void cleanupOldThumbnail(String oldThumbnailUrl, String newThumbnailUrl) {
-        if (oldThumbnailUrl != null && !oldThumbnailUrl.equals(newThumbnailUrl)) {
-            deleteImageSafely(oldThumbnailUrl);
-        }
-    }
-    private void cleanupOldPostImages(List<PostImage> oldImages, List<String> newImageUrls) {
-        oldImages.stream()
-                .map(PostImage::getFinalUrl)
-                .filter(url -> !newImageUrls.contains(url))
-                .forEach(this::deleteImageSafely);
-    }
-
-    private void publishImageProcessEvent(Long postId, String thumbnailUrl, List<String> imageUrls) {
-        eventPublisher.publishEvent(new PostImageProcessEvent(postId, thumbnailUrl, imageUrls));
-    }
-
-    private String convertToFinalUrl(String tempUrl, Long postId) {
-        if (tempUrl == null || !tempUrl.contains(TEMP_PATH)) {
-            return tempUrl;
-        }
-
-        String finalPath = String.format(POSTS_PATH_FORMAT, postId);
-        return tempUrl.replace(TEMP_PATH, finalPath);
+    private List<String> getPostImageUrls(StudentCouncilPost post) {
+        return postImageRepository
+                .findAllByPostOrderBySequenceAsc(post)
+                .stream()
+                .map(PostImage::getImageUrl)
+                .collect(Collectors.toList());
     }
 
     private StudentCouncil findStudentCouncil(Long councilId) {
-        return studentCouncilRepository.findById(councilId)
-                .orElseThrow(StudentCouncilNotFoundException::new);
+        return studentCouncilRepository.findById(councilId).orElseThrow(StudentCouncilNotFoundException::new);
     }
 
     private StudentCouncilPost findPost(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(PostNotFoundException::new);
+        return postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
     }
 
     private void validateWriter(Long councilId, StudentCouncilPost post) {
-        if (!post.getWriter().getId().equals(councilId)) {
-            throw new NotPostWriterException();
-        }
+        if (!post.getWriter().getId().equals(councilId)) throw new NotPostWriterException();
     }
 
     private void validateThumbnail(PostRequestDto dto) {
         if (dto.getThumbnailImageUrl() == null && dto.getThumbnailIcon() == null) {
             throw new ThumbnailRequiredException();
         }
-    }
-
-    @Getter
-    @AllArgsConstructor
-    private static class ImageUpdateContext {
-        private final String oldThumbnailUrl;
-        private final List<PostImage> oldImages;
     }
 }

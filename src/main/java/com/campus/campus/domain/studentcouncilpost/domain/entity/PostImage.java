@@ -2,6 +2,7 @@ package com.campus.campus.domain.studentcouncilpost.domain.entity;
 
 import static jakarta.persistence.FetchType.LAZY;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -27,9 +28,8 @@ public class PostImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String tempUrl;
-    private String finalUrl;
-
+    @Column(nullable = false)
+    private String imageUrl;
     private int sequence;
 
 
@@ -40,4 +40,10 @@ public class PostImage {
     @JoinColumn(name = "post_id")
     private StudentCouncilPost post;
 
+    @Builder
+    public PostImage(StudentCouncilPost post, String imageUrl, int sequence) {
+        this.post = post;
+        this.imageUrl = imageUrl;
+        this.sequence = sequence;
+    }
 }

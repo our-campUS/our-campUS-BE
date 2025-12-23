@@ -13,7 +13,9 @@ import com.oracle.bmc.objectstorage.requests.CopyObjectRequest;
 import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.responses.CreatePreauthenticatedRequestResponse;
+import java.net.URI;
 import java.util.Date;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,17 +28,20 @@ public class OciPresignedUrlService {
     private final ObjectStorage objectStorage;
     private final OciConfig ociConfig;
 
-    /**
-     * Presigned URL 생성
-     */
+    private static final long PRESIGNED_TTL_MS = 10 * 60 * 1000; // 10분
+
     public String createPresignedPutUrl(String objectName) {
         try {
             CreatePreauthenticatedRequestDetails details =
                     CreatePreauthenticatedRequestDetails.builder()
-                            .name("upload-" + objectName)
+                            .name("upload-" + UUID.randomUUID())
                             .objectName(objectName)
-                            .accessType(CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite)
-                            .timeExpires(new Date(System.currentTimeMillis() + 1000 * 60 * 10))
+                            .accessType(
+                                    CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite
+                            )
+                            .timeExpires(
+                                    new Date(System.currentTimeMillis() + PRESIGNED_TTL_MS)
+                            )
                             .build();
 
             CreatePreauthenticatedRequestRequest request =
@@ -56,95 +61,50 @@ public class OciPresignedUrlService {
             );
 
         } catch (Exception e) {
-            log.error(">>> PRESIGNED ERROR: {}", e.getMessage(), e);
+            log.error(">>> PRESIGNED URL CREATE ERROR", e);
             throw new OciPresignedUrlCreateFailException();
         }
     }
 
     public void deleteImage(String imageUrl) {
-        if (imageUrl == null || imageUrl.isEmpty()) {
-            return;
-        }
+        if (imageUrl == null || imageUrl.isBlank()) return;
 
-        try {
-            String objectName = extractObjectNameFromUrl(imageUrl);
-            deleteObject(objectName);
-            log.info("Deleted image: {}", objectName);
-        } catch (Exception e) {
-            log.error(">>> DELETE IMAGE ERROR: {}", e.getMessage(), e);
-        }
+        String objectName = extractObjectNameFromUrl(imageUrl);
+        deleteObject(objectName);
     }
-    public String copyTempToFinal(String tempUrl, Long postId) {
-        String tempObjectName = extractObjectNameFromUrl(tempUrl);
 
-        // 이미 final 경로라면 복사할 필요 없음
-        if (!tempObjectName.startsWith("temp/")) {
-            return tempUrl;
-        }
-
-        String fileName = tempObjectName.substring("temp/".length());
-        String finalObjectName = "posts/" + postId + "/" + fileName;
-
-        try {
-            // OCI 내부 복사 실행
-            copyObject(tempObjectName, finalObjectName);
-            log.info("OCI Copy Success: {} -> {}", tempObjectName, finalObjectName);
-        } catch (Exception e) {
-            log.error(">>> ASYNC COPY ERROR: {}", e.getMessage());
-            throw new OciImageMoveFailException();
-        }
-
-        return ociConfig.fullObjectUrl(finalObjectName);
-    }
     private String extractObjectNameFromUrl(String url) {
-        int idx = url.indexOf("/o/");
-        if (idx == -1) throw new IllegalArgumentException("올바르지 않은 URL: " + url);
-        return url.substring(idx + 3);
-    }
-
-    private void copyObject(String source, String destination) {
         try {
-            CopyObjectDetails details = CopyObjectDetails.builder()
-                    .sourceObjectName(source)
-                    .destinationObjectName(destination)
-                    .destinationBucket(ociConfig.getBucketName())
-                    .destinationNamespace(ociConfig.getNamespace())
-                    .destinationRegion(ociConfig.getRegion())
-                    .build();
-
-            CopyObjectRequest request = CopyObjectRequest.builder()
-                    .bucketName(ociConfig.getBucketName())
-                    .namespaceName(ociConfig.getNamespace())
-                    .copyObjectDetails(details)
-                    .build();
-
-            objectStorage.copyObject(request);
-
-        } catch (BmcException e) {
-            log.error(">>> OCI SDK ERROR: Status={}, Code={}, Message={}",
-                    e.getStatusCode(), e.getServiceCode(), e.getMessage());
-            throw new OciObjectCopyFailException();
+            URI uri = URI.create(url);
+            String path = uri.getPath();
+            int idx = path.indexOf("/o/");
+            if (idx == -1) {
+                throw new IllegalArgumentException("Invalid OCI object URL");
+            }
+            return path.substring(idx + 3);
         } catch (Exception e) {
-            log.error(">>> UNKNOWN COPY ERROR: {}", e.getMessage(), e);
-            throw new OciObjectCopyFailException();
+            throw new IllegalArgumentException("Invalid OCI object URL: " + url);
         }
     }
 
     /**
-     * DELETE
+     * OCI Object 삭제
      */
     private void deleteObject(String objectName) {
         try {
-            DeleteObjectRequest request = DeleteObjectRequest.builder()
-                    .bucketName(ociConfig.getBucketName())
-                    .namespaceName(ociConfig.getNamespace())
-                    .objectName(objectName)
-                    .build();
+            DeleteObjectRequest request =
+                    DeleteObjectRequest.builder()
+                            .bucketName(ociConfig.getBucketName())
+                            .namespaceName(ociConfig.getNamespace())
+                            .objectName(objectName)
+                            .build();
 
             objectStorage.deleteObject(request);
 
+            log.info("OCI object deleted: {}", objectName);
+
         } catch (Exception e) {
-            log.error(">>> DELETE ERROR: {}", e.getMessage(), e);
+            log.error(">>> OCI DELETE ERROR", e);
             throw new OciObjectDeleteFailException();
         }
     }

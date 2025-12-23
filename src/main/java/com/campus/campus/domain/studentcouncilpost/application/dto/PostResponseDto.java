@@ -12,6 +12,8 @@ import lombok.Getter;
 public class PostResponseDto {
     private Long id;
     private Long writerId;
+    private String writerName;
+    private Boolean isWriter;
 
     private PostCategory category;
     private String title;

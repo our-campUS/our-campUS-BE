@@ -44,21 +44,37 @@ public class StudentCouncilPostController {
 
     @GetMapping("/{postId}")
     @Operation(summary = "학생회 게시글 단건 조회")
-    public CommonResponse<PostResponseDto> getPost(@PathVariable Long postId) {
-        PostResponseDto responseDto = postService.findById(postId);
-        return CommonResponse.success(PostResponseCode.POST_READ_SUCCESS, responseDto);
+    public CommonResponse<PostResponseDto> getPost(
+            @PathVariable Long postId,
+            @CurrentUserId Long councilId
+    ) {
+        PostResponseDto responseDto =
+                postService.findById(postId, councilId);
+
+        return CommonResponse.success(
+                PostResponseCode.POST_READ_SUCCESS,
+                responseDto
+        );
     }
+
 
     @GetMapping
     @Operation(summary = "학생회 게시글 목록 조회")
     public CommonResponse<Page<PostListItemResponseDto>> getPostList(
             @RequestParam(required = false) PostCategory category,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "3") int size
+            @RequestParam(defaultValue = "3") int size,
+            @CurrentUserId Long councilId
     ) {
-        Page<PostListItemResponseDto> responseDto = postService.findAll(category, page, size);
-        return CommonResponse.success(PostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+        Page<PostListItemResponseDto> responseDto =
+                postService.findAll(category, page, size, councilId);
+
+        return CommonResponse.success(
+                PostResponseCode.POST_LIST_READ_SUCCESS,
+                responseDto
+        );
     }
+
 
     @PatchMapping("/{postId}")
     @Operation(summary = "학생회 게시글 수정")
