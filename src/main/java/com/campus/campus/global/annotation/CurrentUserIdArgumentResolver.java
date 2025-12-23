@@ -9,6 +9,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import com.campus.campus.global.util.jwt.StudentCouncilPrincipal;
 import com.campus.campus.global.util.jwt.UserPrincipal;
 import com.campus.campus.global.util.jwt.exception.UnAuthorizedException;
 
@@ -53,6 +54,12 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 			if (id == null && required) {
 				throw new UnAuthorizedException();
 			}
+			return id;
+		}
+
+		if (principal instanceof StudentCouncilPrincipal councilPrincipal) {
+			Long id = councilPrincipal.getCouncilId();
+			if (id == null && required) throw new UnAuthorizedException();
 			return id;
 		}
 
