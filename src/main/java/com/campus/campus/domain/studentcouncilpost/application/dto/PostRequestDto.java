@@ -3,9 +3,10 @@ package com.campus.campus.domain.studentcouncilpost.application.dto;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.ThumbnailIcon;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record PostRequestDto(
@@ -21,11 +22,13 @@ public record PostRequestDto(
 
         String place,
 
-        @JsonFormat(pattern = "yyyy-MM-dd")
-        LocalDate startDate,
+        @Schema(example = "2025-04-10T18:00")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+        LocalDateTime startDateTime,
 
-        @JsonFormat(pattern = "yyyy-MM-dd")
-        LocalDate endDate,
+        @Schema(example = "2025-04-30T23:59")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+        LocalDateTime endDateTime,
 
         // 썸네일 (둘 중 하나는 필수)
         String thumbnailImageUrl,

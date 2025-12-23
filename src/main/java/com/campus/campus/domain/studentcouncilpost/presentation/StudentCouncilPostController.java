@@ -9,7 +9,11 @@ import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,18 +43,70 @@ public class StudentCouncilPostController {
     @PostMapping
     @Operation(
             summary = "학생회 제휴/행사 게시글 생성",
-            description = "새로운 학생회 게시글을 작성합니다. \n\n" +
-                    "### [핵심 내용]\n" +
-                    "1. **카테고리 선택**: `PARTNERSHIP`(제휴) 또는 `EVENT`(행사) 중 하나를 반드시 선택해야 합니다.\n" +
-                    "2. **이미지 처리**: OCI Presigned URL을 통해 먼저 이미지를 업로드한 후, 반환된 **최종 URL**을 `thumbnailImageUrl` 및 `imageUrls` 리스트에 담아 보내야 합니다.\n" +
-                    "3. **권한**: 해당 학교/단과대/학과 소속 학생회 계정(`councilId`)만 작성이 가능합니다.\n" +
-                    "* `thumbnailImageUrl`이 **없을 경우**, 아래 아이콘 중 하나를 `thumbnailIcon`에 담아 보내야 합니다.\n" +
-                        "  - `CAFE`: 카페, 디저트 관련 제휴\n" +
-                        "  - `FOOD`: 식당, 술집 등 일반 음식점\n" +
-                        "  - `EVENT`: 축제, 공연, 대형 행사\n" +
-                        "  - `NOTICE`: 단순 공지사항, 안내\n" +
-                        "  - `SPORTS`: 체육대회, 스포츠 시합\n"
+            description =
+                    "새로운 학생회 게시글을 작성합니다.\n\n" +
+
+                            "### 📌 핵심 내용\n" +
+                            "1. **카테고리 선택**\n" +
+                            "   - `PARTNERSHIP`(제휴) 또는 `EVENT`(행사) 중 하나를 반드시 선택해야 합니다.\n\n" +
+
+                            "2. **카테고리별 날짜/시간 규칙**\n" +
+                            "   - `EVENT` (행사)\n" +
+                            "     - `startDateTime`은 **필수**입니다. (날짜 + 시간 포함)\n" +
+                            "     - `endDateTime`은 **허용되지 않습니다**.\n" +
+                            "   - `PARTNERSHIP` (제휴)\n" +
+                            "     - `startDateTime`, `endDateTime`은 **모두 필수**입니다.\n" +
+                            "     - 서버에서 시간은 자동 정규화됩니다.\n\n" +
+
+                            "3. **이미지 처리 방식**\n" +
+                            "   - OCI Presigned URL로 업로드 후 최종 URL 전달\n\n" +
+
+                            "4. **권한 제한**\n" +
+                            "   - 학생회 계정만 작성 가능",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PostRequestDto.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "EVENT 게시글",
+                                            summary = "행사 게시글",
+                                            value = """
+                                        {
+                                          "category": "EVENT",
+                                          "title": "2025 봄 축제",
+                                          "content": "중앙 동아리 연합 봄 축제",
+                                          "place": "대운동장",
+                                          "startDateTime": "2025-04-10T18:00",
+                                          "thumbnailIcon": "EVENT",
+                                          "imageUrls": []
+                                        }
+                                        """
+                                    ),
+                                    @ExampleObject(
+                                            name = "PARTNERSHIP 게시글",
+                                            summary = "제휴 게시글",
+                                            value = """
+                                        {
+                                          "category": "PARTNERSHIP",
+                                          "title": "카페 할인",
+                                          "content": "10% 할인",
+                                          "place": "OO카페",
+                                          "startDateTime": "2025-04-01T00:00",
+                                          "endDateTime": "2025-04-30T23:59",
+                                          "thumbnailIcon": "CAFE",
+                                          "imageUrls": []
+                                        }
+                                        """
+                                    )
+                            }
+                    )
+            )
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공")
+    })
     public CommonResponse<PostResponseDto> createPost(
             @CurrentUserId Long councilId,
             @RequestBody @Valid PostRequestDto requestDto
@@ -58,6 +114,7 @@ public class StudentCouncilPostController {
         PostResponseDto responseDto = postService.create(councilId, requestDto);
         return CommonResponse.success(PostResponseCode.POST_CREATE_SUCCESS, responseDto);
     }
+
 
     @GetMapping("/{postId}")
     @Operation(summary = "학생회 게시글 단건 조회")

@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,8 +45,8 @@ public class StudentCouncilPost extends BaseEntity {
 
     private String place;
 
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDateTime startDateTime;
+    private LocalDateTime endDateTime;
 
     private String thumbnailImageUrl;
 
@@ -56,8 +57,8 @@ public class StudentCouncilPost extends BaseEntity {
     public void update(String title,
                        String content,
                        String place,
-                       LocalDate startDate,
-                       LocalDate endDate,
+                       LocalDateTime startDateTime,
+                       LocalDateTime endDateTime,
                        String thumbnailImageUrl,
                        ThumbnailIcon thumbnailIcon,
                        PostCategory category) {
@@ -65,8 +66,8 @@ public class StudentCouncilPost extends BaseEntity {
         this.title = title;
         this.content = content;
         this.place = place;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        this.startDateTime = startDateTime;
+        this.endDateTime = endDateTime;
         this.category = category;
 
         if (thumbnailImageUrl != null)
@@ -74,6 +75,22 @@ public class StudentCouncilPost extends BaseEntity {
 
         if (thumbnailIcon != null)
             this.thumbnailIcon = thumbnailIcon;
+    }
+
+    public boolean isEvent() {
+        return this.category == PostCategory.EVENT;
+    }
+
+    public LocalDate getDisplayStartDate() {
+        return startDateTime != null ? startDateTime.toLocalDate() : null;
+    }
+
+    public LocalDate getDisplayEndDate() {
+        return endDateTime != null ? endDateTime.toLocalDate() : null;
+    }
+
+    public boolean isWrittenBy(Long userId) {
+        return writer != null && writer.getId().equals(userId);
     }
 
 }
