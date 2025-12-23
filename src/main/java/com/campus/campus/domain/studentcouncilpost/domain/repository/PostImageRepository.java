@@ -1,6 +1,5 @@
 package com.campus.campus.domain.studentcouncilpost.domain.repository;
 
-import com.campus.campus.domain.studentcouncilpost.domain.entity.ImageStatus;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.PostImage;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.StudentCouncilPost;
 import java.util.List;

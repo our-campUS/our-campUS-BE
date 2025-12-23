@@ -1,16 +1,15 @@
 package com.campus.campus.global.oci.application.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@Data
-@AllArgsConstructor
-public class PresignedUrlResponseDto {
+public record PresignedUrlResponseDto(
+        @Schema(description = "Presigned PUT 업로드 URL")
+        String uploadUrl,
 
-    //OCI에 PUT 업로드할 Presigned URL
-    private String uploadUrl;
+        @Schema(description = "업로드 완료 후 접근 가능한 이미지 URL")
+        String imageUrl
+) {}
 
-    //업로드 완료 후 최종 이미지 URL
-    private String imageUrl;
-}
 

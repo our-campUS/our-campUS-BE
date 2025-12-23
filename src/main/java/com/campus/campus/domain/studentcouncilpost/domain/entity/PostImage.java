@@ -4,8 +4,6 @@ import static jakarta.persistence.FetchType.LAZY;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -32,18 +30,8 @@ public class PostImage {
     private String imageUrl;
     private int sequence;
 
-
-    @Enumerated(EnumType.STRING)
-    private ImageStatus status;
-
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "post_id")
     private StudentCouncilPost post;
 
-    @Builder
-    public PostImage(StudentCouncilPost post, String imageUrl, int sequence) {
-        this.post = post;
-        this.imageUrl = imageUrl;
-        this.sequence = sequence;
-    }
 }

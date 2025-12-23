@@ -7,6 +7,7 @@ import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestD
 import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -38,9 +39,9 @@ public class OciController {
     @PostMapping("/presigned")
     @Operation(summary = "이미지 업로드용 Presigned URL 생성")
     public CommonResponse<PresignedUrlResponseDto> createPresignedUrl(
-            @RequestBody PresignedUrlRequestDto request
+            @RequestBody @Valid PresignedUrlRequestDto request
     ) {
-        String objectName = "uploads/" + UUID.randomUUID() + request.getExtension();
+        String objectName = "uploads/" + UUID.randomUUID() + request.resolveExtension();
 
         String uploadUrl = presignedUrlService.createPresignedPutUrl(objectName);
         String finalUrl = ociConfig.fullObjectUrl(objectName);
@@ -48,6 +49,26 @@ public class OciController {
         return CommonResponse.success(
                 OciResponseCode.PRESIGNED_URL_SUCCESS,
                 new PresignedUrlResponseDto(uploadUrl, finalUrl)
+        );
+    }
+
+    @PostMapping("/posts/images/presigned")
+    @Operation(
+            summary = "게시글 이미지 업로드용 Presigned URL 생성",
+            description = "게시글 본문/썸네일 이미지 업로드 전용 Presigned URL을 생성"
+    )
+    public CommonResponse<PresignedUrlResponseDto> createPostImagePresignedUrl(
+            @RequestBody @Valid PresignedUrlRequestDto request
+    ) {
+        String objectName =
+                "posts/images/" + UUID.randomUUID() + request.resolveExtension();
+
+        String uploadUrl = presignedUrlService.createPresignedPutUrl(objectName);
+        String imageUrl = ociConfig.fullObjectUrl(objectName);
+
+        return CommonResponse.success(
+                OciResponseCode.PRESIGNED_URL_SUCCESS,
+                new PresignedUrlResponseDto(uploadUrl, imageUrl)
         );
     }
 

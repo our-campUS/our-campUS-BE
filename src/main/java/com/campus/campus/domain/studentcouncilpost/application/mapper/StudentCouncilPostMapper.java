@@ -11,16 +11,17 @@ public class StudentCouncilPostMapper {
             StudentCouncilPost post,
             Long currentUserId
     ) {
-        return PostListItemResponseDto.builder()
-                .id(post.getId())
-                .category(post.getCategory())
-                .title(post.getTitle())
-                .place(post.getPlace())
-                .endDate(post.getEndDate())
-                .thumbnailImageUrl(post.getThumbnailImageUrl())
-                .thumbnailIcon(post.getThumbnailIcon())
-                .isWriter(post.getWriter().getId().equals(currentUserId))
-                .build();
+        return new PostListItemResponseDto(
+                post.getId(),
+                post.getCategory(),
+                post.getTitle(),
+                post.getPlace(),
+                post.getEndDate(),
+                post.getThumbnailImageUrl(),
+                post.getThumbnailIcon(),
+                currentUserId != null && post.getWriter().getId().equals(currentUserId)
+        );
+
     }
 
     public static PostResponseDto toDetail(

@@ -10,7 +10,6 @@ import com.campus.campus.domain.studentcouncilpost.application.exception.NotPost
 import com.campus.campus.domain.studentcouncilpost.application.exception.PostNotFoundException;
 import com.campus.campus.domain.studentcouncilpost.application.exception.ThumbnailRequiredException;
 import com.campus.campus.domain.studentcouncilpost.application.mapper.StudentCouncilPostMapper;
-import com.campus.campus.domain.studentcouncilpost.domain.entity.ImageStatus;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.PostImage;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.StudentCouncilPost;
@@ -48,8 +47,8 @@ public class StudentCouncilPostService {
         StudentCouncilPost post = createPost(writer, dto);
         post = postRepository.save(post);
 
-        List<String> imageUrls = dto.getImageUrls() != null
-                ? dto.getImageUrls()
+        List<String> imageUrls = dto.imageUrls() != null
+                ? dto.imageUrls()
                 : new ArrayList<>();
 
         for (int i = 0; i < imageUrls.size(); i++) {
@@ -126,20 +125,20 @@ public class StudentCouncilPostService {
         List<PostImage> oldImages = postImageRepository.findAllByPost(post);
 
         post.update(
-                dto.getTitle(),
-                dto.getContent(),
-                dto.getPlace(),
-                dto.getStartDate(),
-                dto.getEndDate(),
-                dto.getThumbnailImageUrl(),
-                dto.getThumbnailIcon(),
-                dto.getCategory()
+                dto.title(),
+                dto.content(),
+                dto.place(),
+                dto.startDate(),
+                dto.endDate(),
+                dto.thumbnailImageUrl(),
+                dto.thumbnailIcon(),
+                dto.category()
         );
 
         postImageRepository.deleteByPost(post);
 
-        List<String> newUrls = dto.getImageUrls() != null
-                ? dto.getImageUrls()
+        List<String> newUrls = dto.imageUrls() != null
+                ? dto.imageUrls()
                 : new ArrayList<>();
 
         for (int i = 0; i < newUrls.size(); i++) {
@@ -151,7 +150,7 @@ public class StudentCouncilPostService {
         }
 
         if (oldThumbnailUrl != null &&
-                !oldThumbnailUrl.equals(dto.getThumbnailImageUrl())) {
+                !oldThumbnailUrl.equals(dto.thumbnailImageUrl())) {
             deleteImageSafely(oldThumbnailUrl);
         }
 
@@ -167,14 +166,14 @@ public class StudentCouncilPostService {
     private StudentCouncilPost createPost(StudentCouncil writer, PostRequestDto dto) {
         return StudentCouncilPost.builder()
                 .writer(writer)
-                .category(dto.getCategory())
-                .title(dto.getTitle())
-                .content(dto.getContent())
-                .place(dto.getPlace())
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
-                .thumbnailImageUrl(dto.getThumbnailImageUrl())
-                .thumbnailIcon(dto.getThumbnailIcon())
+                .category(dto.category())
+                .title(dto.title())
+                .content(dto.content())
+                .place(dto.place())
+                .startDate(dto.startDate())
+                .endDate(dto.endDate())
+                .thumbnailImageUrl(dto.thumbnailImageUrl())
+                .thumbnailIcon(dto.thumbnailIcon())
                 .build();
     }
 
@@ -209,7 +208,7 @@ public class StudentCouncilPostService {
     }
 
     private void validateThumbnail(PostRequestDto dto) {
-        if (dto.getThumbnailImageUrl() == null && dto.getThumbnailIcon() == null) {
+        if (dto.thumbnailImageUrl() == null && dto.thumbnailIcon() == null) {
             throw new ThumbnailRequiredException();
         }
     }

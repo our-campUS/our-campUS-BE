@@ -12,36 +12,29 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class PostRequestDto {
+public record PostRequestDto(
 
-    @NotNull
-    private PostCategory category;
+        @NotNull
+        PostCategory category,
 
-    @NotBlank
-    private String title;
+        @NotBlank
+        String title,
 
-    @NotBlank
-    private String content;
+        @NotBlank
+        String content,
 
-    private String place;
+        String place,
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate startDate;
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        LocalDate startDate,
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate endDate;
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        LocalDate endDate,
 
-    // 썸네일 (둘 중 하나는 필수)
-    private String thumbnailImageUrl;  // temp URL
-    private ThumbnailIcon thumbnailIcon;
+        // 썸네일 (둘 중 하나는 필수)
+        String thumbnailImageUrl,
+        ThumbnailIcon thumbnailIcon,
 
-    // 본문 이미지들 (temp URL 리스트)
-    private List<String> imageUrls;  // 추가!
-}
-
-
-
+        // 본문 이미지들
+        List<String> imageUrls
+) {}
