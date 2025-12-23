@@ -5,7 +5,7 @@ import com.campus.campus.domain.studentcouncilpost.application.dto.PostRequestDt
 import com.campus.campus.domain.studentcouncilpost.application.dto.PostResponseDto;
 import com.campus.campus.domain.studentcouncilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.PostCategory;
-import com.campus.campus.global.auth.annotation.CurrentUserId;
+import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -32,12 +33,15 @@ public class OciConfig {
     private static final String OBJECT_STORAGE_URL_TEMPLATE =
             "https://objectstorage.%s.oraclecloud.com/n/%s/b/%s/o/%s";
 
+    @Getter
     @Value("${oci.region}")
     private String region;
 
+    @Getter
     @Value("${oci.namespace}")
     private String namespace;
 
+    @Getter
     @Value("${oci.bucket-name}")
     private String bucketName;
 
@@ -258,4 +262,5 @@ public class OciConfig {
             }
         }
     }
+
 }
