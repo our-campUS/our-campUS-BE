@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.mail.application.dto.request.EmailVerificationConfirmRequest;
 import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
+import com.campus.campus.domain.mail.application.exception.InvalidSchoolEmailException;
 import com.campus.campus.domain.mail.application.exception.VerificationCodeExpiredException;
 import com.campus.campus.domain.mail.application.exception.VerificationCodeNotMatchException;
 import com.campus.campus.domain.mail.application.mapper.EmailVerificationMapper;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class EmailVerificationService {
 	private static final long EXPIRE_TIME = 5L;
+	private static final String SCHOOL_EMAIL_SUFFIX = ".ac.kr";
 
 	private final JavaMailSender javaMailSender;
 	private final EmailVerificationMapper emailVerificationMapper;
@@ -31,6 +33,7 @@ public class EmailVerificationService {
 
 	@Transactional
 	public void sendSignUpVerificationCode(String email) {
+		validateSchoolEmail(email);
 		String code = createCode();
 		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
 
@@ -139,5 +142,11 @@ public class EmailVerificationService {
 	private String createCode() {
 		int code = ThreadLocalRandom.current().nextInt(100000, 1000000);
 		return String.valueOf(code);
+	}
+
+	private void validateSchoolEmail(String email) {
+		if (!email.endsWith(SCHOOL_EMAIL_SUFFIX)) {
+			throw new InvalidSchoolEmailException();
+		}
 	}
 }
