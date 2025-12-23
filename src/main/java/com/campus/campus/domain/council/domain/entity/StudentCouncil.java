@@ -63,4 +63,8 @@ public class StudentCouncil extends BaseEntity {
 	public void changePassword(String newPassword) {
 		this.password = newPassword;
 	}
+
+	public void changeEmail(String newEmail) {
+		this.email = newEmail;
+	}
 }
