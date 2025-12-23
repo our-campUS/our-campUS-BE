@@ -11,7 +11,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ErrorCode implements ErrorCodeInterface {
 	USER_NOT_FOUND(2100, HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다."),
-	USER_NOT_FIRST_LOGIN(2101,HttpStatus.BAD_REQUEST, "최초 로그인한 사용가 아닙니다.");
+	USER_NOT_FIRST_LOGIN(2101, HttpStatus.BAD_REQUEST, "최초 로그인한 사용가 아닙니다."),
+	NICKNAME_NOT_MATCH(2102, HttpStatus.BAD_REQUEST, "닉네임이 일치하지 않습니다.");
 
 	private final int code;
 	private final HttpStatus status;

@@ -3,6 +3,7 @@ package com.campus.campus.domain.user.application.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.campus.campus.domain.user.application.exception.NicknameNotMatchException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
@@ -52,15 +53,20 @@ public class KakaoOauthService {
 		String accessToken = jwtProvider.createAccessToken(user.getId());
 		String refreshToken = jwtProvider.createRefreshToken(user.getId());
 
-		redisTokenService.setRefreshToken("USER", String.valueOf(user.getId()), refreshToken, refreshTokenExpirationSeconds);
+		redisTokenService.setRefreshToken("USER", String.valueOf(user.getId()), refreshToken,
+			refreshTokenExpirationSeconds);
 
 		return loginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
 	}
 
 	@Transactional
-	public void withdraw(Long userId) {
+	public void withdraw(Long userId, String nickname) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
+
+		if (user.getNickname() == null || !user.getNickname().equals(nickname)) {
+			throw new NicknameNotMatchException();
+		}
 
 		if (user.getKakaoId() != null) {
 			unlink(user.getKakaoId());
