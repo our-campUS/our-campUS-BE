@@ -1,9 +1,12 @@
 package com.campus.campus.domain.user.application.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.campus.campus.domain.user.application.exception.NicknameNotMatchException;
+import com.campus.campus.domain.user.application.exception.SignupForbiddenException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
@@ -61,18 +64,37 @@ public class KakaoOauthService {
 
 	@Transactional
 	public void withdraw(Long userId, String nickname) {
-		User user = userRepository.findById(userId)
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
 		if (user.getNickname() == null || !user.getNickname().equals(nickname)) {
 			throw new NicknameNotMatchException();
 		}
 
-		if (user.getKakaoId() != null) {
-			unlink(user.getKakaoId());
-		}
+		user.delete(LocalDateTime.now());
+		userRepository.save(user);
+	}
 
-		userRepository.delete(user);
+	public boolean unlink(Long kakaoId) {
+		RestClient client = RestClient.create();
+
+		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+		body.add("target_id_type", "user_id");
+		body.add("target_id", String.valueOf(kakaoId));
+
+		try {
+			client.post()
+				.uri(UNLINK_URL)
+				.header("Authorization", "KakaoAK " + kakaoOauthProperty.getAdminKey())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(body)
+				.retrieve()
+				.toBodilessEntity();
+			return true;
+		} catch (Exception e) {
+			System.err.println("카카오 연결 끊기 실패: " + e.getMessage());
+			return false;
+		}
 	}
 
 	private KakaoTokenResponse getToken(String authorizationCode) {
@@ -124,30 +146,14 @@ public class KakaoOauthService {
 			? kakaoUserResponse.kakaoAccount().profile().profileImageUrl()
 			: null;
 
-		return userRepository.findByKakaoId(kakaoId)
+		return userRepository.findByKakaoIdAndDeletedAtIsNull(kakaoId)
 			.orElseGet(() -> {
+				if (userRepository.findByKakaoId(kakaoId).isPresent()) {
+					throw new SignupForbiddenException();
+				}
+
 				User newUser = userMapper.createUser(kakaoId, nickname, email, profileImage);
 				return userRepository.save(newUser);
 			});
-	}
-
-	private void unlink(Long kakaoId) {
-		RestClient client = RestClient.create();
-
-		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-		body.add("target_id_type", "user_id");
-		body.add("target_id", String.valueOf(kakaoId));
-
-		try {
-			client.post()
-				.uri(UNLINK_URL)
-				.header("Authorization", "KakaoAK " + kakaoOauthProperty.getAdminKey())
-				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-				.body(body)
-				.retrieve()
-				.toBodilessEntity();
-		} catch (Exception e) {
-			System.err.println("카카오 연결 끊기 실패: " + e.getMessage());
-		}
 	}
 }
