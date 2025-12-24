@@ -4,7 +4,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeEmailRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangePasswordRequest;
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
+import com.campus.campus.domain.council.application.exception.NewPasswordConfirmNotMatchException;
+import com.campus.campus.domain.council.application.exception.NewPasswordIsCurrentPasswordException;
+import com.campus.campus.domain.council.application.exception.PasswordNotCorrectException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
@@ -13,6 +17,7 @@ import com.campus.campus.domain.mail.application.exception.InvalidEmailVerificat
 import com.campus.campus.domain.mail.domain.entity.EmailVerification;
 import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.domain.mail.domain.repository.EmailVerificationRepository;
+import com.campus.campus.global.config.SecurityConfig;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class CouncilService {
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final EmailVerificationRepository emailVerificationRepository;
+	private final SecurityConfig securityConfig;
 
 	@Transactional
 	public void changeEmail(Long councilId, StudentCouncilChangeEmailRequest studentCouncilChangeEmailRequest) {
@@ -37,6 +43,33 @@ public class CouncilService {
 
 		studentCouncil.changeEmail(studentCouncilChangeEmailRequest.email());
 		emailVerification.use();
+		studentCouncilRepository.save(studentCouncil);
+	}
+
+	@Transactional
+	public void changePassword(Long councilId,
+		StudentCouncilChangePasswordRequest studentCouncilChangePasswordRequest) {
+		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		if (!securityConfig.passwordEncoder()
+			.matches(studentCouncilChangePasswordRequest.currentPassword(), studentCouncil.getPassword())) {
+			throw new PasswordNotCorrectException();
+		}
+
+		if (studentCouncilChangePasswordRequest.newPassword()
+			.equals(studentCouncilChangePasswordRequest.currentPassword())) {
+			throw new NewPasswordIsCurrentPasswordException();
+		}
+
+		if (!studentCouncilChangePasswordRequest.newPassword()
+			.equals(studentCouncilChangePasswordRequest.newPasswordConfirm())) {
+			throw new NewPasswordConfirmNotMatchException();
+		}
+
+		String newPassword = securityConfig.passwordEncoder().encode(studentCouncilChangePasswordRequest.newPassword());
+		studentCouncil.changePassword(newPassword);
+
 		studentCouncilRepository.save(studentCouncil);
 	}
 
