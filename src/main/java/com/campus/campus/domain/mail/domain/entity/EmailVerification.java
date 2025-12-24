@@ -33,6 +33,9 @@ public class EmailVerification extends BaseEntity {
 	@Column(name = "email", nullable = false)
 	private String email;
 
+	@Column(name = "council_id")
+	private Long councilId;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "verification_type", nullable = false, length = 20)
 	private VerificationType verificationType;
@@ -46,11 +49,18 @@ public class EmailVerification extends BaseEntity {
 	@Column(name = "verified", nullable = false)
 	private boolean verified;
 
+	@Column(name = "used", nullable = false)
+	private boolean used;
+
 	public boolean isExpired() {
 		return expiresAt.isBefore(LocalDateTime.now());
 	}
 
 	public void verify() {
 		this.verified = true;
+	}
+
+	public void use() {
+		this.used = true;
 	}
 }
