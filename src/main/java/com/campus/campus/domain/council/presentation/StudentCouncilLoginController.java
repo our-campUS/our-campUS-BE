@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilWithdrawRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.service.CouncilLoginService;
+import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,5 +61,14 @@ public class StudentCouncilLoginController {
 		councilLoginService.findPassword(studentCouncilFindPasswordRequest);
 
 		return CommonResponse.success(StudentCouncilResponseCode.FIND_PASSWORD_SUCCESS);
+	}
+
+	@PatchMapping("/withdraw")
+	@Operation(summary = "학생회 회원탈퇴 (soft delete 방식)")
+	public CommonResponse<Void> withdraw(@CurrentUserId Long councilId,
+		@Valid @RequestBody StudentCouncilWithdrawRequest studentCouncilWithdrawRequest) {
+		councilLoginService.withdrawCouncil(councilId, studentCouncilWithdrawRequest);
+
+		return CommonResponse.success(StudentCouncilResponseCode.COUNCIL_WITHDRAW_SUCCESS);
 	}
 }

@@ -18,7 +18,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 	SIGNUP_EMAIL_NOT_FOUND(2305, HttpStatus.NOT_FOUND, "해당 이메일로 가입된 아이디가 없습니다."),
 	ID_EMAIL_INVALID(2306, HttpStatus.BAD_REQUEST, "아이디에 해당하는 학생회의 이메일이 아닙니다."),
 	NEW_PASSWORD_IS_CURRENT_PASSWORD(2307, HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다."),
-	NEW_PASSWORD_CONFIRM_NOT_CORRECT(2308, HttpStatus.BAD_REQUEST, "비밀번호 재입력이 일치하지 않습니다.");
+	NEW_PASSWORD_CONFIRM_NOT_CORRECT(2308, HttpStatus.BAD_REQUEST, "비밀번호 재입력이 일치하지 않습니다."),
+	PRECAUTION_NOT_AGREE(2309, HttpStatus.BAD_REQUEST, "유의사항에 동의하지 않았습니다.");
 
 	private final int code;
 	private final HttpStatus status;

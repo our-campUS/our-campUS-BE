@@ -1,5 +1,7 @@
 package com.campus.campus.domain.council.application.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -8,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilWithdrawRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.exception.CouncilIdAndVerifiedEmailInvalidException;
@@ -15,6 +18,7 @@ import com.campus.campus.domain.council.application.exception.EmailAlreadyExists
 import com.campus.campus.domain.council.application.exception.InvalidCouncilScopeException;
 import com.campus.campus.domain.council.application.exception.LoginIdAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.PasswordNotCorrectException;
+import com.campus.campus.domain.council.application.exception.PrecautionNotAgreeException;
 import com.campus.campus.domain.council.application.exception.SignupEmailNotFoundException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
@@ -142,6 +146,24 @@ public class CouncilLoginService {
 
 		emailVerification.use();
 
+		studentCouncilRepository.save(studentCouncil);
+	}
+
+	@Transactional
+	public void withdrawCouncil(Long councilId, StudentCouncilWithdrawRequest studentCouncilWithdrawRequest) {
+		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		if (!studentCouncilWithdrawRequest.precaution()) {
+			throw new PrecautionNotAgreeException();
+		}
+
+		if (!securityConfig.passwordEncoder()
+			.matches(studentCouncilWithdrawRequest.password(), studentCouncil.getPassword())) {
+			throw new PasswordNotCorrectException();
+		}
+
+		studentCouncil.delete(LocalDateTime.now());
 		studentCouncilRepository.save(studentCouncil);
 	}
 

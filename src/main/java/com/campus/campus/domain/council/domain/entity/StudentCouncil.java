@@ -1,5 +1,7 @@
 package com.campus.campus.domain.council.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
@@ -59,6 +61,13 @@ public class StudentCouncil extends BaseEntity {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "major_id")
 	private Major major;
+
+	@Column(name = "deleted_at")
+	private LocalDateTime deletedAt;
+
+	public void delete(LocalDateTime now) {
+		this.deletedAt = now;
+	}
 
 	public void changePassword(String newPassword) {
 		this.password = newPassword;
