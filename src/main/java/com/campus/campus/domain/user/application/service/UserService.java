@@ -32,7 +32,7 @@ public class UserService {
 
 	@Transactional
 	public UserFirstProfileResponse writeUserProfile(Long userId, UserProfileRequest userProfileRequest) {
-		User user = userRepository.findById(userId)
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
 		if (!user.isProfileNotCompleted()) {

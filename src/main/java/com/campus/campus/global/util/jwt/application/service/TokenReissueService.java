@@ -70,11 +70,11 @@ public class TokenReissueService {
 
 	private void checkUserExists(String role, Long id) {
 		if ("USER".equals(role)) {
-			if (!userRepository.existsById(id)) {
+			if (!userRepository.existsByIdAndDeletedAtIsNull(id)) {
 				throw new UserNotFoundException();
 			}
 		} else if ("COUNCIL".equals(role)) {
-			if (!studentCouncilRepository.existsById(id)) {
+			if (!studentCouncilRepository.existsByIdAndDeletedAtIsNull(id)) {
 				throw new StudentCouncilNotFoundException();
 			}
 		}
