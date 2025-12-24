@@ -120,13 +120,13 @@ public class EmailVerificationService {
 	}
 
 	@Transactional
-	public void sendChangeEmailVerificationCode(String email) {
+	public void sendChangeEmailVerificationCode(Long councilId, String email) {
 		validateSchoolEmail(email);
 		String code = createCode();
 		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
 
 		EmailVerification emailVerification = emailVerificationMapper
-			.changeEmailVerification(email, code, expireTime);
+			.changeEmailVerification(councilId, email, code, expireTime);
 		emailVerificationRepository.save(emailVerification);
 
 		sendChangeEmailVerificationMail(email, code);
@@ -152,10 +152,26 @@ public class EmailVerificationService {
 	@Transactional
 	public void verifyCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
 		VerificationType verificationType) {
-		EmailVerification emailVerification = emailVerificationRepository.
-			findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(emailVerificationConfirmRequest.email(),
-				verificationType)
-			.orElseThrow(EmailVerificationNotFoundException::new);
+		verifyCodeInternal(emailVerificationConfirmRequest, verificationType, null);
+	}
+
+	@Transactional
+	public void verifyChangeEmailCode(Long councilId, EmailVerificationConfirmRequest emailVerificationConfirmRequest) {
+		verifyCodeInternal(emailVerificationConfirmRequest, VerificationType.CHANGE_EMAIL, councilId);
+	}
+
+	private void verifyCodeInternal(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
+		VerificationType verificationType, Long councilId) {
+		EmailVerification emailVerification;
+		if (councilId == null) {
+			emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(
+					emailVerificationConfirmRequest.email(), verificationType)
+				.orElseThrow(EmailVerificationNotFoundException::new);
+		} else {
+			emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeAndCouncilIdOrderByEmailVerificationIdDesc(
+					emailVerificationConfirmRequest.email(), verificationType, councilId)
+				.orElseThrow(EmailVerificationNotFoundException::new);
+		}
 
 		if (emailVerification.isExpired()) {
 			emailVerificationRepository.delete(emailVerification);

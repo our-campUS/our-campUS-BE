@@ -18,6 +18,7 @@ public class EmailVerificationMapper {
 			.code(code)
 			.expiresAt(expireTime)
 			.verified(false)
+			.used(false)
 			.build();
 	}
 
@@ -29,6 +30,7 @@ public class EmailVerificationMapper {
 			.code(code)
 			.expiresAt(expireTime)
 			.verified(false)
+			.used(false)
 			.build();
 	}
 
@@ -40,17 +42,20 @@ public class EmailVerificationMapper {
 			.code(code)
 			.expiresAt(expireTime)
 			.verified(false)
+			.used(false)
 			.build();
 	}
 
-	public EmailVerification changeEmailVerification(String email, String code,
+	public EmailVerification changeEmailVerification(Long councilId, String email, String code,
 		LocalDateTime expireTime) {
 		return EmailVerification.builder()
 			.email(email)
+			.councilId(councilId)
 			.verificationType(VerificationType.CHANGE_EMAIL)
 			.code(code)
 			.expiresAt(expireTime)
 			.verified(false)
+			.used(false)
 			.build();
 	}
 }

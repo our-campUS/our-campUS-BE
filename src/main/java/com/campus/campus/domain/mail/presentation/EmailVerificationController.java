@@ -11,6 +11,7 @@ import com.campus.campus.domain.mail.application.dto.request.EmailVerificationRe
 import com.campus.campus.domain.mail.application.service.EmailVerificationService;
 import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.global.common.response.CommonResponse;
+import com.campus.campus.global.annotation.CurrentUserId;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -86,9 +87,10 @@ public class EmailVerificationController {
 	@PostMapping("/change/email/code")
 	@Operation(summary = "학생회 이메일 변경 인증 코드 전송")
 	public CommonResponse<Void> sendChangeEmailVerificationCodeEmail(
+		@CurrentUserId Long councilId,
 		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
 	) {
-		emailVerificationService.sendChangeEmailVerificationCode(emailVerificationRequest.email());
+		emailVerificationService.sendChangeEmailVerificationCode(councilId, emailVerificationRequest.email());
 
 		return CommonResponse.success(EmailVerificationResponseCode.EMAIL_SEND_SUCCESS);
 	}
@@ -97,9 +99,10 @@ public class EmailVerificationController {
 	@PostMapping("/change/email/code/verify")
 	@Operation(summary = "학생회 이메일 변경 코드 검증")
 	public CommonResponse<Void> verifyChangeEmailVerificationCode(
+		@CurrentUserId Long councilId,
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
-		emailVerificationService.verifyCode(emailVerificationConfirmRequest, VerificationType.CHANGE_EMAIL);
+		emailVerificationService.verifyChangeEmailCode(councilId, emailVerificationConfirmRequest);
 
 		return CommonResponse.success(EmailVerificationResponseCode.VERIFY_SUCCESS);
 	}

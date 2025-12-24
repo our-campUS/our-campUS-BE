@@ -9,6 +9,8 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.mail.application.exception.EmailNotVerifiedException;
+import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
+import com.campus.campus.domain.mail.domain.entity.EmailVerification;
 import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.domain.mail.domain.repository.EmailVerificationRepository;
 
@@ -30,18 +32,24 @@ public class CouncilService {
 			throw new EmailAlreadyExistsException();
 		}
 
-		checkVerifiedEmail(studentCouncilChangeEmailRequest.email(), VerificationType.CHANGE_EMAIL);
+		EmailVerification emailVerification = getVerifiedChangeEmail(councilId,
+			studentCouncilChangeEmailRequest.email());
 
 		studentCouncil.changeEmail(studentCouncilChangeEmailRequest.email());
+		emailVerification.use();
 		studentCouncilRepository.save(studentCouncil);
 	}
 
-	private void checkVerifiedEmail(String email, VerificationType verificationType) {
-		boolean exists = emailVerificationRepository
-			.existsByEmailAndVerificationTypeAndVerifiedIsTrue(email, verificationType);
+	private EmailVerification getVerifiedChangeEmail(Long councilId, String email) {
+		EmailVerification emailVerification = emailVerificationRepository
+			.findTopByEmailAndVerificationTypeAndCouncilIdOrderByEmailVerificationIdDesc(
+				email, VerificationType.CHANGE_EMAIL, councilId)
+			.orElseThrow(EmailVerificationNotFoundException::new);
 
-		if (!exists) {
+		if (emailVerification.isExpired() || !emailVerification.isVerified() || emailVerification.isUsed()) {
 			throw new EmailNotVerifiedException();
 		}
+
+		return emailVerification;
 	}
 }
