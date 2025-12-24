@@ -97,7 +97,8 @@ public class CouncilLoginService {
 	}
 
 	public StudentCouncilLoginResponse login(StudentCouncilLoginRequest studentCouncilLoginRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findByLoginId(studentCouncilLoginRequest.loginId())
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByLoginIdAndDeletedAtIsNull(studentCouncilLoginRequest.loginId())
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!passwordEncoder.matches(studentCouncilLoginRequest.password(), studentCouncil.getPassword())) {
@@ -117,11 +118,11 @@ public class CouncilLoginService {
 	public StudentCouncilFindIdResponse findId(String email) {
 		EmailVerification emailVerification = getVerifiedEmail(email, VerificationType.FIND_ID);
 
-		if (!studentCouncilRepository.existsByEmail(email)) {
+		if (!studentCouncilRepository.existsByEmailAndDeletedAtIsNull(email)) {
 			throw new SignupEmailNotFoundException();
 		}
 
-		StudentCouncil studentCouncil = studentCouncilRepository.findByEmail(email)
+		StudentCouncil studentCouncil = studentCouncilRepository.findByEmailAndDeletedAtIsNull(email)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		emailVerification.use();
@@ -132,7 +133,7 @@ public class CouncilLoginService {
 	@Transactional
 	public void findPassword(StudentCouncilFindPasswordRequest studentCouncilFindPasswordRequest) {
 		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByLoginId(studentCouncilFindPasswordRequest.loginId())
+			.findByLoginIdAndDeletedAtIsNull(studentCouncilFindPasswordRequest.loginId())
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!studentCouncilFindPasswordRequest.email().equals(studentCouncil.getEmail())) {
@@ -151,7 +152,7 @@ public class CouncilLoginService {
 
 	@Transactional
 	public void withdrawCouncil(Long councilId, StudentCouncilWithdrawRequest studentCouncilWithdrawRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!studentCouncilWithdrawRequest.precaution()) {

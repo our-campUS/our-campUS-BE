@@ -31,9 +31,10 @@ public class CouncilService {
 
 	@Transactional
 	public void changeEmail(Long councilId, StudentCouncilChangeEmailRequest studentCouncilChangeEmailRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
+		//soft delete된 유저가 예상치 못하게 계정을 복구해야할 수도 있기에 이를 막기 위해 deleteAt이 존재하더라도 조회되게 한다.
 		if (studentCouncilRepository.existsByEmail(studentCouncilChangeEmailRequest.email())) {
 			throw new EmailAlreadyExistsException();
 		}
@@ -49,7 +50,7 @@ public class CouncilService {
 	@Transactional
 	public void changePassword(Long councilId,
 		StudentCouncilChangePasswordRequest studentCouncilChangePasswordRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!securityConfig.passwordEncoder()

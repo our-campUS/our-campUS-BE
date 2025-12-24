@@ -1,5 +1,6 @@
 package com.campus.campus.domain.council.presentation;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,6 +65,7 @@ public class StudentCouncilLoginController {
 	}
 
 	@PatchMapping("/withdraw")
+	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 회원탈퇴 (soft delete 방식)")
 	public CommonResponse<Void> withdraw(@CurrentUserId Long councilId,
 		@Valid @RequestBody StudentCouncilWithdrawRequest studentCouncilWithdrawRequest) {
