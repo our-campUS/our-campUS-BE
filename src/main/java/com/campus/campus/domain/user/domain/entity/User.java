@@ -1,5 +1,7 @@
 package com.campus.campus.domain.user.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
@@ -44,6 +46,9 @@ public class User extends BaseEntity {
 	@Column(name = "profile_image")
 	private String profileImage;
 
+	@Column(name = "deleted_at")
+	private LocalDateTime deletedAt;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "school_id")
 	private School school;
@@ -60,6 +65,10 @@ public class User extends BaseEntity {
 		this.school = school;
 		this.college = college;
 		this.major = major;
+	}
+
+	public void delete(LocalDateTime now) {
+		this.deletedAt = now;
 	}
 
 	public boolean isProfileNotCompleted() {
