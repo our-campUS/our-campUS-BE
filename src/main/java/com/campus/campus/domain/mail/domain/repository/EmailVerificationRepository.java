@@ -13,7 +13,4 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
 
 	Optional<EmailVerification> findTopByEmailAndVerificationTypeAndCouncilIdOrderByEmailVerificationIdDesc(
 		String email, VerificationType verificationType, Long councilId);
-
-	boolean existsByEmailAndVerificationTypeAndVerifiedIsTrue(String email, VerificationType verificationType);
-
 }

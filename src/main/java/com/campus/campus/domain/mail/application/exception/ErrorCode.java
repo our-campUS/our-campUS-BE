@@ -14,7 +14,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 	VERIFICATION_CODE_EXPIRED(2401, HttpStatus.REQUEST_TIMEOUT, "인증 코드가 만료되었습니다."),
 	VERIFICATION_CODE_NOT_MATCH(2402, HttpStatus.BAD_REQUEST, "인증 코드가 일치하지 않습니다."),
 	EMAIL_NOT_VERIFIED(2403, HttpStatus.UNAUTHORIZED, "이메일 인증이 되지 않았습니다."),
-	INVALID_SCHOOL_EMAIL(2404, HttpStatus.BAD_REQUEST, "학교 이메일(.ac.kr)만 인증 가능합니다.");
+	INVALID_SCHOOL_EMAIL(2404, HttpStatus.BAD_REQUEST, "학교 이메일(.ac.kr)만 인증 가능합니다."),
+	VERIFICATION_INVALID(2405, HttpStatus.BAD_REQUEST, "유효하지 않은 인증 정보입니다.");
 
 	private final int code;
 	private final HttpStatus status;

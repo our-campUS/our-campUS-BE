@@ -20,7 +20,9 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
-import com.campus.campus.domain.mail.application.exception.EmailNotVerifiedException;
+import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
+import com.campus.campus.domain.mail.application.exception.InvalidEmailVerificationException;
+import com.campus.campus.domain.mail.domain.entity.EmailVerification;
 import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.domain.mail.domain.repository.EmailVerificationRepository;
 import com.campus.campus.domain.school.application.exception.CollegeNotFoundException;
@@ -62,7 +64,8 @@ public class CouncilLoginService {
 		if (studentCouncilRepository.existsByEmail(studentCouncilSignUpRequest.email())) {
 			throw new EmailAlreadyExistsException();
 		}
-		checkVerifiedEmail(studentCouncilSignUpRequest.email(), VerificationType.SIGNUP);
+		EmailVerification emailVerification = getVerifiedEmail(
+			studentCouncilSignUpRequest.email(), VerificationType.SIGNUP);
 
 		if (studentCouncilRepository.existsByLoginId(studentCouncilSignUpRequest.loginId())) {
 			throw new LoginIdAlreadyExistsException();
@@ -84,6 +87,8 @@ public class CouncilLoginService {
 		redisTokenService.setRefreshToken("COUNCIL", String.valueOf(studentCouncil.getId()), refreshToken,
 			refreshTokenExpirationSeconds);
 
+		emailVerification.use();
+
 		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
 	}
 
@@ -104,14 +109,18 @@ public class CouncilLoginService {
 		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
 	}
 
+	@Transactional
 	public StudentCouncilFindIdResponse findId(String email) {
+		EmailVerification emailVerification = getVerifiedEmail(email, VerificationType.FIND_ID);
+
 		if (!studentCouncilRepository.existsByEmail(email)) {
 			throw new SignupEmailNotFoundException();
 		}
-		checkVerifiedEmail(email, VerificationType.FIND_ID);
 
 		StudentCouncil studentCouncil = studentCouncilRepository.findByEmail(email)
 			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		emailVerification.use();
 
 		return studentCouncilLoginMapper.toStudentCouncilFindIdResponse(studentCouncil.getLoginId());
 	}
@@ -125,10 +134,13 @@ public class CouncilLoginService {
 		if (!studentCouncilFindPasswordRequest.email().equals(studentCouncil.getEmail())) {
 			throw new CouncilIdAndVerifiedEmailInvalidException();
 		}
-		checkVerifiedEmail(studentCouncilFindPasswordRequest.email(), VerificationType.FIND_PASSWORD);
+		EmailVerification emailVerification = getVerifiedEmail(
+			studentCouncilFindPasswordRequest.email(), VerificationType.FIND_PASSWORD);
 
 		String newPassword = securityConfig.passwordEncoder().encode(studentCouncilFindPasswordRequest.password());
 		studentCouncil.changePassword(newPassword);
+
+		emailVerification.use();
 
 		studentCouncilRepository.save(studentCouncil);
 	}
@@ -188,12 +200,15 @@ public class CouncilLoginService {
 		};
 	}
 
-	private void checkVerifiedEmail(String email, VerificationType verificationType) {
-		boolean exists = emailVerificationRepository
-			.existsByEmailAndVerificationTypeAndVerifiedIsTrue(email, verificationType);
+	private EmailVerification getVerifiedEmail(String email, VerificationType verificationType) {
+		EmailVerification emailVerification = emailVerificationRepository
+			.findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(email, verificationType)
+			.orElseThrow(EmailVerificationNotFoundException::new);
 
-		if (!exists) {
-			throw new EmailNotVerifiedException();
+		if (emailVerification.isExpired() || !emailVerification.isVerified() || emailVerification.isUsed()) {
+			throw new InvalidEmailVerificationException();
 		}
+
+		return emailVerification;
 	}
 }
