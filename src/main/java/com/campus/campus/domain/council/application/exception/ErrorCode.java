@@ -19,7 +19,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 	ID_EMAIL_INVALID(2306, HttpStatus.BAD_REQUEST, "아이디에 해당하는 학생회의 이메일이 아닙니다."),
 	NEW_PASSWORD_IS_CURRENT_PASSWORD(2307, HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다."),
 	NEW_PASSWORD_CONFIRM_NOT_CORRECT(2308, HttpStatus.BAD_REQUEST, "비밀번호 재입력이 일치하지 않습니다."),
-	PRECAUTION_NOT_AGREE(2309, HttpStatus.BAD_REQUEST, "유의사항에 동의하지 않았습니다.");
+	PRECAUTION_NOT_AGREE(2309, HttpStatus.BAD_REQUEST, "유의사항에 동의하지 않았습니다."),
+	COUNCIL_SIGNUP_FORBIDDEN_NOW(2310, HttpStatus.FORBIDDEN,"현재 학생회 회원가입할 수 없는 계정입니다.");
 
 	private final int code;
 	private final HttpStatus status;

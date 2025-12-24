@@ -14,6 +14,7 @@ import com.campus.campus.domain.council.application.dto.request.StudentCouncilWi
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.exception.CouncilIdAndVerifiedEmailInvalidException;
+import com.campus.campus.domain.council.application.exception.CouncilSignupForbiddenException;
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.InvalidCouncilScopeException;
 import com.campus.campus.domain.council.application.exception.LoginIdAlreadyExistsException;
@@ -65,9 +66,13 @@ public class CouncilLoginService {
 
 	@Transactional
 	public StudentCouncilLoginResponse signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
+		if(studentCouncilRepository.existsByEmailAndDeletedAtIsNotNull(studentCouncilSignUpRequest.email())){
+			throw new CouncilSignupForbiddenException();
+		}
 		if (studentCouncilRepository.existsByEmail(studentCouncilSignUpRequest.email())) {
 			throw new EmailAlreadyExistsException();
 		}
+
 		EmailVerification emailVerification = getVerifiedEmail(
 			studentCouncilSignUpRequest.email(), VerificationType.SIGNUP);
 

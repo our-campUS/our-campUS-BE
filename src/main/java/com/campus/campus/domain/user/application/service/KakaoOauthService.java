@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.campus.campus.domain.user.application.exception.NicknameNotMatchException;
-import com.campus.campus.domain.user.application.exception.SignupForbiddenException;
+import com.campus.campus.domain.user.application.exception.UserSignupForbiddenException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
@@ -149,7 +149,7 @@ public class KakaoOauthService {
 		return userRepository.findByKakaoIdAndDeletedAtIsNull(kakaoId)
 			.orElseGet(() -> {
 				if (userRepository.findByKakaoId(kakaoId).isPresent()) {
-					throw new SignupForbiddenException();
+					throw new UserSignupForbiddenException();
 				}
 
 				User newUser = userMapper.createUser(kakaoId, nickname, email, profileImage);
