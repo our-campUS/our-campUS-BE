@@ -152,27 +152,24 @@ public class EmailVerificationService {
 	@Transactional
 	public void verifyCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
 		VerificationType verificationType) {
-		verifyCodeInternal(emailVerificationConfirmRequest, verificationType, null);
+		EmailVerification emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(
+				emailVerificationConfirmRequest.email(), verificationType)
+			.orElseThrow(EmailVerificationNotFoundException::new);
+
+		verifyCodeInternal(emailVerificationConfirmRequest, emailVerification);
 	}
 
 	@Transactional
 	public void verifyChangeEmailCode(Long councilId, EmailVerificationConfirmRequest emailVerificationConfirmRequest) {
-		verifyCodeInternal(emailVerificationConfirmRequest, VerificationType.CHANGE_EMAIL, councilId);
+		EmailVerification emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeAndCouncilIdOrderByEmailVerificationIdDesc(
+				emailVerificationConfirmRequest.email(), VerificationType.CHANGE_EMAIL, councilId)
+			.orElseThrow(EmailVerificationNotFoundException::new);
+
+		verifyCodeInternal(emailVerificationConfirmRequest, emailVerification);
 	}
 
 	private void verifyCodeInternal(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
-		VerificationType verificationType, Long councilId) {
-		EmailVerification emailVerification;
-		if (councilId == null) {
-			emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(
-					emailVerificationConfirmRequest.email(), verificationType)
-				.orElseThrow(EmailVerificationNotFoundException::new);
-		} else {
-			emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeAndCouncilIdOrderByEmailVerificationIdDesc(
-					emailVerificationConfirmRequest.email(), verificationType, councilId)
-				.orElseThrow(EmailVerificationNotFoundException::new);
-		}
-
+		EmailVerification emailVerification) {
 		if (emailVerification.isExpired()) {
 			emailVerificationRepository.delete(emailVerification);
 			throw new VerificationCodeExpiredException();
