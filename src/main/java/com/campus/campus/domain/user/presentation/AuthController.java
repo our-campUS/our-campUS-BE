@@ -1,6 +1,6 @@
 package com.campus.campus.domain.user.presentation;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +31,7 @@ public class AuthController {
 		return CommonResponse.success(UserResponseCode.LOGIN_SUCCESS, response);
 	}
 
-	@DeleteMapping("/withdraw/users")
+	@PatchMapping("/withdraw/users")
 	@Operation(summary = "카카오 유저 회원탈퇴")
 	public CommonResponse<Void> withdraw(@CurrentUserId Long userId,
 		@RequestBody @Valid UserWithdrawRequest userWithdrawRequest) {
