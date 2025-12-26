@@ -25,7 +25,7 @@ public class StudentCouncilController {
 
 	@PatchMapping("/change/email")
 	@Operation(summary = "학생회 이메일 변경")
-	CommonResponse<Void> changeEmail(@CurrentUserId Long councilId,
+	public CommonResponse<Void> changeEmail(@CurrentUserId Long councilId,
 		@Valid @RequestBody StudentCouncilChangeEmailRequest studentCouncilChangeEmailRequest) {
 		councilService.changeEmail(councilId, studentCouncilChangeEmailRequest);
 
@@ -34,7 +34,7 @@ public class StudentCouncilController {
 
 	@PatchMapping("/change/password")
 	@Operation(summary = "학생회 비밀번호 변경")
-	CommonResponse<Void> changePassword(@CurrentUserId Long councilId,
+	public CommonResponse<Void> changePassword(@CurrentUserId Long councilId,
 		@Valid @RequestBody StudentCouncilChangePasswordRequest studentCouncilChangePasswordRequest) {
 		councilService.changePassword(councilId, studentCouncilChangePasswordRequest);
 
