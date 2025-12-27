@@ -1,6 +1,6 @@
 package com.campus.campus.domain.studentcouncilpost.domain.entity;
 
-import static jakarta.persistence.FetchType.LAZY;
+import static jakarta.persistence.FetchType.*;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,15 +22,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class PostImage {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false)
-    private String imageUrl;
+	@Column(nullable = false)
+	private String imageUrl;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "post_id")
-    private StudentCouncilPost post;
+	@ManyToOne(fetch = LAZY)
+	@JoinColumn(name = "post_id")
+	private StudentCouncilPost post;
 
 }
