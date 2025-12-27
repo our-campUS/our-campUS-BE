@@ -1,7 +1,6 @@
 package com.campus.campus.domain.studentcouncilpost.presentation;
 
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,11 +10,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campus.campus.domain.studentcouncilpost.application.dto.response.PostListItemResponseDto;
 import com.campus.campus.domain.studentcouncilpost.application.dto.request.PostRequestDto;
+import com.campus.campus.domain.studentcouncilpost.application.dto.response.PostListItemResponseDto;
 import com.campus.campus.domain.studentcouncilpost.application.dto.response.PostResponseDto;
 import com.campus.campus.domain.studentcouncilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.PostCategory;
@@ -170,7 +168,6 @@ public class StudentCouncilPostController {
 
 	@DeleteMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 삭제")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public CommonResponse<Void> deletePost(
 		@CurrentUserId Long councilId,
 		@PathVariable Long postId
