@@ -101,6 +101,38 @@ public class JwtProvider {
 		return Long.valueOf(claims.getSubject());
 	}
 
+	public String createManagerAccessToken(Long managerId) {
+		Instant now = Instant.now();
+		return Jwts.builder()
+			.subject(String.valueOf(managerId))
+			.issuedAt(Date.from(now))
+			.expiration(Date.from(now.plusSeconds(accessTokenExpirationSeconds)))
+			.claim("role", "MANAGER")
+			.signWith(accessKey)
+			.compact();
+	}
+
+	public String createManagerRefreshToken(Long managerId) {
+		Instant now = Instant.now();
+		return Jwts.builder()
+			.subject(String.valueOf(managerId))
+			.issuedAt(Date.from(now))
+			.expiration(Date.from(now.plusSeconds(refreshTokenExpirationSeconds)))
+			.claim("role", "MANAGER")
+			.signWith(refreshKey)
+			.compact();
+	}
+
+	public Long getManagerIdFromAccessToken(String token) {
+		Claims claims = jwtAuthenticator.parseAccessToken(token).getPayload();
+		String role = claims.get("role", String.class);
+		if (!"MANAGER".equals(role)) {
+			throw new InvalidJwtException();
+		}
+
+		return Long.valueOf(claims.getSubject());
+	}
+
 	public Long getAccessTokenExpiration(String accessToken) {
 		Date expiration = jwtAuthenticator.parseAccessToken(accessToken).getPayload().getExpiration();
 		long now = new Date().getTime();
