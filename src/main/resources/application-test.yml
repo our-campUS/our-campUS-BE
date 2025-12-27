@@ -1,0 +1,61 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:um;MODE=MYSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: illta.campus
+    password: abcd efgh ijkl mnop
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 6316
+
+oauth:
+  kakao:
+    client-id: 2fb31q4aeb2877d3408aac80b3ddb2c5
+    client-secret: vMAvuShaneiT1Kovp8CclDJRDOFczt12
+    redirect-uri: "http://localhost:8080/auth/login/kakao"
+
+jwt:
+  access:
+    secret: qaed2N33cbYOuhiCT1wDD4YA4Tzq/z9Wc0ZrlEUBK4KeguIBIcDjs9N6Ox09vbVhhI1zxsd1n0GSHuqllHl8SQ==
+    expiration-seconds: 3600
+  refresh:
+    secret: /QuR112ZbzLQwelZSdb1pJWutiBYEbjRmxf4AyGcPDq9rtyuDzean8abRxTxvWdvbghF+cMCKAkEF5atidssJA==
+    expiration-seconds: 1209600
+oci:
+  enabled: false
+  region: dummy
+  namespace: dummy
+  bucket-name: dummy
+  tenancy-ocid: dummy
+  user-ocid: dummy
+  fingerprint: dummy
+  private-key: dummy
+  passphrase: ""
+
+server-uri: http://localhost
+
+management:
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: false

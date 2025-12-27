@@ -41,7 +41,7 @@ public class PresignedUrlService {
 		return new PresignedUrlResponseDto(uploadUrl, imageUrl);
 	}
 
-	public String createPresignedPutUrl(String objectName) {
+	private String createPresignedPutUrl(String objectName) {
 		try {
 			CreatePreauthenticatedRequestRequest request =
 				PresignedUrlMapper.toPutObjectRequest(

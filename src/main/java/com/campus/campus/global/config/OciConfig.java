@@ -13,7 +13,6 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
@@ -66,7 +65,6 @@ public class OciConfig {
 	private Path keyFilePath;
 
 	@Bean
-	@Scope("singleton")
 	public ObjectStorage objectStorage() {
 		log.info(">>> [OCI] Initializing ObjectStorage client...");
 
@@ -90,10 +88,11 @@ public class OciConfig {
 					.region(Region.fromRegionId(region))
 					.build();
 
-			ObjectStorage client = new ObjectStorageClient(provider);
+			ObjectStorage client = ObjectStorageClient.builder()
+				.region(Region.fromRegionId(region))
+				.build(provider);
 
 			log.info(">>> [OCI] ObjectStorage client initialized successfully for region: {}", region);
-
 			return client;
 
 		} catch (Exception e) {
@@ -108,9 +107,7 @@ public class OciConfig {
 			throw new IllegalArgumentException("Private key cannot be null or empty");
 		}
 
-		String normalized = pem
-			.replace("\\n", "\n")
-			.trim();
+		String normalized = pem.replace("\\n", "\n").trim();
 
 		String firstLine = normalized.lines().findFirst().orElse("");
 		String lastLine = normalized.lines().reduce((a, b) -> b).orElse("");

@@ -19,9 +19,7 @@ public class PresignedUrlMapper {
 			CreatePreauthenticatedRequestDetails.builder()
 				.name("upload-" + UUID.randomUUID())
 				.objectName(objectName)
-				.accessType(
-					CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite
-				)
+				.accessType(CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite)
 				.timeExpires(new Date(expiresAtMillis))
 				.build();
 
