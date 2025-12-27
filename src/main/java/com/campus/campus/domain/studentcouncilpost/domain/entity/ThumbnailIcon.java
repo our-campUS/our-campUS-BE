@@ -7,4 +7,3 @@ public enum ThumbnailIcon {
 	FOOD,
 	SPORTS
 }
-

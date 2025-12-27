@@ -7,4 +7,3 @@ public class PostNotFoundException extends ApplicationException {
 		super(ErrorCode.POST_NOT_FOUND);
 	}
 }
-

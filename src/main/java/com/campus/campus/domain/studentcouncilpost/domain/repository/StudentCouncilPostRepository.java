@@ -32,4 +32,3 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	Optional<StudentCouncilPost> findByIdWithWriter(@Param("postId") Long postId);
 
 }
-

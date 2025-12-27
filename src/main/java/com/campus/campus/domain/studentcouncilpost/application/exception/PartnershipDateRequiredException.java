@@ -7,4 +7,3 @@ public class PartnershipDateRequiredException extends ApplicationException {
 		super(ErrorCode.PARTNERSHIP_DATE_REQUIRED);
 	}
 }
-

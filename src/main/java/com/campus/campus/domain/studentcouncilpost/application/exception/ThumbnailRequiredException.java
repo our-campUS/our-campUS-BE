@@ -7,4 +7,3 @@ public class ThumbnailRequiredException extends ApplicationException {
 		super(ErrorCode.THUMBNAIL_REQUIRED);
 	}
 }
-

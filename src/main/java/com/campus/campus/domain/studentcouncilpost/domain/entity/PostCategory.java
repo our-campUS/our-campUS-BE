@@ -38,5 +38,3 @@ public enum PostCategory {
 
 	public abstract NormalizedDateTime validateAndNormalize(PostRequestDto dto);
 }
-
-

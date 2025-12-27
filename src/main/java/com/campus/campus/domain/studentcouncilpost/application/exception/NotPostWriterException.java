@@ -7,5 +7,3 @@ public class NotPostWriterException extends ApplicationException {
 		super(ErrorCode.NOT_POST_WRITER);
 	}
 }
-
-

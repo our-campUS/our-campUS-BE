@@ -15,4 +15,3 @@ public interface PostImageRepository extends JpaRepository<PostImage, Long> {
 
 	List<PostImage> findAllByPostOrderByIdAsc(StudentCouncilPost post);
 }
-
