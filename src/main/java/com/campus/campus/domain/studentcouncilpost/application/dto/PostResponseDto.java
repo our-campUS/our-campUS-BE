@@ -7,30 +7,26 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PostResponseDto {
-    private Long id;
-    private Long writerId;
-    private String writerName;
-    private Boolean isWriter;
+public record PostResponseDto (
 
-    private PostCategory category;
-    private String title;
-    private String content;
+        Long id,
+        Long writerId,
+        String writerName,
+        Boolean isWriter,
 
-    private String place;
+        PostCategory category,
+        String title,
+        String content,
+        String place,
+        LocalDate startDate,
+        LocalDate endDate,
+        LocalDateTime startDateTime,
 
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private LocalDateTime startDateTime;
+        String thumbnailImageUrl,
+        ThumbnailIcon thumbnailIcon,
 
-
-    private String thumbnailImageUrl;
-    private ThumbnailIcon thumbnailIcon;
-
-    private List<String> images;
-}
+        List<String> images
+) {}

@@ -1,15 +1,13 @@
-package com.campus.campus.global.oci;
+package com.campus.campus.global.oci.application.service;
 
 import com.campus.campus.global.config.OciConfig;
-import com.campus.campus.global.oci.exception.OciImageMoveFailException;
-import com.campus.campus.global.oci.exception.OciObjectCopyFailException;
+import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
+import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
 import com.campus.campus.global.oci.exception.OciObjectDeleteFailException;
 import com.campus.campus.global.oci.exception.OciPresignedUrlCreateFailException;
-import com.oracle.bmc.model.BmcException;
+import com.campus.campus.global.oci.mapper.PresignedUrlMapper;
 import com.oracle.bmc.objectstorage.ObjectStorage;
-import com.oracle.bmc.objectstorage.model.CopyObjectDetails;
 import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
-import com.oracle.bmc.objectstorage.requests.CopyObjectRequest;
 import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.responses.CreatePreauthenticatedRequestResponse;
@@ -23,33 +21,36 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OciPresignedUrlService {
+public class PresignedUrlService {
 
     private final ObjectStorage objectStorage;
     private final OciConfig ociConfig;
 
     private static final long PRESIGNED_TTL_MS = 10 * 60 * 1000; // 10분
 
+    public PresignedUrlResponseDto createPresignedUrl(
+            String directory,
+            PresignedUrlRequestDto request
+    ) {
+        String objectName =
+                directory + "/" + UUID.randomUUID() + request.resolveExtension();
+
+        String uploadUrl = createPresignedPutUrl(objectName);
+        String imageUrl = ociConfig.fullObjectUrl(objectName);
+
+
+        return new PresignedUrlResponseDto(uploadUrl, imageUrl);
+    }
+
     public String createPresignedPutUrl(String objectName) {
         try {
-            CreatePreauthenticatedRequestDetails details =
-                    CreatePreauthenticatedRequestDetails.builder()
-                            .name("upload-" + UUID.randomUUID())
-                            .objectName(objectName)
-                            .accessType(
-                                    CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite
-                            )
-                            .timeExpires(
-                                    new Date(System.currentTimeMillis() + PRESIGNED_TTL_MS)
-                            )
-                            .build();
-
             CreatePreauthenticatedRequestRequest request =
-                    CreatePreauthenticatedRequestRequest.builder()
-                            .bucketName(ociConfig.getBucketName())
-                            .namespaceName(ociConfig.getNamespace())
-                            .createPreauthenticatedRequestDetails(details)
-                            .build();
+                    PresignedUrlMapper.toPutObjectRequest(
+                            ociConfig.getBucketName(),
+                            ociConfig.getNamespace(),
+                            objectName,
+                            System.currentTimeMillis() + PRESIGNED_TTL_MS
+                    );
 
             CreatePreauthenticatedRequestResponse response =
                     objectStorage.createPreauthenticatedRequest(request);
@@ -93,11 +94,11 @@ public class OciPresignedUrlService {
     private void deleteObject(String objectName) {
         try {
             DeleteObjectRequest request =
-                    DeleteObjectRequest.builder()
-                            .bucketName(ociConfig.getBucketName())
-                            .namespaceName(ociConfig.getNamespace())
-                            .objectName(objectName)
-                            .build();
+                    PresignedUrlMapper.toDeleteObjectRequest(
+                            ociConfig.getBucketName(),
+                            ociConfig.getNamespace(),
+                            objectName
+                    );
 
             objectStorage.deleteObject(request);
 

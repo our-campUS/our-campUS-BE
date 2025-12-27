@@ -12,8 +12,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -73,48 +71,46 @@ public class StudentCouncilPostController {
                                             name = "EVENT 게시글",
                                             summary = "행사 게시글",
                                             value = """
-                                        {
-                                          "category": "EVENT",
-                                          "title": "2025 봄 축제",
-                                          "content": "중앙 동아리 연합 봄 축제",
-                                          "place": "대운동장",
-                                          "startDateTime": "2025-04-10T18:00",
-                                          "thumbnailIcon": "EVENT",
-                                          "imageUrls": []
-                                        }
-                                        """
+                                                    {
+                                                      "category": "EVENT",
+                                                      "title": "2025 봄 축제",
+                                                      "content": "중앙 동아리 연합 봄 축제",
+                                                      "place": "대운동장",
+                                                      "startDateTime": "2025-04-10T18:00",
+                                                      "thumbnailIcon": "EVENT",
+                                                      "imageUrls": []
+                                                    }
+                                                    """
                                     ),
                                     @ExampleObject(
                                             name = "PARTNERSHIP 게시글",
                                             summary = "제휴 게시글",
                                             value = """
-                                        {
-                                          "category": "PARTNERSHIP",
-                                          "title": "카페 할인",
-                                          "content": "10% 할인",
-                                          "place": "OO카페",
-                                          "startDateTime": "2025-04-01T00:00",
-                                          "endDateTime": "2025-04-30T23:59",
-                                          "thumbnailIcon": "CAFE",
-                                          "imageUrls": []
-                                        }
-                                        """
+                                                    {
+                                                      "category": "PARTNERSHIP",
+                                                      "title": "카페 할인",
+                                                      "content": "10% 할인",
+                                                      "place": "OO카페",
+                                                      "startDateTime": "2025-04-01T00:00",
+                                                      "endDateTime": "2025-04-30T23:59",
+                                                      "thumbnailIcon": "CAFE",
+                                                      "imageUrls": []
+                                                    }
+                                                    """
                                     )
                             }
                     )
             )
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "성공")
-    })
     public CommonResponse<PostResponseDto> createPost(
             @CurrentUserId Long councilId,
             @RequestBody @Valid PostRequestDto requestDto
     ) {
         PostResponseDto responseDto = postService.create(councilId, requestDto);
-        return CommonResponse.success(PostResponseCode.POST_CREATE_SUCCESS, responseDto);
+        return CommonResponse.success(
+                PostResponseCode.POST_CREATE_SUCCESS,
+                responseDto);
     }
-
 
     @GetMapping("/{postId}")
     @Operation(summary = "학생회 게시글 단건 조회")
@@ -130,7 +126,6 @@ public class StudentCouncilPostController {
                 responseDto
         );
     }
-
 
     @GetMapping
     @Operation(
@@ -158,7 +153,6 @@ public class StudentCouncilPostController {
         );
     }
 
-
     @PatchMapping("/{postId}")
     @Operation(summary = "학생회 게시글 수정")
     public CommonResponse<PostResponseDto> updatePost(
@@ -167,7 +161,9 @@ public class StudentCouncilPostController {
             @RequestBody @Valid PostRequestDto requestDto
     ) {
         PostResponseDto responseDto = postService.update(councilId, postId, requestDto);
-        return CommonResponse.success(PostResponseCode.POST_UPDATE_SUCCESS, responseDto);
+        return CommonResponse.success(
+                PostResponseCode.POST_UPDATE_SUCCESS,
+                responseDto);
     }
 
     @DeleteMapping("/{postId}")
@@ -178,6 +174,6 @@ public class StudentCouncilPostController {
             @PathVariable Long postId
     ) {
         postService.delete(councilId, postId);
-        return CommonResponse.success(PostResponseCode.POST_DELETE_SUCCESS, null);
+        return CommonResponse.success(PostResponseCode.POST_DELETE_SUCCESS);
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum OciResponseCode implements ResponseCodeInterface {
+public enum PresignedUrlResponseCode implements ResponseCodeInterface {
 
     PRESIGNED_URL_SUCCESS(200, HttpStatus.OK, "Presigned URL 생성 성공");
 

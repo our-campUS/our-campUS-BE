@@ -3,13 +3,12 @@ package com.campus.campus.domain.studentcouncilpost.application.service;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.studentcouncilpost.application.dto.NormalizedDateTime;
 import com.campus.campus.domain.studentcouncilpost.application.dto.PostListItemResponseDto;
 import com.campus.campus.domain.studentcouncilpost.application.dto.PostRequestDto;
 import com.campus.campus.domain.studentcouncilpost.application.dto.PostResponseDto;
-import com.campus.campus.domain.studentcouncilpost.application.exception.EventEndDateTimeNotAllowedException;
-import com.campus.campus.domain.studentcouncilpost.application.exception.EventStartDateTimeRequiredException;
 import com.campus.campus.domain.studentcouncilpost.application.exception.NotPostWriterException;
-import com.campus.campus.domain.studentcouncilpost.application.exception.PartnershipDateRequiredException;
+import com.campus.campus.domain.studentcouncilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.studentcouncilpost.application.exception.PostNotFoundException;
 import com.campus.campus.domain.studentcouncilpost.application.exception.ThumbnailRequiredException;
 import com.campus.campus.domain.studentcouncilpost.application.mapper.StudentCouncilPostMapper;
@@ -18,11 +17,9 @@ import com.campus.campus.domain.studentcouncilpost.domain.entity.PostImage;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.studentcouncilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.studentcouncilpost.domain.repository.StudentCouncilPostRepository;
-import com.campus.campus.global.oci.OciPresignedUrlService;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import com.campus.campus.global.oci.application.service.PresignedUrlService;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,59 +32,75 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class StudentCouncilPostService {
 
     private final StudentCouncilPostRepository postRepository;
     private final StudentCouncilRepository studentCouncilRepository;
     private final PostImageRepository postImageRepository;
-    private final OciPresignedUrlService presignedUrlService;
+    private final PresignedUrlService presignedUrlService;
 
     @Transactional
     public PostResponseDto create(Long councilId, PostRequestDto dto) {
-        StudentCouncil writer = findStudentCouncil(councilId);
 
-        validateThumbnail(dto);
-        validateCategoryDateRule(dto);
-        NormalizedDateTime normalized =
-                normalizeDateTime(
-                        dto.category(),
-                        dto.startDateTime(),
-                        dto.endDateTime()
+        if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
+            throw new PostImageLimitExceededException();
+        }
+
+        StudentCouncil writer = studentCouncilRepository.findByIdWithDetails(councilId)
+                .orElseThrow(StudentCouncilNotFoundException::new);
+
+        if (dto.thumbnailImageUrl() == null && dto.thumbnailIcon() == null) {
+            throw new ThumbnailRequiredException();
+        }
+
+        NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
+
+        StudentCouncilPost post = StudentCouncilPostMapper.toEntity(
+                writer,
+                dto,
+                normalized.startDateTime(),
+                normalized.endDateTime()
+        );
+
+        postRepository.save(post);
+
+        if (dto.imageUrls() != null) {
+            for (String imageUrl : dto.imageUrls()) {
+                postImageRepository.save(
+                        StudentCouncilPostMapper.toEntity(post, imageUrl)
                 );
+            }
+        }
 
-        StudentCouncilPost post = StudentCouncilPost.builder()
-                .writer(writer)
-                .category(dto.category())
-                .title(dto.title())
-                .content(dto.content())
-                .place(dto.place())
-                .startDateTime(normalized.startDateTime())
-                .endDateTime(normalized.endDateTime())
-                .thumbnailImageUrl(dto.thumbnailImageUrl())
-                .thumbnailIcon(dto.thumbnailIcon())
-                .build();
-
-        post = postRepository.save(post);
-
-        savePostImages(post, dto.imageUrls());
+        List<String> imageUrls = postImageRepository
+                .findAllByPostOrderByIdAsc(post)
+                .stream()
+                .map(PostImage::getImageUrl)
+                .toList();
 
         return StudentCouncilPostMapper.toDetail(
                 post,
-                getPostImageUrls(post),
+                imageUrls,
                 councilId
         );
     }
-
 
     @Transactional(readOnly = true)
     public PostResponseDto findById(Long postId, Long currentUserId) {
         StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
                 .orElseThrow(PostNotFoundException::new);
 
-        List<String> imageUrls = getPostImageUrls(post);
+        List<String> imageUrls = postImageRepository
+                .findAllByPostOrderByIdAsc(post)
+                .stream()
+                .map(PostImage::getImageUrl)
+                .toList();
 
-        return StudentCouncilPostMapper.toDetail(post, imageUrls, currentUserId);
+        return StudentCouncilPostMapper.toDetail(
+                post,
+                imageUrls,
+                currentUserId
+        );
     }
 
     @Transactional(readOnly = true)
@@ -112,20 +125,38 @@ public class StudentCouncilPostService {
         );
     }
 
-
     @Transactional
     public void delete(Long councilId, Long postId) {
-        StudentCouncilPost post = findPost(postId);
-        validateWriter(councilId, post);
+
+        StudentCouncilPost post = postRepository.findByIdWithWriter(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        if (!post.getWriter().getId().equals(councilId)) {
+            throw new NotPostWriterException();
+        }
 
         List<PostImage> postImages = postImageRepository.findAllByPost(post);
 
-        // 버킷에서 실제 파일 삭제
-        deleteImageSafely(post.getThumbnailImageUrl());
-        postImages.forEach(img -> deleteImageSafely(img.getImageUrl()));
+        List<String> deleteTargets = new ArrayList<>();
+
+        if (post.getThumbnailImageUrl() != null) {
+            deleteTargets.add(post.getThumbnailImageUrl());
+        }
+
+        postImages.stream()
+                .map(PostImage::getImageUrl)
+                .forEach(deleteTargets::add);
 
         postImageRepository.deleteAll(postImages);
         postRepository.delete(post);
+
+        for (String imageUrl : deleteTargets) {
+            try {
+                presignedUrlService.deleteImage(imageUrl);
+            } catch (Exception e) {
+                log.warn("OCI 파일 삭제 실패: {}", imageUrl);
+            }
+        }
     }
 
     @Transactional
@@ -134,18 +165,24 @@ public class StudentCouncilPostService {
             Long postId,
             PostRequestDto dto
     ) {
-        StudentCouncilPost post = findPost(postId);
 
-        validateWriter(councilId, post);
-        validateThumbnail(dto);
-        validateCategoryDateRule(dto);
+        if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
+            throw new PostImageLimitExceededException();
+        }
 
-        NormalizedDateTime normalized =
-                normalizeDateTime(
-                        dto.category(),
-                        dto.startDateTime(),
-                        dto.endDateTime()
-                );
+        StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        if (!post.getWriter().getId().equals(councilId)) {
+            throw new NotPostWriterException();
+        }
+
+        // 썸네일 검증
+        if (dto.thumbnailImageUrl() == null && dto.thumbnailIcon() == null) {
+            throw new ThumbnailRequiredException();
+        }
+
+        NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
         String oldThumbnailUrl = post.getThumbnailImageUrl();
         List<PostImage> oldImages = postImageRepository.findAllByPost(post);
@@ -162,18 +199,29 @@ public class StudentCouncilPostService {
         );
 
         postImageRepository.deleteByPost(post);
-        savePostImages(post, dto.imageUrls());
+
+        if (dto.imageUrls() != null) {
+            for (String imageUrl : dto.imageUrls()) {
+                postImageRepository.save(
+                        StudentCouncilPostMapper.toEntity(post, imageUrl)
+                );
+            }
+        }
 
         cleanupUnusedImages(oldThumbnailUrl, oldImages, dto);
 
+        List<String> imageUrls = postImageRepository
+                .findAllByPostOrderByIdAsc(post)
+                .stream()
+                .map(PostImage::getImageUrl)
+                .toList();
+
         return StudentCouncilPostMapper.toDetail(
                 post,
-                getPostImageUrls(post),
+                imageUrls,
                 councilId
         );
     }
-
-
 
     //이미지 삭제
     private void cleanupUnusedImages(
@@ -181,106 +229,34 @@ public class StudentCouncilPostService {
             List<PostImage> oldImages,
             PostRequestDto dto
     ) {
-        if (oldThumbnailUrl != null &&
-                !oldThumbnailUrl.equals(dto.thumbnailImageUrl())) {
-            deleteImageSafely(oldThumbnailUrl);
-        }
-
         List<String> newUrls = dto.imageUrls() == null
                 ? List.of()
                 : dto.imageUrls();
 
+        List<String> deleteTargets = new ArrayList<>();
+
+        // 썸네일 변경 시 이전 썸네일
+        if (oldThumbnailUrl != null &&
+                !oldThumbnailUrl.equals(dto.thumbnailImageUrl())) {
+            deleteTargets.add(oldThumbnailUrl);
+        }
+
+        // 본문 이미지 중 제거된 이미지
         oldImages.stream()
                 .map(PostImage::getImageUrl)
                 .filter(url -> !newUrls.contains(url))
-                .forEach(this::deleteImageSafely);
-    }
-
-    private void deleteImageSafely(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) return;
-        try {
-            presignedUrlService.deleteImage(imageUrl);
-        } catch (Exception e) {
-            log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
-        }
-    }
-
-    private void savePostImages(StudentCouncilPost post, List<String> imageUrls) {
-        if (imageUrls == null) return;
-
-        for (String imageUrl : imageUrls) {
-            postImageRepository.save(
-                    PostImage.builder()
-                            .post(post)
-                            .imageUrl(imageUrl)
-                            .build()
-            );
-        }
-    }
-
-    private List<String> getPostImageUrls(StudentCouncilPost post) {
-        return postImageRepository
-                .findAllByPostOrderByIdAsc(post)
-                .stream()
-                .map(PostImage::getImageUrl)
-                .collect(Collectors.toList());
-    }
-
-    private StudentCouncil findStudentCouncil(Long councilId) {
-        return studentCouncilRepository.findById(councilId).orElseThrow(StudentCouncilNotFoundException::new);
-    }
-
-    private StudentCouncilPost findPost(Long postId) {
-        return postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
-    }
-
-    private NormalizedDateTime normalizeDateTime(
-            PostCategory category,
-            LocalDateTime start,
-            LocalDateTime end
-    ) {
-        if (category == PostCategory.PARTNERSHIP) {
-            return new NormalizedDateTime(
-                    start.with(LocalTime.MIN),
-                    end.with(LocalTime.MAX)
-            );
-        }
-
-        // EVENT
-        return new NormalizedDateTime(start, null);
-    }
-
-    private record NormalizedDateTime(
-            LocalDateTime startDateTime,
-            LocalDateTime endDateTime
-    ) {}
-
-    private void validateWriter(Long councilId, StudentCouncilPost post) {
-        if (!post.getWriter().getId().equals(councilId)) throw new NotPostWriterException();
-    }
-
-    private void validateThumbnail(PostRequestDto dto) {
-        if (dto.thumbnailImageUrl() == null && dto.thumbnailIcon() == null) {
-            throw new ThumbnailRequiredException();
-        }
-    }
-
-    private void validateCategoryDateRule(PostRequestDto dto) {
-        if (dto.category() == PostCategory.EVENT) {
-            if (dto.startDateTime() == null) {
-                throw new EventStartDateTimeRequiredException();
+                .forEach(deleteTargets::add);
+        //삭제
+        for (String imageUrl : deleteTargets) {
+            if (imageUrl == null || imageUrl.isBlank()) {
+                continue;
             }
-            if (dto.endDateTime() != null) {
-                throw new EventEndDateTimeNotAllowedException();
-            }
-        }
 
-        if (dto.category() == PostCategory.PARTNERSHIP) {
-            if (dto.startDateTime() == null || dto.endDateTime() == null) {
-                throw new PartnershipDateRequiredException();
+            try {
+                presignedUrlService.deleteImage(imageUrl);
+            } catch (Exception e) {
+                log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
             }
         }
     }
-
-
 }

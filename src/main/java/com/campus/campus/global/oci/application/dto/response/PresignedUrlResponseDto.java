@@ -1,8 +1,6 @@
 package com.campus.campus.global.oci.application.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
 public record PresignedUrlResponseDto(
         @Schema(description = "Presigned PUT 업로드 URL")

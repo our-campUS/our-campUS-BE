@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
     Page<StudentCouncilPost> findAllByCategory(PostCategory category, Pageable pageable);
+
     @Query("SELECT p FROM StudentCouncilPost p " +
             "JOIN FETCH p.writer w " +
             "JOIN FETCH w.school s " +
@@ -19,5 +20,14 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
             "LEFT JOIN FETCH w.major m " +
             "WHERE p.id = :postId")
     Optional<StudentCouncilPost> findByIdWithFullInfo(@Param("postId") Long postId);
+
+    @Query("SELECT p FROM StudentCouncilPost p " +
+            "JOIN FETCH p.writer w " +
+            "LEFT JOIN FETCH w.school " +
+            "LEFT JOIN FETCH w.college " +
+            "LEFT JOIN FETCH w.major " +
+            "WHERE p.id = :postId")
+    Optional<StudentCouncilPost> findByIdWithWriter(@Param("postId") Long postId);
+
 }
 
