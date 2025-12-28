@@ -10,6 +10,7 @@ import com.campus.campus.domain.mail.application.dto.request.EmailVerificationCo
 import com.campus.campus.domain.mail.application.dto.request.EmailVerificationRequest;
 import com.campus.campus.domain.mail.application.service.EmailVerificationService;
 import com.campus.campus.domain.mail.domain.entity.VerificationType;
+import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
 import com.campus.campus.global.annotation.CurrentUserId;
 
@@ -99,7 +100,7 @@ public class EmailVerificationController {
 	@PostMapping("/change/email/code/verify")
 	@Operation(summary = "학생회 이메일 변경 코드 검증")
 	public CommonResponse<Void> verifyChangeEmailVerificationCode(
-		@CurrentUserId Long councilId,
+		@CurrentCouncilId Long councilId,
 		@Valid @RequestBody EmailVerificationConfirmRequest emailVerificationConfirmRequest
 	) {
 		emailVerificationService.verifyChangeEmailCode(councilId, emailVerificationConfirmRequest);

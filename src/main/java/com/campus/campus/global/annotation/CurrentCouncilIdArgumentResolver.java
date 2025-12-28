@@ -9,15 +9,14 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import com.campus.campus.global.util.jwt.UserPrincipal;
+import com.campus.campus.global.util.jwt.StudentCouncilPrincipal;
 import com.campus.campus.global.util.jwt.exception.UnAuthorizedException;
 
 @Component
-public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {
-
+public class CurrentCouncilIdArgumentResolver implements HandlerMethodArgumentResolver {
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
-		boolean hasAnnotation = parameter.hasParameterAnnotation(CurrentUserId.class);
+		boolean hasAnnotation = parameter.hasParameterAnnotation(CurrentCouncilId.class);
 		boolean hasSupportedType =
 			Long.class.equals(parameter.getParameterType()) ||
 				long.class.equals(parameter.getParameterType());
@@ -32,7 +31,7 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 		NativeWebRequest webRequest,
 		WebDataBinderFactory binderFactory
 	) {
-		CurrentUserId anno = parameter.getParameterAnnotation(CurrentUserId.class);
+		CurrentCouncilId anno = parameter.getParameterAnnotation(CurrentCouncilId.class);
 		boolean required = anno == null || anno.required();
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -47,12 +46,11 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 
 		Object principal = authentication.getPrincipal();
 
-		// 2) JwtAuthenticationFilter 에서 principal 을 UserPrincipal 로 넣어뒀음
-		if (principal instanceof UserPrincipal userPrincipal) {
-			Long id = userPrincipal.getUserId();
-			if (id == null && required) {
+		// 2) JwtAuthenticationFilter 에서 principal 을 CouncilPrincipal 로 넣어뒀음
+		if (principal instanceof StudentCouncilPrincipal councilPrincipal) {
+			Long id = councilPrincipal.getCouncilId();
+			if (id == null && required)
 				throw new UnAuthorizedException();
-			}
 			return id;
 		}
 

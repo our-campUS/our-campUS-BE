@@ -17,7 +17,7 @@ import com.campus.campus.domain.studentcouncilpost.application.dto.response.Post
 import com.campus.campus.domain.studentcouncilpost.application.dto.response.PostResponseDto;
 import com.campus.campus.domain.studentcouncilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.studentcouncilpost.domain.entity.PostCategory;
-import com.campus.campus.global.annotation.CurrentUserId;
+import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -103,7 +103,7 @@ public class StudentCouncilPostController {
 		)
 	)
 	public CommonResponse<PostResponseDto> createPost(
-		@CurrentUserId Long councilId,
+		@CurrentCouncilId Long councilId,
 		@RequestBody @Valid PostRequestDto requestDto
 	) {
 		PostResponseDto responseDto = postService.create(councilId, requestDto);
@@ -116,7 +116,7 @@ public class StudentCouncilPostController {
 	@Operation(summary = "학생회 게시글 단건 조회")
 	public CommonResponse<PostResponseDto> getPost(
 		@PathVariable Long postId,
-		@CurrentUserId Long councilId
+		@CurrentCouncilId Long councilId
 	) {
 		PostResponseDto responseDto =
 			postService.findById(postId, councilId);
@@ -141,7 +141,7 @@ public class StudentCouncilPostController {
 		@RequestParam(required = false) PostCategory category,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
-		@CurrentUserId Long councilId
+		@CurrentCouncilId Long councilId
 	) {
 		Page<PostListItemResponseDto> responseDto =
 			postService.findAll(
@@ -157,7 +157,7 @@ public class StudentCouncilPostController {
 	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 수정")
 	public CommonResponse<PostResponseDto> updatePost(
-		@CurrentUserId Long councilId,
+		@CurrentCouncilId Long councilId,
 		@PathVariable Long postId,
 		@RequestBody @Valid PostRequestDto requestDto
 	) {
@@ -171,7 +171,7 @@ public class StudentCouncilPostController {
 	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 삭제")
 	public CommonResponse<Void> deletePost(
-		@CurrentUserId Long councilId,
+		@CurrentCouncilId Long councilId,
 		@PathVariable Long postId
 	) {
 		postService.delete(councilId, postId);
