@@ -49,7 +49,7 @@ public class StudentCouncilPostService {
 			throw new PostImageLimitExceededException();
 		}
 
-		StudentCouncil writer = studentCouncilRepository.findByIdWithDetails(councilId)
+		StudentCouncil writer = studentCouncilRepository.findByIdWithDetailsAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (dto.thumbnailImageUrl() == null && dto.thumbnailIcon() == null) {

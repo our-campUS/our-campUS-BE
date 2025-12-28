@@ -19,8 +19,8 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 		"LEFT JOIN FETCH sc.school " +
 		"LEFT JOIN FETCH sc.college " +
 		"LEFT JOIN FETCH sc.major " +
-		"WHERE sc.id = :councilId")
-	Optional<StudentCouncil> findByIdWithDetails(@Param("councilId") Long councilId);
+		"WHERE sc.id = :councilId AND sc.deletedAt IS NULL")
+	Optional<StudentCouncil> findByIdWithDetailsAndDeletedAtIsNull(@Param("councilId") Long councilId);
 
 	boolean existsByLoginId(String loginId);
 
