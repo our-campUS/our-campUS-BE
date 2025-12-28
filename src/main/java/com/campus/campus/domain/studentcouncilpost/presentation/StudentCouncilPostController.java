@@ -30,7 +30,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@PreAuthorize("hasRole('COUNCIL')")
 @RequestMapping("/student-council/posts")
 @Tag(name = "Student Council Post", description = "학생회(COUNCIL) 권한 전용 제휴/행사 게시글 관리 API")
 @RequiredArgsConstructor
@@ -39,6 +38,7 @@ public class StudentCouncilPostController {
 	private final StudentCouncilPostService postService;
 
 	@PostMapping
+	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(
 		summary = "학생회 제휴/행사 게시글 생성",
 		description =
@@ -154,6 +154,7 @@ public class StudentCouncilPostController {
 	}
 
 	@PatchMapping("/{postId}")
+	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 수정")
 	public CommonResponse<PostResponseDto> updatePost(
 		@CurrentUserId Long councilId,
@@ -167,6 +168,7 @@ public class StudentCouncilPostController {
 	}
 
 	@DeleteMapping("/{postId}")
+	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 삭제")
 	public CommonResponse<Void> deletePost(
 		@CurrentUserId Long councilId,
