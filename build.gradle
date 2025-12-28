@@ -47,6 +47,15 @@ dependencies {
     // mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+    // OCI SDK BOM
+    implementation platform('com.oracle.oci.sdk:oci-java-sdk-bom:3.31.0')
+
+    // OCI ObjectStorage
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage'
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-common'
+
+    //HTTP 클라이언트
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3'
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

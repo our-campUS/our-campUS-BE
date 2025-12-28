@@ -45,5 +45,14 @@ jwt:
   refresh:
     secret: ${JWT_SECRET}
     expiration-seconds: 1209600
+oci:
+  tenancy-ocid: ${OCI_TENANCY_OCID}
+  user-ocid: ${OCI_USER_OCID}
+  fingerprint: ${OCI_FINGERPRINT}
+  private-key: ${OCI_PRIVATE_KEY}
+  passphrase: ${OCI_PASSPHRASE:}
+  namespace: ${OCI_NAMESPACE}
+  bucket-name: ${BUCKET_NAME}
+  region: ${OCI_REGION}
 
 server-uri: http://localhost:8080

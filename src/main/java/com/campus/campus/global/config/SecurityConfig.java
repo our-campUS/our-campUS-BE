@@ -22,7 +22,7 @@ import com.campus.campus.global.util.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 

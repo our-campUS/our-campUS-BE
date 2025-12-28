@@ -34,8 +34,8 @@ import com.campus.campus.domain.school.domain.repository.CollegeRepository;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
 import com.campus.campus.global.config.SecurityConfig;
-import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 import com.campus.campus.global.util.jwt.JwtProvider;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -133,13 +133,6 @@ public class CouncilLoginService {
 		studentCouncilRepository.save(studentCouncil);
 	}
 
-	private record CouncilScope(
-		College college,
-		Major major
-	) {
-
-	}
-
 	private CouncilScope validateCouncilScope(
 		StudentCouncilSignUpRequest studentCouncilSignUpRequest,
 		School school
@@ -195,5 +188,12 @@ public class CouncilLoginService {
 		if (!exists) {
 			throw new EmailNotVerifiedException();
 		}
+	}
+
+	private record CouncilScope(
+		College college,
+		Major major
+	) {
+
 	}
 }
