@@ -107,24 +107,16 @@ public class StudentCouncilPostController {
 		@RequestBody @Valid PostRequestDto requestDto
 	) {
 		PostResponseDto responseDto = postService.create(councilId, requestDto);
-		return CommonResponse.success(
-			PostResponseCode.POST_CREATE_SUCCESS,
-			responseDto);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_CREATE_SUCCESS, responseDto);
 	}
 
 	@GetMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 단건 조회")
-	public CommonResponse<PostResponseDto> getPost(
-		@PathVariable Long postId,
-		@CurrentCouncilId Long councilId
-	) {
+	public CommonResponse<PostResponseDto> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
 		PostResponseDto responseDto =
 			postService.findById(postId, councilId);
 
-		return CommonResponse.success(
-			PostResponseCode.POST_READ_SUCCESS,
-			responseDto
-		);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping
@@ -143,14 +135,9 @@ public class StudentCouncilPostController {
 		@RequestParam(defaultValue = "3") int size,
 		@CurrentCouncilId Long councilId
 	) {
-		Page<PostListItemResponseDto> responseDto =
-			postService.findAll(
-				category, page, size, councilId);
+		Page<PostListItemResponseDto> responseDto = postService.findAll(category, page, size, councilId);
 
-		return CommonResponse.success(
-			PostResponseCode.POST_LIST_READ_SUCCESS,
-			responseDto
-		);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
 	@PatchMapping("/{postId}")
@@ -162,19 +149,16 @@ public class StudentCouncilPostController {
 		@RequestBody @Valid PostRequestDto requestDto
 	) {
 		PostResponseDto responseDto = postService.update(councilId, postId, requestDto);
-		return CommonResponse.success(
-			PostResponseCode.POST_UPDATE_SUCCESS,
-			responseDto);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_UPDATE_SUCCESS, responseDto);
 	}
 
 	@DeleteMapping("/{postId}")
 	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 삭제")
-	public CommonResponse<Void> deletePost(
-		@CurrentCouncilId Long councilId,
-		@PathVariable Long postId
-	) {
+	public CommonResponse<Void> deletePost(@CurrentCouncilId Long councilId, @PathVariable Long postId) {
 		postService.delete(councilId, postId);
-		return CommonResponse.success(PostResponseCode.POST_DELETE_SUCCESS);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_DELETE_SUCCESS);
 	}
 }

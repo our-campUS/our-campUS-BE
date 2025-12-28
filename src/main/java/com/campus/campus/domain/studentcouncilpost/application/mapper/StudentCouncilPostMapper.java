@@ -13,10 +13,7 @@ import com.campus.campus.domain.studentcouncilpost.domain.entity.StudentCouncilP
 
 public class StudentCouncilPostMapper {
 
-	public static PostListItemResponseDto toListItem(
-		StudentCouncilPost post,
-		Long currentUserId
-	) {
+	public static PostListItemResponseDto toListItem(StudentCouncilPost post, Long currentUserId) {
 		return new PostListItemResponseDto(
 			post.getId(),
 			post.getCategory(),
@@ -27,15 +24,9 @@ public class StudentCouncilPostMapper {
 			post.getThumbnailIcon(),
 			post.getWriter().getId().equals(currentUserId)
 		);
-
 	}
 
-	public static PostResponseDto toDetail(
-		StudentCouncilPost post,
-		List<String> images,
-		Long currentUserId
-	) {
-
+	public static PostResponseDto toDetail(StudentCouncilPost post, List<String> images, Long currentUserId) {
 		var writer = post.getWriter();
 		var builder = PostResponseDto.builder()
 			.id(post.getId())
@@ -61,10 +52,7 @@ public class StudentCouncilPostMapper {
 	}
 
 	public static StudentCouncilPost toEntity(
-		StudentCouncil writer,
-		PostRequestDto dto,
-		LocalDateTime startDateTime,
-		LocalDateTime endDateTime
+		StudentCouncil writer, PostRequestDto dto, LocalDateTime startDateTime, LocalDateTime endDateTime
 	) {
 		return StudentCouncilPost.builder()
 			.writer(writer)
@@ -79,14 +67,10 @@ public class StudentCouncilPostMapper {
 			.build();
 	}
 
-	public static PostImage toEntity(
-		StudentCouncilPost post,
-		String imageUrl
-	) {
+	public static PostImage toEntity(StudentCouncilPost post, String imageUrl) {
 		return PostImage.builder()
 			.post(post)
 			.imageUrl(imageUrl)
 			.build();
 	}
-
 }

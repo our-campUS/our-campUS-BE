@@ -55,7 +55,8 @@ public class StudentCouncilPost extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private ThumbnailIcon thumbnailIcon;
 
-	public void update(String title,
+	public void update(
+		String title,
 		String content,
 		String place,
 		LocalDateTime startDateTime,

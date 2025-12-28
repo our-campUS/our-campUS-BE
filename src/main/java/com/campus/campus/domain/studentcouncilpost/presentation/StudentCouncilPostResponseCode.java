@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum PostResponseCode implements ResponseCodeInterface {
+public enum StudentCouncilPostResponseCode implements ResponseCodeInterface {
 
 	POST_CREATE_SUCCESS(201, HttpStatus.CREATED, "게시글 생성에 성공했습니다."),
 	POST_READ_SUCCESS(200, HttpStatus.OK, "게시글 조회에 성공했습니다."),

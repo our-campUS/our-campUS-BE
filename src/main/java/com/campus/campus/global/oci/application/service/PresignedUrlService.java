@@ -28,12 +28,8 @@ public class PresignedUrlService {
 	private final ObjectStorage objectStorage;
 	private final OciConfig ociConfig;
 
-	public PresignedUrlResponseDto createPresignedUrl(
-		String directory,
-		PresignedUrlRequestDto request
-	) {
-		String objectName =
-			directory + "/" + UUID.randomUUID() + request.resolveExtension();
+	public PresignedUrlResponseDto createPresignedUrl(String directory, PresignedUrlRequestDto request) {
+		String objectName = directory + "/" + UUID.randomUUID() + request.resolveExtension();
 
 		String uploadUrl = createPresignedPutUrl(objectName);
 		String imageUrl = ociConfig.fullObjectUrl(objectName);
@@ -51,8 +47,7 @@ public class PresignedUrlService {
 					System.currentTimeMillis() + PRESIGNED_TTL_MS
 				);
 
-			CreatePreauthenticatedRequestResponse response =
-				objectStorage.createPreauthenticatedRequest(request);
+			CreatePreauthenticatedRequestResponse response = objectStorage.createPreauthenticatedRequest(request);
 
 			return String.format(
 				"https://objectstorage.%s.oraclecloud.com%s",
@@ -67,8 +62,9 @@ public class PresignedUrlService {
 	}
 
 	public void deleteImage(String imageUrl) {
-		if (imageUrl == null || imageUrl.isBlank())
+		if (imageUrl == null || imageUrl.isBlank()) {
 			return;
+		}
 
 		String objectName = extractObjectNameFromUrl(imageUrl);
 		deleteObject(objectName);
@@ -93,12 +89,11 @@ public class PresignedUrlService {
 	 */
 	private void deleteObject(String objectName) {
 		try {
-			DeleteObjectRequest request =
-				PresignedUrlMapper.toDeleteObjectRequest(
-					ociConfig.getBucketName(),
-					ociConfig.getNamespace(),
-					objectName
-				);
+			DeleteObjectRequest request = PresignedUrlMapper.toDeleteObjectRequest(
+				ociConfig.getBucketName(),
+				ociConfig.getNamespace(),
+				objectName
+			);
 
 			objectStorage.deleteObject(request);
 

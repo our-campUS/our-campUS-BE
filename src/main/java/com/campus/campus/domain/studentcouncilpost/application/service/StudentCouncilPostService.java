@@ -44,7 +44,6 @@ public class StudentCouncilPostService {
 
 	@Transactional
 	public PostResponseDto create(Long councilId, PostRequestDto dto) {
-
 		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
 		}
@@ -59,19 +58,14 @@ public class StudentCouncilPostService {
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
 		StudentCouncilPost post = StudentCouncilPostMapper.toEntity(
-			writer,
-			dto,
-			normalized.startDateTime(),
-			normalized.endDateTime()
+			writer, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
 		postRepository.save(post);
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				postImageRepository.save(
-					StudentCouncilPostMapper.toEntity(post, imageUrl)
-				);
+				postImageRepository.save(StudentCouncilPostMapper.toEntity(post, imageUrl));
 			}
 		}
 
@@ -81,11 +75,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toDetail(
-			post,
-			imageUrls,
-			councilId
-		);
+		return StudentCouncilPostMapper.toDetail(post, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
@@ -99,25 +89,12 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toDetail(
-			post,
-			imageUrls,
-			currentUserId
-		);
+		return StudentCouncilPostMapper.toDetail(post, imageUrls, currentUserId);
 	}
 
 	@Transactional(readOnly = true)
-	public Page<PostListItemResponseDto> findAll(
-		PostCategory category,
-		int page,
-		int size,
-		Long currentUserId
-	) {
-		Pageable pageable = PageRequest.of(
-			Math.max(page - 1, 0),
-			size,
-			Sort.by(Sort.Direction.DESC, "createdAt")
-		);
+	public Page<PostListItemResponseDto> findAll(PostCategory category, int page, int size, Long currentUserId) {
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
 		Page<StudentCouncilPost> posts = (category == null)
 			? postRepository.findAll(pageable)
@@ -130,7 +107,6 @@ public class StudentCouncilPostService {
 
 	@Transactional
 	public void delete(Long councilId, Long postId) {
-
 		StudentCouncilPost post = postRepository.findByIdWithWriter(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -163,12 +139,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponseDto update(
-		Long councilId,
-		Long postId,
-		PostRequestDto dto
-	) {
-
+	public PostResponseDto update(Long councilId, Long postId, PostRequestDto dto) {
 		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
 		}
@@ -205,9 +176,7 @@ public class StudentCouncilPostService {
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				postImageRepository.save(
-					StudentCouncilPostMapper.toEntity(post, imageUrl)
-				);
+				postImageRepository.save(StudentCouncilPostMapper.toEntity(post, imageUrl));
 			}
 		}
 
@@ -219,28 +188,17 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toDetail(
-			post,
-			imageUrls,
-			councilId
-		);
+		return StudentCouncilPostMapper.toDetail(post, imageUrls, councilId);
 	}
 
 	//이미지 삭제
-	private void cleanupUnusedImages(
-		String oldThumbnailUrl,
-		List<PostImage> oldImages,
-		PostRequestDto dto
-	) {
-		List<String> newUrls = dto.imageUrls() == null
-			? List.of()
-			: dto.imageUrls();
+	private void cleanupUnusedImages(String oldThumbnailUrl, List<PostImage> oldImages, PostRequestDto dto) {
+		List<String> newUrls = dto.imageUrls() == null ? List.of() : dto.imageUrls();
 
 		List<String> deleteTargets = new ArrayList<>();
 
 		// 썸네일 변경 시 이전 썸네일
-		if (oldThumbnailUrl != null &&
-			!oldThumbnailUrl.equals(dto.thumbnailImageUrl())) {
+		if (oldThumbnailUrl != null && !oldThumbnailUrl.equals(dto.thumbnailImageUrl())) {
 			deleteTargets.add(oldThumbnailUrl);
 		}
 
@@ -249,6 +207,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.filter(url -> !newUrls.contains(url))
 			.forEach(deleteTargets::add);
+
 		//삭제
 		for (String imageUrl : deleteTargets) {
 			if (imageUrl == null || imageUrl.isBlank()) {

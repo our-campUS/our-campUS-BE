@@ -15,13 +15,12 @@ public class PresignedUrlMapper {
 		String objectName,
 		long expiresAtMillis
 	) {
-		CreatePreauthenticatedRequestDetails details =
-			CreatePreauthenticatedRequestDetails.builder()
-				.name("upload-" + UUID.randomUUID())
-				.objectName(objectName)
-				.accessType(CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite)
-				.timeExpires(new Date(expiresAtMillis))
-				.build();
+		CreatePreauthenticatedRequestDetails details = CreatePreauthenticatedRequestDetails.builder()
+			.name("upload-" + UUID.randomUUID())
+			.objectName(objectName)
+			.accessType(CreatePreauthenticatedRequestDetails.AccessType.ObjectWrite)
+			.timeExpires(new Date(expiresAtMillis))
+			.build();
 
 		return CreatePreauthenticatedRequestRequest.builder()
 			.bucketName(bucketName)
