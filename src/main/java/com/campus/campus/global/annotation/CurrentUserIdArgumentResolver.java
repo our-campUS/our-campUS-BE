@@ -1,5 +1,6 @@
 package com.campus.campus.global.annotation;
 
+import com.campus.campus.global.util.jwt.StudentCouncilPrincipal;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

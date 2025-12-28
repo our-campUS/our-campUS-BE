@@ -40,6 +40,16 @@ jwt:
   refresh:
     secret: /QuR112ZbzLQwelZSdb1pJWutiBYEbjRmxf4AyGcPDq9rtyuDzean8abRxTxvWdvbghF+cMCKAkEF5atidssJA==
     expiration-seconds: 1209600
+oci:
+  enabled: false
+  region: dummy
+  namespace: dummy
+  bucket-name: dummy
+  tenancy-ocid: dummy
+  user-ocid: dummy
+  fingerprint: dummy
+  private-key: dummy
+  passphrase: ""
 
 server-uri: http://localhost
 

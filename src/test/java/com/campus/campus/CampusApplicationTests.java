@@ -9,6 +9,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.oracle.bmc.objectstorage.ObjectStorage;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -18,6 +21,9 @@ class CampusApplicationTests {
 
 	@Autowired
 	TestRestTemplate restTemplate;
+
+	@MockitoBean
+	ObjectStorage objectStorage;
 
 	@Test
 	void healthCheck() {
