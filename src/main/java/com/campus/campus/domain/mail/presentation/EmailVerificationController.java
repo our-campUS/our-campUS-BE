@@ -12,7 +12,6 @@ import com.campus.campus.domain.mail.application.service.EmailVerificationServic
 import com.campus.campus.domain.mail.domain.entity.VerificationType;
 import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
-import com.campus.campus.global.annotation.CurrentUserId;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -88,7 +87,7 @@ public class EmailVerificationController {
 	@PostMapping("/change/email/code")
 	@Operation(summary = "학생회 이메일 변경 인증 코드 전송")
 	public CommonResponse<Void> sendChangeEmailVerificationCodeEmail(
-		@CurrentUserId Long councilId,
+		@CurrentCouncilId Long councilId,
 		@Valid @RequestBody EmailVerificationRequest emailVerificationRequest
 	) {
 		emailVerificationService.sendChangeEmailVerificationCode(councilId, emailVerificationRequest.email());
