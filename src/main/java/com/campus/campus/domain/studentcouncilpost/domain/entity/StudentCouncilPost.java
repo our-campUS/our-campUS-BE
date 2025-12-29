@@ -90,8 +90,8 @@ public class StudentCouncilPost extends BaseEntity {
 		return endDateTime != null ? endDateTime.toLocalDate() : null;
 	}
 
-	public boolean isWrittenBy(Long userId) {
-		return writer != null && writer.getId().equals(userId);
+	public boolean isWrittenByCouncil(Long councilId) {
+		return writer != null && writer.getId().equals(councilId);
 	}
 
 }

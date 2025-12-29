@@ -1,5 +1,6 @@
 package com.campus.campus.domain.studentcouncilpost.application.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -122,6 +123,34 @@ public class StudentCouncilPostService {
 		Page<StudentCouncilPost> posts = (category == null)
 			? postRepository.findAll(pageable)
 			: postRepository.findAllByCategory(category, pageable);
+
+		return posts.map(post ->
+			StudentCouncilPostMapper.toListItem(post, currentUserId)
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<PostListItemResponseDto> findUpcomingEvents(
+		int page,
+		int size,
+		Long currentUserId
+	) {
+		Pageable pageable = PageRequest.of(
+			Math.max(page - 1, 0),
+			size,
+			Sort.by(Sort.Direction.ASC, "startDateTime")
+		);
+
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime limit = now.plusHours(72);
+
+		Page<StudentCouncilPost> posts =
+			postRepository.findUpcomingEvents(
+				PostCategory.EVENT,
+				now,
+				limit,
+				pageable
+			);
 
 		return posts.map(post ->
 			StudentCouncilPostMapper.toListItem(post, currentUserId)

@@ -22,7 +22,9 @@ public class StudentCouncilPostMapper {
 			post.getCategory(),
 			post.getTitle(),
 			post.getPlace(),
-			post.getEndDateTime(),
+			post.isEvent()
+				? post.getStartDateTime()
+				: post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
 			post.getWriter().getId().equals(currentUserId)
@@ -41,7 +43,7 @@ public class StudentCouncilPostMapper {
 			.id(post.getId())
 			.writerId(writer.getId())
 			.writerName(writer.getFullCouncilName())
-			.isWriter(post.isWrittenBy(currentUserId))
+			.isWriter(post.isWrittenByCouncil(currentUserId))
 			.category(post.getCategory())
 			.title(post.getTitle())
 			.content(post.getContent())

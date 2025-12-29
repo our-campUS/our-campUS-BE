@@ -153,6 +153,18 @@ public class StudentCouncilPostController {
 		);
 	}
 
+	@GetMapping("/events/upcoming")
+	@Operation(summary = "72시간 이내 행사 게시글 조회")
+	public CommonResponse<Page<PostListItemResponseDto>> getUpcomingEvents(
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "3") int size,
+		@CurrentUserId(required = false) Long currentUserId
+	) {
+		return CommonResponse.success(PostResponseCode.POST_LIST_READ_SUCCESS,
+			postService.findUpcomingEvents(page, size, currentUserId)
+		);
+	}
+
 	@PatchMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 수정")
 	public CommonResponse<PostResponseDto> updatePost(
