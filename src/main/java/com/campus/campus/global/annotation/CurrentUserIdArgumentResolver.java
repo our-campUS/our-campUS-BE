@@ -1,6 +1,5 @@
 package com.campus.campus.global.annotation;
 
-import com.campus.campus.global.util.jwt.StudentCouncilPrincipal;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,12 +53,6 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 			if (id == null && required) {
 				throw new UnAuthorizedException();
 			}
-			return id;
-		}
-
-		if (principal instanceof StudentCouncilPrincipal councilPrincipal) {
-			Long id = councilPrincipal.getCouncilId();
-			if (id == null && required) throw new UnAuthorizedException();
 			return id;
 		}
 

@@ -1,5 +1,7 @@
 package com.campus.campus.domain.council.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
@@ -60,6 +62,13 @@ public class StudentCouncil extends BaseEntity {
 	@JoinColumn(name = "major_id")
 	private Major major;
 
+	@Column(name = "deleted_at")
+	private LocalDateTime deletedAt;
+
+	public void delete(LocalDateTime now) {
+		this.deletedAt = now;
+	}
+
 	public void changePassword(String newPassword) {
 		this.password = newPassword;
 	}
@@ -73,5 +82,9 @@ public class StudentCouncil extends BaseEntity {
 		if (major != null)
 			fullName.append(" ").append(major.getMajorName());
 		return fullName.append(" 학생회").toString().trim();
+	}
+
+	public void changeEmail(String newEmail) {
+		this.email = newEmail;
 	}
 }
