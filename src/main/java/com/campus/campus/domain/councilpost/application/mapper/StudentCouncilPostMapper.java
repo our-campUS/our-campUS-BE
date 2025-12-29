@@ -51,9 +51,8 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public static StudentCouncilPost toEntity(
-		StudentCouncil writer, PostRequestDto dto, LocalDateTime startDateTime, LocalDateTime endDateTime
-	) {
+	public static StudentCouncilPost toEntity(StudentCouncil writer, PostRequestDto dto, LocalDateTime startDateTime,
+		LocalDateTime endDateTime) {
 		return StudentCouncilPost.builder()
 			.writer(writer)
 			.category(dto.category())
