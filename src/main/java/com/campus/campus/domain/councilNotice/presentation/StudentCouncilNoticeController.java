@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.presentation;
+package com.campus.campus.domain.councilNotice.presentation;
 
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campus.campus.domain.studentCouncilNotice.application.dto.request.NoticeRequestDto;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.response.NoticeListItemResponseDto;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.response.NoticeResponseDto;
-import com.campus.campus.domain.studentCouncilNotice.application.service.StudentCouncilNoticeService;
-import com.campus.campus.global.annotation.CurrentUserId;
+import com.campus.campus.domain.councilNotice.application.dto.request.NoticeRequestDto;
+import com.campus.campus.domain.councilNotice.application.dto.response.NoticeListItemResponseDto;
+import com.campus.campus.domain.councilNotice.application.dto.response.NoticeResponseDto;
+import com.campus.campus.domain.councilNotice.application.service.StudentCouncilNoticeService;
+import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +35,7 @@ public class StudentCouncilNoticeController {
 	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 공지 작성")
 	public CommonResponse<NoticeResponseDto> create(
-		@CurrentUserId Long councilId,
+		@CurrentCouncilId Long councilId,
 		@RequestBody NoticeRequestDto dto
 	) {
 		NoticeResponseDto response = noticeService.create(councilId, dto);
@@ -47,9 +47,9 @@ public class StudentCouncilNoticeController {
 	@Operation(summary = "학생회 공지 단건 조회")
 	public CommonResponse<NoticeResponseDto> getNotice(
 		@PathVariable Long noticeId,
-		@CurrentUserId(required = false) Long currentUserId
+		@CurrentCouncilId(required = false) Long councilId
 	) {
-		NoticeResponseDto response = noticeService.findById(noticeId, currentUserId);
+		NoticeResponseDto response = noticeService.findById(noticeId, councilId);
 
 		return CommonResponse.success(NoticeResponseCode.NOTICE_READ_SUCCESS, response);
 	}
@@ -59,9 +59,9 @@ public class StudentCouncilNoticeController {
 	public CommonResponse<Page<NoticeListItemResponseDto>> getNotices(
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "10") int size,
-		@CurrentUserId(required = false) Long currentUserId
+		@CurrentCouncilId(required = false) Long councilId
 	) {
-		Page<NoticeListItemResponseDto> response = noticeService.findAll(page, size, currentUserId);
+		Page<NoticeListItemResponseDto> response = noticeService.findAll(page, size, councilId);
 
 		return CommonResponse.success(NoticeResponseCode.NOTICE_LIST_READ_SUCCESS, response);
 	}
@@ -71,7 +71,7 @@ public class StudentCouncilNoticeController {
 	@Operation(summary = "학생회 공지 수정")
 	public CommonResponse<NoticeResponseDto> update(
 		@PathVariable Long noticeId,
-		@CurrentUserId Long councilId,
+		@CurrentCouncilId Long councilId,
 		@RequestBody NoticeRequestDto dto
 	) {
 		NoticeResponseDto response = noticeService.update(councilId, noticeId, dto);
@@ -84,7 +84,7 @@ public class StudentCouncilNoticeController {
 	@Operation(summary = "학생회 공지 삭제")
 	public CommonResponse<Void> delete(
 		@PathVariable Long noticeId,
-		@CurrentUserId Long councilId
+		@CurrentCouncilId Long councilId
 	) {
 		noticeService.delete(councilId, noticeId);
 

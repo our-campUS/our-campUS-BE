@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.presentation;
+package com.campus.campus.domain.councilNotice.presentation;
 
 import org.springframework.http.HttpStatus;
 

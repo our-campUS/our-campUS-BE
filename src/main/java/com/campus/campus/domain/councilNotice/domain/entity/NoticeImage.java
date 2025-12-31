@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.domain.entity;
+package com.campus.campus.domain.councilNotice.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

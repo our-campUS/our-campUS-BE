@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.application.dto.response;
+package com.campus.campus.domain.councilNotice.application.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;

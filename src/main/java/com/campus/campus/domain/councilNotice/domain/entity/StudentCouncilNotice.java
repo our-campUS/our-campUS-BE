@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.domain.entity;
+package com.campus.campus.domain.councilNotice.domain.entity;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.global.entity.BaseEntity;

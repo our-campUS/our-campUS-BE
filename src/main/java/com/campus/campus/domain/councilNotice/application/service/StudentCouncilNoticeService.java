@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.application.service;
+package com.campus.campus.domain.councilNotice.application.service;
 
 import java.util.List;
 
@@ -12,17 +12,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.request.NoticeRequestDto;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.response.NoticeListItemResponseDto;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.response.NoticeResponseDto;
-import com.campus.campus.domain.studentCouncilNotice.application.exception.NotNoticeWriterException;
-import com.campus.campus.domain.studentCouncilNotice.application.exception.NoticeImageLimitExceededException;
-import com.campus.campus.domain.studentCouncilNotice.application.exception.NoticeNotFoundException;
-import com.campus.campus.domain.studentCouncilNotice.application.mapper.StudentCouncilNoticeMapper;
-import com.campus.campus.domain.studentCouncilNotice.domain.entity.NoticeImage;
-import com.campus.campus.domain.studentCouncilNotice.domain.entity.StudentCouncilNotice;
-import com.campus.campus.domain.studentCouncilNotice.domain.repository.NoticeImageRepository;
-import com.campus.campus.domain.studentCouncilNotice.domain.repository.StudentCouncilNoticeRepository;
+import com.campus.campus.domain.councilNotice.application.dto.request.NoticeRequestDto;
+import com.campus.campus.domain.councilNotice.application.dto.response.NoticeListItemResponseDto;
+import com.campus.campus.domain.councilNotice.application.dto.response.NoticeResponseDto;
+import com.campus.campus.domain.councilNotice.application.exception.NotNoticeWriterException;
+import com.campus.campus.domain.councilNotice.application.exception.NoticeImageLimitExceededException;
+import com.campus.campus.domain.councilNotice.application.exception.NoticeNotFoundException;
+import com.campus.campus.domain.councilNotice.application.mapper.StudentCouncilNoticeMapper;
+import com.campus.campus.domain.councilNotice.domain.entity.NoticeImage;
+import com.campus.campus.domain.councilNotice.domain.entity.StudentCouncilNotice;
+import com.campus.campus.domain.councilNotice.domain.repository.NoticeImageRepository;
+import com.campus.campus.domain.councilNotice.domain.repository.StudentCouncilNoticeRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -47,16 +47,18 @@ public class StudentCouncilNoticeService {
 			throw new NoticeImageLimitExceededException();
 		}
 
-		StudentCouncil writer = studentCouncilRepository.findByIdWithDetails(councilId)
+		StudentCouncil writer = studentCouncilRepository.findByIdWithDetailsAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		StudentCouncilNotice notice =
 			noticeRepository.save(StudentCouncilNoticeMapper.toEntity(writer, dto));
 
-		if (dto.imageUrls() != null) {
-			for (String imageUrl : dto.imageUrls()) {
-				noticeImageRepository.save(StudentCouncilNoticeMapper.toEntity(notice, imageUrl));
-			}
+		if (dto.imageUrls() != null && !dto.imageUrls().isEmpty()) {
+			List<NoticeImage> images = dto.imageUrls().stream()
+				.map(imageUrl -> StudentCouncilNoticeMapper.toEntity(notice, imageUrl))
+				.toList();
+
+			noticeImageRepository.saveAll(images);
 		}
 
 		List<String> imageUrls = noticeImageRepository
@@ -71,7 +73,7 @@ public class StudentCouncilNoticeService {
 	@Transactional(readOnly = true)
 	public NoticeResponseDto findById(Long noticeId, Long councilId) {
 
-		StudentCouncilNotice notice = noticeRepository.findByIdWithWriter(noticeId)
+		StudentCouncilNotice notice = noticeRepository.findByIdWithFullInfo(noticeId)
 			.orElseThrow(NoticeNotFoundException::new);
 
 		List<String> imageUrls = noticeImageRepository
@@ -84,7 +86,7 @@ public class StudentCouncilNoticeService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<NoticeListItemResponseDto> findAll(int page, int size, Long currentUserId) {
+	public Page<NoticeListItemResponseDto> findAll(int page, int size, Long councilId) {
 
 		Pageable pageable = PageRequest.of(
 			Math.max(page - 1, 0),
@@ -95,7 +97,7 @@ public class StudentCouncilNoticeService {
 		Page<StudentCouncilNotice> notices = noticeRepository.findAll(pageable);
 
 		return notices.map(notice ->
-			StudentCouncilNoticeMapper.toListItem(notice, currentUserId)
+			StudentCouncilNoticeMapper.toListItem(notice, councilId)
 		);
 	}
 
@@ -106,7 +108,7 @@ public class StudentCouncilNoticeService {
 			throw new NoticeImageLimitExceededException();
 		}
 
-		StudentCouncilNotice notice = noticeRepository.findByIdWithWriter(noticeId)
+		StudentCouncilNotice notice = noticeRepository.findByIdWithFullInfo(noticeId)
 			.orElseThrow(NoticeNotFoundException::new);
 
 		if (!notice.isWrittenByCouncil(councilId)) {
@@ -119,12 +121,12 @@ public class StudentCouncilNoticeService {
 
 		noticeImageRepository.deleteByNotice(notice);
 
-		if (dto.imageUrls() != null) {
-			for (String imageUrl : dto.imageUrls()) {
-				noticeImageRepository.save(
-					StudentCouncilNoticeMapper.toEntity(notice, imageUrl)
-				);
-			}
+		if (dto.imageUrls() != null && !dto.imageUrls().isEmpty()) {
+			List<NoticeImage> images = dto.imageUrls().stream()
+				.map(imageUrl -> StudentCouncilNoticeMapper.toEntity(notice, imageUrl))
+				.toList();
+
+			noticeImageRepository.saveAll(images);
 		}
 
 		for (NoticeImage image : oldImages) {
@@ -147,7 +149,7 @@ public class StudentCouncilNoticeService {
 	@Transactional
 	public void delete(Long councilId, Long noticeId) {
 
-		StudentCouncilNotice notice = noticeRepository.findByIdWithWriter(noticeId)
+		StudentCouncilNotice notice = noticeRepository.findByIdWithFullInfo(noticeId)
 			.orElseThrow(NoticeNotFoundException::new);
 
 		if (!notice.isWrittenByCouncil(councilId)) {

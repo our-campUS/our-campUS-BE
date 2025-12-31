@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.application.dto.request;
+package com.campus.campus.domain.councilNotice.application.dto.request;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.application.exception;
+package com.campus.campus.domain.councilNotice.application.exception;
 
 import org.springframework.http.HttpStatus;
 
@@ -19,4 +19,3 @@ public enum ErrorCode implements ErrorCodeInterface {
 	private final HttpStatus status;
 	private final String message;
 }
-

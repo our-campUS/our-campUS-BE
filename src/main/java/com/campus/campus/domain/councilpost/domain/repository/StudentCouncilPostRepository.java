@@ -24,14 +24,6 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		"WHERE p.id = :postId")
 	Optional<StudentCouncilPost> findByIdWithFullInfo(@Param("postId") Long postId);
 
-	@Query("SELECT p FROM StudentCouncilPost p " +
-		"JOIN FETCH p.writer w " +
-		"LEFT JOIN FETCH w.school " +
-		"LEFT JOIN FETCH w.college " +
-		"LEFT JOIN FETCH w.major " +
-		"WHERE p.id = :postId")
-	Optional<StudentCouncilPost> findByIdWithWriter(@Param("postId") Long postId);
-
 	@Query("""
 			SELECT p
 			FROM StudentCouncilPost p

@@ -1,17 +1,17 @@
-package com.campus.campus.domain.studentCouncilNotice.application.mapper;
+package com.campus.campus.domain.councilNotice.application.mapper;
 
 import java.util.List;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.request.NoticeRequestDto;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.response.NoticeListItemResponseDto;
-import com.campus.campus.domain.studentCouncilNotice.application.dto.response.NoticeResponseDto;
-import com.campus.campus.domain.studentCouncilNotice.domain.entity.NoticeImage;
-import com.campus.campus.domain.studentCouncilNotice.domain.entity.StudentCouncilNotice;
+import com.campus.campus.domain.councilNotice.application.dto.request.NoticeRequestDto;
+import com.campus.campus.domain.councilNotice.application.dto.response.NoticeListItemResponseDto;
+import com.campus.campus.domain.councilNotice.application.dto.response.NoticeResponseDto;
+import com.campus.campus.domain.councilNotice.domain.entity.NoticeImage;
+import com.campus.campus.domain.councilNotice.domain.entity.StudentCouncilNotice;
 
 public class StudentCouncilNoticeMapper {
 
-	public static StudentCouncilNotice toEntity(StudentCouncil writer, NoticeRequestDto dto){
+	public static StudentCouncilNotice toEntity(StudentCouncil writer, NoticeRequestDto dto) {
 		return StudentCouncilNotice.builder()
 			.title(dto.title())
 			.content(dto.content())
@@ -35,6 +35,8 @@ public class StudentCouncilNoticeMapper {
 			.title(notice.getTitle())
 			.content(notice.getContent())
 			.images(imageUrls)
+			.createdAt(notice.getCreatedAt())
+			.updatedAt(notice.getUpdatedAt())
 			.build();
 	}
 
@@ -44,6 +46,7 @@ public class StudentCouncilNoticeMapper {
 			.title(notice.getTitle())
 			.isWriter(notice.isWrittenByCouncil(currentUserId))
 			.createdAt(notice.getCreatedAt())
+			.updatedAt(notice.getUpdatedAt())
 			.build();
 	}
 }

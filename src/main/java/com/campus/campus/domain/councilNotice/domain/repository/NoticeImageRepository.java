@@ -1,11 +1,11 @@
-package com.campus.campus.domain.studentCouncilNotice.domain.repository;
+package com.campus.campus.domain.councilNotice.domain.repository;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.campus.campus.domain.studentCouncilNotice.domain.entity.NoticeImage;
-import com.campus.campus.domain.studentCouncilNotice.domain.entity.StudentCouncilNotice;
+import com.campus.campus.domain.councilNotice.domain.entity.NoticeImage;
+import com.campus.campus.domain.councilNotice.domain.entity.StudentCouncilNotice;
 
 public interface NoticeImageRepository extends JpaRepository<NoticeImage, Long> {
 

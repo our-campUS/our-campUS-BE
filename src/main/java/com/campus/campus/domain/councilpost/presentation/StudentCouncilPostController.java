@@ -133,7 +133,7 @@ public class StudentCouncilPostController {
 		@RequestParam(required = false) PostCategory category,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
-		@CurrentCouncilId Long councilId
+		@CurrentCouncilId(required = false) Long councilId
 	) {
 		Page<PostListItemResponseDto> responseDto = postService.findAll(category, page, size, councilId);
 
@@ -145,10 +145,10 @@ public class StudentCouncilPostController {
 	public CommonResponse<Page<PostListItemResponseDto>> getUpcomingEvents(
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
-		@CurrentUserId(required = false) Long currentUserId
+		@CurrentCouncilId(required = false) Long councilId
 	) {
-		return CommonResponse.success(PostResponseCode.POST_LIST_READ_SUCCESS,
-			postService.findUpcomingEvents(page, size, currentUserId)
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS,
+			postService.findUpcomingEvents(page, size, councilId)
 		);
 	}
 

@@ -136,7 +136,7 @@ public class StudentCouncilPostService {
 
 	@Transactional
 	public void delete(Long councilId, Long postId) {
-		StudentCouncilPost post = postRepository.findByIdWithWriter(postId)
+		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
 		if (!post.getWriter().getId().equals(councilId)) {

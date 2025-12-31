@@ -1,4 +1,4 @@
-package com.campus.campus.domain.studentCouncilNotice.application.dto.response;
+package com.campus.campus.domain.councilNotice.application.dto.response;
 
 import java.time.LocalDateTime;
 
@@ -9,6 +9,7 @@ public record NoticeListItemResponseDto(
 	Long id,
 	String title,
 	boolean isWriter,
-	LocalDateTime createdAt
+	LocalDateTime createdAt,
+	LocalDateTime updatedAt
 ) {
 }
