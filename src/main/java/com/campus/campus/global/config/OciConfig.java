@@ -75,18 +75,16 @@ public class OciConfig {
 			keyFilePath = createSecureKeyFile(normalizedPem);
 
 			// Provider 생성
-			SimplePrivateKeySupplier keySupplier =
-				new SimplePrivateKeySupplier(keyFilePath.toString());
+			SimplePrivateKeySupplier keySupplier = new SimplePrivateKeySupplier(keyFilePath.toString());
 
-			SimpleAuthenticationDetailsProvider provider =
-				SimpleAuthenticationDetailsProvider.builder()
-					.tenantId(tenancyOcid)
-					.userId(userOcid)
-					.fingerprint(fingerprint)
-					.privateKeySupplier(keySupplier)
-					.passPhrase(passPhrase)
-					.region(Region.fromRegionId(region))
-					.build();
+			SimpleAuthenticationDetailsProvider provider = SimpleAuthenticationDetailsProvider.builder()
+				.tenantId(tenancyOcid)
+				.userId(userOcid)
+				.fingerprint(fingerprint)
+				.privateKeySupplier(keySupplier)
+				.passPhrase(passPhrase)
+				.region(Region.fromRegionId(region))
+				.build();
 
 			ObjectStorage client = ObjectStorageClient.builder()
 				.region(Region.fromRegionId(region))
@@ -187,10 +185,7 @@ public class OciConfig {
 		File f = file.toFile();
 
 		try {
-			Set<PosixFilePermission> perms = Set.of(
-				PosixFilePermission.OWNER_READ,
-				PosixFilePermission.OWNER_WRITE
-			);
+			Set<PosixFilePermission> perms = Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
 			Files.setPosixFilePermissions(file, perms);
 			log.debug(">>> [PEM] File POSIX permissions set (600)");
 
@@ -215,13 +210,7 @@ public class OciConfig {
 
 		String encodedObjectName = URLEncoder.encode(objectName, StandardCharsets.UTF_8);
 
-		return String.format(
-			OBJECT_STORAGE_URL_TEMPLATE,
-			region,
-			namespace,
-			bucketName,
-			encodedObjectName
-		);
+		return String.format(OBJECT_STORAGE_URL_TEMPLATE, region, namespace, bucketName, encodedObjectName);
 	}
 
 	/**

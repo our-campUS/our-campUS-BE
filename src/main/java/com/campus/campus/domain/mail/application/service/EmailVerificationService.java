@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.mail.application.dto.request.EmailVerificationConfirmRequest;
 import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
+import com.campus.campus.domain.mail.application.exception.InvalidSchoolEmailException;
 import com.campus.campus.domain.mail.application.exception.VerificationCodeExpiredException;
 import com.campus.campus.domain.mail.application.exception.VerificationCodeNotMatchException;
 import com.campus.campus.domain.mail.application.mapper.EmailVerificationMapper;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class EmailVerificationService {
 	private static final long EXPIRE_TIME = 5L;
+	private static final String SCHOOL_EMAIL_SUFFIX = ".ac.kr";
 
 	private final JavaMailSender javaMailSender;
 	private final EmailVerificationMapper emailVerificationMapper;
@@ -31,6 +33,7 @@ public class EmailVerificationService {
 
 	@Transactional
 	public void sendSignUpVerificationCode(String email) {
+		validateSchoolEmail(email);
 		String code = createCode();
 		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
 
@@ -117,13 +120,56 @@ public class EmailVerificationService {
 	}
 
 	@Transactional
+	public void sendChangeEmailVerificationCode(Long councilId, String email) {
+		validateSchoolEmail(email);
+		String code = createCode();
+		LocalDateTime expireTime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
+
+		EmailVerification emailVerification = emailVerificationMapper
+			.changeEmailVerification(councilId, email, code, expireTime);
+		emailVerificationRepository.save(emailVerification);
+
+		sendChangeEmailVerificationMail(email, code);
+	}
+
+	public void sendChangeEmailVerificationMail(String to, String code) {
+		SimpleMailMessage message = new SimpleMailMessage();
+		message.setTo(to);
+		message.setSubject("[Campus] 학생회 계정 이메일 변경 이메일 인증 코드");
+		message.setText(
+			"""
+				Campus 학생회 계정 이메일 변경을 위한 이메일 인증 코드입니다.
+				
+				인증 코드 : %s
+				
+				5분 이내에 입력해주세요.
+				""".formatted(code)
+		);
+
+		javaMailSender.send(message);
+	}
+
+	@Transactional
 	public void verifyCode(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
 		VerificationType verificationType) {
-		EmailVerification emailVerification = emailVerificationRepository.
-			findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(emailVerificationConfirmRequest.email(),
-				verificationType)
+		EmailVerification emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeOrderByEmailVerificationIdDesc(
+				emailVerificationConfirmRequest.email(), verificationType)
 			.orElseThrow(EmailVerificationNotFoundException::new);
 
+		verifyCodeInternal(emailVerificationConfirmRequest, emailVerification);
+	}
+
+	@Transactional
+	public void verifyChangeEmailCode(Long councilId, EmailVerificationConfirmRequest emailVerificationConfirmRequest) {
+		EmailVerification emailVerification = emailVerificationRepository.findTopByEmailAndVerificationTypeAndCouncilIdOrderByEmailVerificationIdDesc(
+				emailVerificationConfirmRequest.email(), VerificationType.CHANGE_EMAIL, councilId)
+			.orElseThrow(EmailVerificationNotFoundException::new);
+
+		verifyCodeInternal(emailVerificationConfirmRequest, emailVerification);
+	}
+
+	private void verifyCodeInternal(EmailVerificationConfirmRequest emailVerificationConfirmRequest,
+		EmailVerification emailVerification) {
 		if (emailVerification.isExpired()) {
 			emailVerificationRepository.delete(emailVerification);
 			throw new VerificationCodeExpiredException();
@@ -139,5 +185,11 @@ public class EmailVerificationService {
 	private String createCode() {
 		int code = ThreadLocalRandom.current().nextInt(100000, 1000000);
 		return String.valueOf(code);
+	}
+
+	private void validateSchoolEmail(String email) {
+		if (!email.endsWith(SCHOOL_EMAIL_SUFFIX)) {
+			throw new InvalidSchoolEmailException();
+		}
 	}
 }

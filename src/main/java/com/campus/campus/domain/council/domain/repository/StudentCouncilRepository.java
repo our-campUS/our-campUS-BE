@@ -9,19 +9,28 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 
 public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, Long> {
+	Optional<StudentCouncil> findByLoginIdAndDeletedAtIsNull(String loginId);
 
 	Optional<StudentCouncil> findByLoginId(String loginId);
 
-	Optional<StudentCouncil> findByEmail(String email);
+	Optional<StudentCouncil> findByEmailAndDeletedAtIsNull(String email);
 
 	@Query("SELECT sc FROM StudentCouncil sc " +
 		"LEFT JOIN FETCH sc.school " +
 		"LEFT JOIN FETCH sc.college " +
 		"LEFT JOIN FETCH sc.major " +
-		"WHERE sc.id = :councilId")
-	Optional<StudentCouncil> findByIdWithDetails(@Param("councilId") Long councilId);
+		"WHERE sc.id = :councilId AND sc.deletedAt IS NULL")
+	Optional<StudentCouncil> findByIdWithDetailsAndDeletedAtIsNull(@Param("councilId") Long councilId);
 
 	boolean existsByLoginId(String loginId);
 
 	boolean existsByEmail(String email);
+
+	boolean existsByEmailAndDeletedAtIsNull(String email);
+
+	Optional<StudentCouncil> findByIdAndDeletedAtIsNull(Long councilId);
+
+	boolean existsByIdAndDeletedAtIsNull(Long councilId);
+
+	boolean existsByEmailAndDeletedAtIsNotNull(String email);
 }

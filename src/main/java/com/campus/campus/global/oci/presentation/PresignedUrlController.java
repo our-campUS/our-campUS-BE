@@ -28,10 +28,9 @@ public class PresignedUrlController {
 	public CommonResponse<PresignedUrlResponseDto> createPresignedUrl(
 		@RequestBody @Valid PresignedUrlRequestDto request
 	) {
-		return CommonResponse.success(
-			PresignedUrlResponseCode.PRESIGNED_URL_SUCCESS,
-			presignedUrlService.createPresignedUrl("uploads", request)
-		);
+		PresignedUrlResponseDto responseDto = presignedUrlService.createPresignedUrl("uploads", request);
+
+		return CommonResponse.success(PresignedUrlResponseCode.PRESIGNED_URL_SUCCESS, responseDto);
 	}
 
 	@PostMapping("/posts/images/presigned")
@@ -42,10 +41,9 @@ public class PresignedUrlController {
 	public CommonResponse<PresignedUrlResponseDto> createPostImagePresignedUrl(
 		@RequestBody @Valid PresignedUrlRequestDto request
 	) {
-		return CommonResponse.success(
-			PresignedUrlResponseCode.PRESIGNED_URL_SUCCESS,
-			presignedUrlService.createPresignedUrl("posts/images", request)
-		);
+		PresignedUrlResponseDto responseDto = presignedUrlService.createPresignedUrl("posts/images", request);
+
+		return CommonResponse.success(PresignedUrlResponseCode.PRESIGNED_URL_SUCCESS, responseDto);
 	}
 
 }
