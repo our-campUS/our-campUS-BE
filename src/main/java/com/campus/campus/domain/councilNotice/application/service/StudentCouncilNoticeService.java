@@ -1,5 +1,6 @@
 package com.campus.campus.domain.councilNotice.application.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -115,27 +116,21 @@ public class StudentCouncilNoticeService {
 			throw new NotNoticeWriterException();
 		}
 
+		// 업데이트 전 기존 이미지 스냅샷
 		List<NoticeImage> oldImages = noticeImageRepository.findAllByNotice(notice);
 
 		notice.update(dto.title(), dto.content());
 
+		// DB 이미지 교체
 		noticeImageRepository.deleteByNotice(notice);
 
-		if (dto.imageUrls() != null && !dto.imageUrls().isEmpty()) {
-			List<NoticeImage> images = dto.imageUrls().stream()
-				.map(imageUrl -> StudentCouncilNoticeMapper.toEntity(notice, imageUrl))
-				.toList();
-
-			noticeImageRepository.saveAll(images);
-		}
-
-		for (NoticeImage image : oldImages) {
-			try {
-				presignedUrlService.deleteImage(image.getImageUrl());
-			} catch (Exception e) {
-				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", image.getImageUrl());
+		if (dto.imageUrls() != null) {
+			for (String imageUrl : dto.imageUrls()) {
+				noticeImageRepository.save(StudentCouncilNoticeMapper.toEntity(notice, imageUrl));
 			}
 		}
+
+		cleanupUnusedImages(oldImages, dto);
 
 		List<String> imageUrls = noticeImageRepository
 			.findAllByNoticeOrderByIdAsc(notice)
@@ -158,14 +153,48 @@ public class StudentCouncilNoticeService {
 
 		List<NoticeImage> images = noticeImageRepository.findAllByNotice(notice);
 
+		List<String> deleteTargets = new ArrayList<>();
+		images.stream()
+			.map(NoticeImage::getImageUrl)
+			.forEach(deleteTargets::add);
+
 		noticeImageRepository.deleteAll(images);
 		noticeRepository.delete(notice);
 
-		for (NoticeImage image : images) {
+		for (String imageUrl : deleteTargets) {
+			if (imageUrl == null || imageUrl.isBlank()) {
+				continue;
+			}
+
 			try {
-				presignedUrlService.deleteImage(image.getImageUrl());
+				presignedUrlService.deleteImage(imageUrl);
 			} catch (Exception e) {
-				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", image.getImageUrl());
+				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
+			}
+		}
+	}
+
+	private void cleanupUnusedImages(List<NoticeImage> oldImages, NoticeRequestDto dto) {
+		List<String> newUrls = dto.imageUrls() == null ? List.of() : dto.imageUrls();
+
+		List<String> deleteTargets = new ArrayList<>();
+
+		// 본문 이미지 중 제거된 이미지
+		oldImages.stream()
+			.map(NoticeImage::getImageUrl)
+			.filter(url -> !newUrls.contains(url))
+			.forEach(deleteTargets::add);
+
+		//삭제
+		for (String imageUrl : deleteTargets) {
+			if (imageUrl == null || imageUrl.isBlank()) {
+				continue;
+			}
+
+			try {
+				presignedUrlService.deleteImage(imageUrl);
+			} catch (Exception e) {
+				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
 			}
 		}
 	}
