@@ -24,7 +24,8 @@ public class PermitUrlConfig {
 			"/search/schools",
 			"/search/colleges",
 			"/search/majors",
-			"/jwt/token/reissue"
+			"/jwt/token/reissue",
+			"/places/search"
 		};
 	}
 }
