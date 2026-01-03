@@ -117,7 +117,7 @@ public class PlaceService {
 			);
 
 			placeImagesRepository.save(
-				placeMapper.createPlaceImages(placeKey, googleUrl)
+				placeMapper.createPlaceImages(placeKey, presigned.imageUrl())
 			);
 		}
 	}
