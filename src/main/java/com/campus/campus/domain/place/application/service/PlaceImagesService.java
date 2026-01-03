@@ -1,6 +1,5 @@
 package com.campus.campus.domain.place.application.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -27,30 +26,39 @@ public class PlaceImagesService {
 	public List<String> getPlaceImgs(String placeKey, String name, String address) {
 
 		// DB 확인
-		List<PlaceImages> savedImages = placeImagesRepository.findByPlaceKey(placeKey);
-		if (!savedImages.isEmpty()) {
-			return savedImages.stream()
-				.map(PlaceImages::getImageUrl)
-				.toList();
+		List<String> images = getImages(placeKey);
+		if (!images.isEmpty()) {
+			return images;
 		}
 
 		//최초 검색 시 google에서 이미지 url 가져오기
 		List<String> googleImageUrls = googleClient.fetchImages(name, address, 3);
-
 		if (googleImageUrls.isEmpty()) {
 			return List.of();
 		}
 
 		// google 이미지 url을 그대로 DB에 저장
-		List<String> storedImageUrls = new ArrayList<>();
+		// savePlaceImages(placeKey, googleImageUrls);
+		return googleImageUrls;
+	}
 
-		for (String googleImageUrl : googleImageUrls) {
-			placeImagesRepository.save(
-				new PlaceImages(placeKey, googleImageUrl, ImageSource.GOOGLE)
-			);
-			storedImageUrls.add(googleImageUrl);
-		}
-		return storedImageUrls;
+	/*
+	 * DB 캐시 조회
+	 */
+	private List<String> getImages(String placeKey) {
+		return placeImagesRepository.findByPlaceKey(placeKey).stream()
+			.map(PlaceImages::getImageUrl)
+			.toList();
+	}
+
+	/*
+	 * 이미지 저장
+	 */
+	private void savePlaceImages(String placeKey, List<String> imageUrls) {
+		List<PlaceImages> entities = imageUrls.stream()
+			.map(url -> new PlaceImages(placeKey, url, ImageSource.GOOGLE))
+			.toList();
+		placeImagesRepository.saveAll(entities);
 	}
 
 	@Transactional

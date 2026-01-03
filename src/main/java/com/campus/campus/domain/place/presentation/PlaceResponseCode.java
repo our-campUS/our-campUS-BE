@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum PlaceResponseCode implements ResponseCodeInterface {
-	PLACE_SAVE_SUCCESS(200, HttpStatus.OK, "장소 저장이 성공적으로 완료되었습니다."),
+	PLACE_SAVE_SUCCESS(200, HttpStatus.OK, "좋아요 처리가 완료되었습니다."),
 	PLACE_SEARCH_SUCCESS(200, HttpStatus.OK, "키워드 장소 검색이 성공적으로 완료되었습니다.");
 
 	private final int code;

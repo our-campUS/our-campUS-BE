@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.campus.campus.domain.place.application.dto.response.PlaceSaveResponse;
+import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
@@ -15,8 +15,8 @@ import com.campus.campus.domain.place.domain.entity.Place;
 @Component
 public class PlaceMapper {
 
-	public PlaceSaveResponse toPlaceSaveResponse(Long placeId) {
-		return new PlaceSaveResponse(
+	public LikeResponse toPlaceSaveResponse(Long placeId) {
+		return new LikeResponse(
 			placeId
 		);
 	}
@@ -38,21 +38,16 @@ public class PlaceMapper {
 		);
 	}
 
-	public static Place toEntity(
-		NaverSearchResponse.Item item,
-		String placeKey
-	) {
-		return Place.create(
-			placeKey,
-			stripHtml(item.title()),
-			item.category(),
-			item.telephone(),
-			item.roadAddress(),
-			item.link(),//네이버 place URL
-			Coordinate.fromNaver(
-				Double.parseDouble(item.mapy()), // 위도
-				Double.parseDouble(item.mapx())  // 경도
-			)
+	public Place toEntity(SavedPlaceInfo savedPlaceInfo) {
+
+		return new Place(
+			savedPlaceInfo.placeKey(),
+			savedPlaceInfo.placeName(),
+			savedPlaceInfo.category(),
+			savedPlaceInfo.telephone(),
+			savedPlaceInfo.address(),
+			savedPlaceInfo.link(),
+			savedPlaceInfo.coordinate()
 		);
 	}
 

@@ -11,15 +11,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "liked_places")
+@Table(
+	name = "liked_places",
+	uniqueConstraints = {
+		@UniqueConstraint(columnNames = {"user_id", "place_id"})
+	})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-
 public class LikedPlace extends BaseEntity {
 
 	@Id
@@ -35,10 +39,6 @@ public class LikedPlace extends BaseEntity {
 	private Place place;
 
 	public LikedPlace(User user, Place place) {
-		// 도메인 규칙 검증
-		if (user == null || place == null) {
-			throw new IllegalArgumentException("user와 place는 필수입니다.");
-		}
 		this.user = user;
 		this.place = place;
 	}

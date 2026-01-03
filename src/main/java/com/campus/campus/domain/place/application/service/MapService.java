@@ -36,8 +36,8 @@ public class MapService {
 				//placeKey 생성
 				String placeKey = PlaceKeyGenerator.generate(name, address);
 
-				//place upsert
-				upsertPlace(mapper.toEntity(item, placeKey));
+				// //place upsert
+				// upsertPlace(mapper.toEntity(item, placeKey));
 
 				//네이버 -> 기본 정보
 				SavedPlaceInfo base = mapper.toSavedPlaceInfo(item, placeKey);

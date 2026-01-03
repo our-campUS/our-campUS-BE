@@ -7,12 +7,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "places")
+@Table(
+	name = "places",
+	uniqueConstraints = {
+		@UniqueConstraint(columnNames = "place_key")
+	})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Place {
@@ -22,9 +27,11 @@ public class Place {
 	@Column(name = "place_id")
 	private Long placeId;
 
+	// 네이버/구글 등 외부 API에서 제공하는 고유 식별자
 	@Column(name = "place_key", nullable = false, unique = true)
 	private String placeKey;
 
+	//장소명
 	@Column(name = "place_name")
 	private String placeName;
 

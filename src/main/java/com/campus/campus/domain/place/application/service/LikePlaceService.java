@@ -1,9 +1,13 @@
 package com.campus.campus.domain.place.application.service;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
@@ -21,27 +25,35 @@ public class LikePlaceService {
 	private final PlaceRepository placeRepository;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
+	private final PlaceMapper placeMapper;
 
 	//장소 저장
 	@Transactional
-	public Long execute(SavedPlaceInfo placeInfo, Long userId) {
+	public LikeResponse likePlace(SavedPlaceInfo placeInfo, Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
-		//장소 저장
-		Place place = Place.create(
-			placeInfo.placeName(),
-			placeInfo.placeKey(),
-			placeInfo.category(),
-			placeInfo.telephone(),
-			placeInfo.address(),
-			placeInfo.link(),
-			placeInfo.coordinate()
-		);
+		String placeKey = placeInfo.placeKey();
 
-		//좋아요 누른 장소 저장
+		//이미 좋아요가 존재하는지 확인
+		Optional<LikedPlace> likedPlace =
+			likedPlacesRepository.findByUserIdAndPlaceKey(userId, placeKey);
+
+		if (likedPlace.isPresent()) {
+			//이미 좋아요 상태->좋아요 취소
+			likedPlacesRepository.delete(likedPlace.get());
+			return new LikeResponse(null, false);
+		}
+
+		//좋아요 추가 로직
+		Place place = placeRepository.findByPlaceKey(placeKey)
+			.orElseGet(() ->
+				placeRepository.save(placeMapper.toEntity(placeInfo)));
+
+		//likedPlace 저장
 		likedPlacesRepository.save(new LikedPlace(user, place));
-		return placeRepository.save(place).getPlaceId();
+
+		return new LikeResponse(place.getPlaceId(), true);
 	}
 
 }

@@ -9,9 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campus.campus.domain.place.application.dto.response.PlaceSaveResponse;
+import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
-import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.service.LikePlaceService;
 import com.campus.campus.domain.place.application.service.MapService;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -26,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 public class PlaceController {
 
 	private final LikePlaceService likePlaceService;
-	private final PlaceMapper placeMapper;
 	private final MapService mapService;
 
 	@GetMapping("/search")
@@ -36,11 +34,10 @@ public class PlaceController {
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
 
-	@PostMapping("/like-place")
+	@PostMapping("/{placeKey}/like-place")
 	@Operation(summary = "장소 좋아요 누르기")
-	public CommonResponse<PlaceSaveResponse> save(@RequestBody SavedPlaceInfo request, @CurrentUserId Long userId) {
-		Long placeId = likePlaceService.execute(request, userId);
-		PlaceSaveResponse response = placeMapper.toPlaceSaveResponse(placeId);
+	public CommonResponse<LikeResponse> likePlace(@RequestBody SavedPlaceInfo request, @CurrentUserId Long userId) {
+		LikeResponse response = likePlaceService.likePlace(request, userId);
 		return CommonResponse.success(PlaceResponseCode.PLACE_SAVE_SUCCESS, response);
 	}
 }
