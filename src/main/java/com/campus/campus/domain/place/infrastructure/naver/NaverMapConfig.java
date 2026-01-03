@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 public class NaverMapConfig {
 
 	@Value("${map.naver.client-id}")
-	public String clientId;
+	private String clientId;
 
 	@Value("${map.naver.client-secret}")
-	public String clientSecret;
+	private String clientSecret;
 }

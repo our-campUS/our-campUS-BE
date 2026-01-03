@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 import com.campus.campus.global.config.OciConfig;
 import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
@@ -29,7 +29,7 @@ public class PresignedUrlService {
 	private static final long PRESIGNED_TTL_MS = 10 * 60 * 1000; // 10분
 	private final ObjectStorage objectStorage;
 	private final OciConfig ociConfig;
-	private final WebClient webClient;
+	private final RestClient restClient;
 
 	public PresignedUrlResponseDto createPresignedUrl(String directory, PresignedUrlRequestDto request) {
 		String objectName = directory + "/" + UUID.randomUUID() + request.resolveExtension();
@@ -118,14 +118,13 @@ public class PresignedUrlService {
 	) {
 
 		try {
-			webClient
+			restClient
 				.put()
-				.uri(uploadUrl)                                      // presigned PUT URL
-				.contentType(MediaType.parseMediaType(contentType)) // Content-Type 지정
-				.bodyValue(imageBytes)                               // 이미지 바이트
+				.uri(uploadUrl)
+				.contentType(MediaType.parseMediaType(contentType))// 업로드 완료까지 대기
+				.body(imageBytes)
 				.retrieve()
-				.toBodilessEntity()                                  // 응답 바디 필요 없음
-				.block();                                            // 업로드 완료까지 대기
+				.toBodilessEntity();
 
 			log.info("[OCI] upload success. uploadUrl={}", uploadUrl);
 

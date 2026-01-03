@@ -40,8 +40,8 @@ public record SavedPlaceInfo(
 		return String.format(
 			"https://map.naver.com/v5/search/%s?c=%f,%f,15,0,0,0,dh",
 			URLEncoder.encode(item.title(), StandardCharsets.UTF_8),
-			Double.parseDouble(item.mapx()),
-			Double.parseDouble(item.mapy())
+			Double.parseDouble(item.mapy()),
+			Double.parseDouble(item.mapx())
 		);
 	}
 
