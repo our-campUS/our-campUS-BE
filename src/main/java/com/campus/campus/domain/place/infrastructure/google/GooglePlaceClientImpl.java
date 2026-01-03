@@ -80,7 +80,11 @@ public class GooglePlaceClientImpl implements GooglePlaceClient {
 			return null;
 		}
 
-		return response.results().get(0).placeId();
+		String placeId = response.results().get(0).placeId();
+		if (placeId == null || placeId.isBlank()) {
+			return null;
+		}
+		return placeId;
 	}
 
 	/*
