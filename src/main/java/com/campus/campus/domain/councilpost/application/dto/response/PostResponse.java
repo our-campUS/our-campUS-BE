@@ -12,7 +12,7 @@ import lombok.Builder;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record PostResponseDto(
+public record PostResponse(
 
 	Long id,
 	Long writerId,

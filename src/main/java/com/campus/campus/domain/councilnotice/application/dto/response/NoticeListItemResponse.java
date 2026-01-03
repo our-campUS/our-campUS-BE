@@ -1,11 +1,11 @@
-package com.campus.campus.domain.councilNotice.application.dto.response;
+package com.campus.campus.domain.councilnotice.application.dto.response;
 
 import java.time.LocalDateTime;
 
 import lombok.Builder;
 
 @Builder
-public record NoticeListItemResponseDto(
+public record NoticeListItemResponse(
 	Long id,
 	String title,
 	boolean isWriter,

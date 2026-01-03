@@ -1,4 +1,4 @@
-package com.campus.campus.domain.councilNotice.application.exception;
+package com.campus.campus.domain.councilnotice.application.exception;
 
 import com.campus.campus.global.common.exception.ApplicationException;
 

@@ -1,4 +1,4 @@
-package com.campus.campus.domain.councilNotice.application.dto.response;
+package com.campus.campus.domain.councilnotice.application.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder
-public record NoticeResponseDto(
+public record NoticeResponse(
 	Long id,
 	Long writerId,
 	String writerName,

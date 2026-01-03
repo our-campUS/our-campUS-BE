@@ -1,4 +1,4 @@
-package com.campus.campus.domain.councilNotice.presentation;
+package com.campus.campus.domain.councilnotice.presentation;
 
 import org.springframework.http.HttpStatus;
 
@@ -15,7 +15,7 @@ public enum NoticeResponseCode implements ResponseCodeInterface {
 	NOTICE_READ_SUCCESS(200, HttpStatus.OK, "공지 조회에 성공했습니다."),
 	NOTICE_LIST_READ_SUCCESS(200, HttpStatus.OK, "공지 목록 조회에 성공했습니다."),
 	NOTICE_UPDATE_SUCCESS(200, HttpStatus.OK, "공지 수정에 성공했습니다."),
-	NOTICE_DELETE_SUCCESS(204, HttpStatus.NO_CONTENT, "공지 삭제에 성공했습니다.");
+	NOTICE_DELETE_SUCCESS(200, HttpStatus.OK, "공지 삭제에 성공했습니다.");
 
 	private final int code;
 	private final HttpStatus status;

@@ -5,16 +5,16 @@ import java.util.Collections;
 import java.util.List;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponseDto;
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequestDto;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponseDto;
+import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 
 public class StudentCouncilPostMapper {
 
-	public static PostListItemResponseDto toListItem(StudentCouncilPost post, Long currentUserId) {
-		return new PostListItemResponseDto(
+	public static PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long currentUserId) {
+		return new PostListItemResponse(
 			post.getId(),
 			post.getCategory(),
 			post.getTitle(),
@@ -28,9 +28,9 @@ public class StudentCouncilPostMapper {
 		);
 	}
 
-	public static PostResponseDto toDetail(StudentCouncilPost post, List<String> images, Long currentUserId) {
+	public static PostResponse toPostResponse(StudentCouncilPost post, List<String> images, Long currentUserId) {
 		var writer = post.getWriter();
-		var builder = PostResponseDto.builder()
+		var builder = PostResponse.builder()
 			.id(post.getId())
 			.writerId(writer.getId())
 			.writerName(writer.getFullCouncilName())
@@ -53,7 +53,7 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public static StudentCouncilPost toEntity(StudentCouncil writer, PostRequestDto dto, LocalDateTime startDateTime,
+	public static StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto, LocalDateTime startDateTime,
 		LocalDateTime endDateTime) {
 		return StudentCouncilPost.builder()
 			.writer(writer)
@@ -68,7 +68,7 @@ public class StudentCouncilPostMapper {
 			.build();
 	}
 
-	public static PostImage toEntity(StudentCouncilPost post, String imageUrl) {
+	public static PostImage createPostImage(StudentCouncilPost post, String imageUrl) {
 		return PostImage.builder()
 			.post(post)
 			.imageUrl(imageUrl)

@@ -1,6 +1,5 @@
-package com.campus.campus.domain.councilNotice.application.service;
+package com.campus.campus.domain.councilnotice.application.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -13,17 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
-import com.campus.campus.domain.councilNotice.application.dto.request.NoticeRequestDto;
-import com.campus.campus.domain.councilNotice.application.dto.response.NoticeListItemResponseDto;
-import com.campus.campus.domain.councilNotice.application.dto.response.NoticeResponseDto;
-import com.campus.campus.domain.councilNotice.application.exception.NotNoticeWriterException;
-import com.campus.campus.domain.councilNotice.application.exception.NoticeImageLimitExceededException;
-import com.campus.campus.domain.councilNotice.application.exception.NoticeNotFoundException;
-import com.campus.campus.domain.councilNotice.application.mapper.StudentCouncilNoticeMapper;
-import com.campus.campus.domain.councilNotice.domain.entity.NoticeImage;
-import com.campus.campus.domain.councilNotice.domain.entity.StudentCouncilNotice;
-import com.campus.campus.domain.councilNotice.domain.repository.NoticeImageRepository;
-import com.campus.campus.domain.councilNotice.domain.repository.StudentCouncilNoticeRepository;
+import com.campus.campus.domain.councilnotice.application.dto.request.NoticeRequest;
+import com.campus.campus.domain.councilnotice.application.dto.response.NoticeListItemResponse;
+import com.campus.campus.domain.councilnotice.application.dto.response.NoticeResponse;
+import com.campus.campus.domain.councilnotice.application.exception.NotNoticeWriterException;
+import com.campus.campus.domain.councilnotice.application.exception.NoticeImageLimitExceededException;
+import com.campus.campus.domain.councilnotice.application.exception.NoticeNotFoundException;
+import com.campus.campus.domain.councilnotice.application.exception.NoticeOciImageDeleteFailedException;
+import com.campus.campus.domain.councilnotice.application.mapper.StudentCouncilNoticeMapper;
+import com.campus.campus.domain.councilnotice.domain.entity.NoticeImage;
+import com.campus.campus.domain.councilnotice.domain.entity.StudentCouncilNotice;
+import com.campus.campus.domain.councilnotice.domain.repository.NoticeImageRepository;
+import com.campus.campus.domain.councilnotice.domain.repository.StudentCouncilNoticeRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ public class StudentCouncilNoticeService {
 	private final PresignedUrlService presignedUrlService;
 
 	@Transactional
-	public NoticeResponseDto create(Long councilId, NoticeRequestDto dto) {
+	public NoticeResponse create(Long councilId, NoticeRequest dto) {
 
 		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new NoticeImageLimitExceededException();
@@ -52,11 +52,11 @@ public class StudentCouncilNoticeService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		StudentCouncilNotice notice =
-			noticeRepository.save(StudentCouncilNoticeMapper.toEntity(writer, dto));
+			noticeRepository.save(StudentCouncilNoticeMapper.createStudentCouncilNotice(writer, dto));
 
 		if (dto.imageUrls() != null && !dto.imageUrls().isEmpty()) {
 			List<NoticeImage> images = dto.imageUrls().stream()
-				.map(imageUrl -> StudentCouncilNoticeMapper.toEntity(notice, imageUrl))
+				.map(imageUrl -> StudentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl))
 				.toList();
 
 			noticeImageRepository.saveAll(images);
@@ -68,11 +68,11 @@ public class StudentCouncilNoticeService {
 			.map(NoticeImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilNoticeMapper.toDetail(notice, imageUrls, councilId);
+		return StudentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
-	public NoticeResponseDto findById(Long noticeId, Long councilId) {
+	public NoticeResponse findById(Long noticeId, Long councilId) {
 
 		StudentCouncilNotice notice = noticeRepository.findByIdWithFullInfo(noticeId)
 			.orElseThrow(NoticeNotFoundException::new);
@@ -83,11 +83,11 @@ public class StudentCouncilNoticeService {
 			.map(NoticeImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilNoticeMapper.toDetail(notice, imageUrls, councilId);
+		return StudentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
-	public Page<NoticeListItemResponseDto> findAll(int page, int size, Long councilId) {
+	public Page<NoticeListItemResponse> findAll(int page, int size, Long councilId) {
 
 		Pageable pageable = PageRequest.of(
 			Math.max(page - 1, 0),
@@ -95,15 +95,15 @@ public class StudentCouncilNoticeService {
 			Sort.by(Sort.Direction.DESC, "createdAt")
 		);
 
-		Page<StudentCouncilNotice> notices = noticeRepository.findAll(pageable);
+		Page<StudentCouncilNotice> notices = noticeRepository.findAllWithWriter(pageable);
 
 		return notices.map(notice ->
-			StudentCouncilNoticeMapper.toListItem(notice, councilId)
+			StudentCouncilNoticeMapper.toNoticeListItemResponse(notice, councilId)
 		);
 	}
 
 	@Transactional
-	public NoticeResponseDto update(Long councilId, Long noticeId, NoticeRequestDto dto) {
+	public NoticeResponse update(Long councilId, Long noticeId, NoticeRequest dto) {
 
 		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new NoticeImageLimitExceededException();
@@ -126,7 +126,7 @@ public class StudentCouncilNoticeService {
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				noticeImageRepository.save(StudentCouncilNoticeMapper.toEntity(notice, imageUrl));
+				noticeImageRepository.save(StudentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl));
 			}
 		}
 
@@ -138,7 +138,7 @@ public class StudentCouncilNoticeService {
 			.map(NoticeImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilNoticeMapper.toDetail(notice, imageUrls, councilId);
+		return StudentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
 	}
 
 	@Transactional
@@ -153,10 +153,9 @@ public class StudentCouncilNoticeService {
 
 		List<NoticeImage> images = noticeImageRepository.findAllByNotice(notice);
 
-		List<String> deleteTargets = new ArrayList<>();
-		images.stream()
+		List<String> deleteTargets = images.stream()
 			.map(NoticeImage::getImageUrl)
-			.forEach(deleteTargets::add);
+			.toList();
 
 		noticeImageRepository.deleteAll(images);
 		noticeRepository.delete(notice);
@@ -168,22 +167,19 @@ public class StudentCouncilNoticeService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (Exception e) {
-				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
+			} catch (NoticeOciImageDeleteFailedException e) {
+				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}
 	}
 
-	private void cleanupUnusedImages(List<NoticeImage> oldImages, NoticeRequestDto dto) {
+	private void cleanupUnusedImages(List<NoticeImage> oldImages, NoticeRequest dto) {
 		List<String> newUrls = dto.imageUrls() == null ? List.of() : dto.imageUrls();
 
-		List<String> deleteTargets = new ArrayList<>();
-
-		// 본문 이미지 중 제거된 이미지
-		oldImages.stream()
+		List<String> deleteTargets = oldImages.stream()
 			.map(NoticeImage::getImageUrl)
 			.filter(url -> !newUrls.contains(url))
-			.forEach(deleteTargets::add);
+			.toList();
 
 		//삭제
 		for (String imageUrl : deleteTargets) {
@@ -193,8 +189,8 @@ public class StudentCouncilNoticeService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (Exception e) {
-				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
+			} catch (NoticeOciImageDeleteFailedException e) {
+				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}
 	}
