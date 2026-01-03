@@ -34,7 +34,7 @@ public class PlaceController {
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
 
-	@PostMapping("/{placeKey}/like-place")
+	@PostMapping("/like-place")
 	@Operation(summary = "장소 좋아요 누르기")
 	public CommonResponse<LikeResponse> likePlace(@RequestBody SavedPlaceInfo request, @CurrentUserId Long userId) {
 		LikeResponse response = likePlaceService.likePlace(request, userId);

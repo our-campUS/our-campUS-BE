@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campus.campus.domain.place.domain.entity.ImageSource;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClientImpl;
@@ -23,8 +22,10 @@ public class PlaceImagesService {
 	private final PlaceImagesRepository placeImagesRepository;
 	private final PresignedUrlService presignedUrlService;
 
+	/*
+	 * 장소 검색 시 google places로부터 이미지 불러오기
+	 */
 	public List<String> getPlaceImgs(String placeKey, String name, String address) {
-
 		// DB 확인
 		List<String> images = getImages(placeKey);
 		if (!images.isEmpty()) {
@@ -36,9 +37,6 @@ public class PlaceImagesService {
 		if (googleImageUrls.isEmpty()) {
 			return List.of();
 		}
-
-		// google 이미지 url을 그대로 DB에 저장
-		// savePlaceImages(placeKey, googleImageUrls);
 		return googleImageUrls;
 	}
 
@@ -51,31 +49,16 @@ public class PlaceImagesService {
 			.toList();
 	}
 
-	/*
-	 * 이미지 저장
-	 */
-	private void savePlaceImages(String placeKey, List<String> imageUrls) {
-		List<PlaceImages> entities = imageUrls.stream()
-			.map(url -> new PlaceImages(placeKey, url, ImageSource.GOOGLE))
-			.toList();
-		placeImagesRepository.saveAll(entities);
-	}
-
 	@Transactional
-	public void migrateImagestoOci(String placeKey) {
-		List<PlaceImages> images = placeImagesRepository.findByPlaceKey(placeKey);
+	public void migrateImagestoOci(String placeKey, List<String> imageUrls) {
 
 		//google 이미지 OCI 업로드
-		for (PlaceImages image : images) {
+		for (String googleUrl : imageUrls) {
 
-			// 이미 OCI로 옮긴 건 스킵
-			if (image.isOciStored()) {
-				continue;
-			}
+			// google 이미지 다운로드
+			byte[] bytes = googleClient.downloadImage(googleUrl);
 
-			// Google → OCI 업로드
-			byte[] bytes = googleClient.downloadImage(image.getImageUrl());
-
+			//OCI 업로드->objectKey 반환
 			PresignedUrlResponseDto presigned =
 				presignedUrlService.createPresignedUrl(
 					"places",
@@ -88,8 +71,9 @@ public class PlaceImagesService {
 				"image/jpeg"
 			);
 
-			// URL 교체
-			image.updateToOci(presigned.imageUrl());
+			placeImagesRepository.save(
+				new PlaceImages(placeKey, googleUrl)
+			);
 		}
 	}
 }

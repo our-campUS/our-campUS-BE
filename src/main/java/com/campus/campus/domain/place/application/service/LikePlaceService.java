@@ -26,6 +26,7 @@ public class LikePlaceService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final PlaceMapper placeMapper;
+	private final PlaceImagesService placeImagesService;
 
 	//장소 저장
 	@Transactional
@@ -45,14 +46,27 @@ public class LikePlaceService {
 			return new LikeResponse(null, false);
 		}
 
-		//좋아요 추가 로직
-		Place place = placeRepository.findByPlaceKey(placeKey)
-			.orElseGet(() ->
-				placeRepository.save(placeMapper.toEntity(placeInfo)));
+		//Place 엔티티 생성
+		Place place;
+		Optional<Place> optionalPlace = placeRepository.findByPlaceKey(placeKey);
 
+		if (optionalPlace.isPresent()) {
+			//기존 place 존재->그대로 사용
+			place = optionalPlace.get();
+		} else {
+			//place 신규 생성
+			place = placeRepository.save(
+				placeMapper.toEntity(placeInfo)
+			);
+
+			//신규 생성된 경우에만 이미지 저장
+			placeImagesService.migrateImagestoOci(
+				place.getPlaceKey(),
+				placeInfo.imgUrls()
+			);
+		}
 		//likedPlace 저장
 		likedPlacesRepository.save(new LikedPlace(user, place));
-
 		return new LikeResponse(place.getPlaceId(), true);
 	}
 

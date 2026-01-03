@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
@@ -14,12 +13,6 @@ import com.campus.campus.domain.place.domain.entity.Place;
 
 @Component
 public class PlaceMapper {
-
-	public LikeResponse toPlaceSaveResponse(Long placeId) {
-		return new LikeResponse(
-			placeId
-		);
-	}
 
 	public SavedPlaceInfo toSavedPlaceInfo(NaverSearchResponse.Item item, String placeKey) {
 
