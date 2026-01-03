@@ -14,17 +14,14 @@ public interface StudentCouncilNoticeRepository extends JpaRepository<StudentCou
 
 	@Query("SELECT n FROM StudentCouncilNotice n " +
 		"JOIN FETCH n.writer w " +
-		"LEFT JOIN FETCH w.school " +
+		"JOIN FETCH w.school " +
 		"LEFT JOIN FETCH w.college " +
 		"LEFT JOIN FETCH w.major " +
 		"WHERE n.id = :noticeId")
 	Optional<StudentCouncilNotice> findByIdWithFullInfo(@Param("noticeId") Long noticeId);
 
-	@Query("SELECT n FROM StudentCouncilNotice n " +
-		"JOIN FETCH n.writer " +
-		"WHERE n.id IN (" +
-		"   SELECT notice.id FROM StudentCouncilNotice notice " +
-		"   ORDER BY notice.createdAt DESC" +
-		")")
+	@Query(value= "SELECT n FROM StudentCouncilNotice n " +
+		"JOIN FETCH n.writer " ,
+		countQuery = "SELECT COUNT(n) FROM StudentCouncilNotice n")
 	Page<StudentCouncilNotice> findAllWithWriter(Pageable pageable);
 }

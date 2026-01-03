@@ -4,6 +4,6 @@ import com.campus.campus.global.common.exception.ApplicationException;
 
 public class NoticeImageLimitExceededException extends ApplicationException {
 	public NoticeImageLimitExceededException() {
-		super(ErrorCode.NOTICE_OCI_IMAGE_DELETE_FAILED);
+		super(ErrorCode.NOTICE_IMAGE_LIMIT_EXCEEDED);
 	}
 }

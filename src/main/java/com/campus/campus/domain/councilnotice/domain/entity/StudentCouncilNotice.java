@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class StudentCouncilNotice extends BaseEntity {
 
@@ -41,6 +41,9 @@ public class StudentCouncilNotice extends BaseEntity {
 	private String content;
 
 	public void update(String title, String content) {
+		if (title == null || content == null) {
+			throw new IllegalArgumentException("제목과 내용은 필수입니다.");
+		}
 		this.title = title;
 		this.content = content;
 	}

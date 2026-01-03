@@ -21,6 +21,7 @@ import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,7 +37,7 @@ public class StudentCouncilNoticeController {
 	@Operation(summary = "학생회 공지 작성")
 	public CommonResponse<NoticeResponse> create(
 		@CurrentCouncilId Long councilId,
-		@RequestBody NoticeRequest dto
+		@RequestBody @Valid NoticeRequest dto
 	) {
 		NoticeResponse response = noticeService.create(councilId, dto);
 
@@ -61,7 +62,7 @@ public class StudentCouncilNoticeController {
 	public CommonResponse<NoticeResponse> update(
 		@PathVariable Long noticeId,
 		@CurrentCouncilId Long councilId,
-		@RequestBody NoticeRequest dto
+		@RequestBody @Valid NoticeRequest dto
 	) {
 		NoticeResponse response = noticeService.update(councilId, noticeId, dto);
 
