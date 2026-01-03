@@ -25,7 +25,6 @@ import com.campus.campus.domain.councilnotice.domain.entity.StudentCouncilNotice
 import com.campus.campus.domain.councilnotice.domain.repository.NoticeImageRepository;
 import com.campus.campus.domain.councilnotice.domain.repository.StudentCouncilNoticeRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
-import com.campus.campus.global.oci.mapper.PresignedUrlMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,6 @@ public class StudentCouncilNoticeService {
 	private final NoticeImageRepository noticeImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilNoticeMapper studentCouncilNoticeMapper;
-	private final PresignedUrlMapper presignedUrlMapper;
 
 	@Transactional
 	public NoticeResponse create(Long councilId, NoticeRequest dto) {
@@ -59,7 +57,7 @@ public class StudentCouncilNoticeService {
 
 		if (dto.imageUrls() != null && !dto.imageUrls().isEmpty()) {
 			List<NoticeImage> images = dto.imageUrls().stream()
-				.map(imageUrl -> StudentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl))
+				.map(imageUrl -> studentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl))
 				.toList();
 
 			noticeImageRepository.saveAll(images);
@@ -71,7 +69,7 @@ public class StudentCouncilNoticeService {
 			.map(NoticeImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
+		return studentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
@@ -86,7 +84,7 @@ public class StudentCouncilNoticeService {
 			.map(NoticeImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
+		return studentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
@@ -101,7 +99,7 @@ public class StudentCouncilNoticeService {
 		Page<StudentCouncilNotice> notices = noticeRepository.findAllWithWriter(pageable);
 
 		return notices.map(notice ->
-			StudentCouncilNoticeMapper.toNoticeListItemResponse(notice, councilId)
+			studentCouncilNoticeMapper.toNoticeListItemResponse(notice, councilId)
 		);
 	}
 
@@ -130,7 +128,7 @@ public class StudentCouncilNoticeService {
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
 				noticeImageRepository.save(
-					StudentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl));
+					studentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl));
 			}
 		}
 
@@ -142,7 +140,7 @@ public class StudentCouncilNoticeService {
 			.map(NoticeImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
+		return studentCouncilNoticeMapper.toNoticeResponse(notice, imageUrls, councilId);
 	}
 
 	@Transactional
