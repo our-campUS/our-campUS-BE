@@ -2,6 +2,8 @@ package com.campus.campus.domain.councilnotice.application.mapper;
 
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.councilnotice.application.dto.request.NoticeRequest;
 import com.campus.campus.domain.councilnotice.application.dto.response.NoticeListItemResponse;
@@ -9,9 +11,13 @@ import com.campus.campus.domain.councilnotice.application.dto.response.NoticeRes
 import com.campus.campus.domain.councilnotice.domain.entity.NoticeImage;
 import com.campus.campus.domain.councilnotice.domain.entity.StudentCouncilNotice;
 
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class StudentCouncilNoticeMapper {
 
-	public static StudentCouncilNotice createStudentCouncilNotice(StudentCouncil writer, NoticeRequest dto) {
+	public StudentCouncilNotice createStudentCouncilNotice(StudentCouncil writer, NoticeRequest dto) {
 		return StudentCouncilNotice.builder()
 			.title(dto.title())
 			.content(dto.content())
@@ -19,14 +25,14 @@ public class StudentCouncilNoticeMapper {
 			.build();
 	}
 
-	public static NoticeImage createStudentCouncilNoticeImage(StudentCouncilNotice notice, String imageUrl) {
+	public NoticeImage createStudentCouncilNoticeImage(StudentCouncilNotice notice, String imageUrl) {
 		return NoticeImage.builder()
 			.notice(notice)
 			.imageUrl(imageUrl)
 			.build();
 	}
 
-	public static NoticeResponse toNoticeResponse(StudentCouncilNotice notice, List<String> imageUrls, Long councilId) {
+	public NoticeResponse toNoticeResponse(StudentCouncilNotice notice, List<String> imageUrls, Long councilId) {
 		return NoticeResponse.builder()
 			.id(notice.getId())
 			.writerId(notice.getWriter().getId())
@@ -40,7 +46,7 @@ public class StudentCouncilNoticeMapper {
 			.build();
 	}
 
-	public static NoticeListItemResponse toNoticeListItemResponse(StudentCouncilNotice notice, Long currentUserId) {
+	public NoticeListItemResponse toNoticeListItemResponse(StudentCouncilNotice notice, Long currentUserId) {
 		return NoticeListItemResponse.builder()
 			.id(notice.getId())
 			.title(notice.getTitle())

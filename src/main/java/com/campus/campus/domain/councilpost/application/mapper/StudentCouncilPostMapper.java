@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
@@ -11,9 +13,13 @@ import com.campus.campus.domain.councilpost.application.dto.response.PostRespons
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class StudentCouncilPostMapper {
 
-	public static PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long currentUserId) {
+	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long currentUserId) {
 		return new PostListItemResponse(
 			post.getId(),
 			post.getCategory(),
@@ -28,7 +34,7 @@ public class StudentCouncilPostMapper {
 		);
 	}
 
-	public static PostResponse toPostResponse(StudentCouncilPost post, List<String> images, Long currentUserId) {
+	public PostResponse toPostResponse(StudentCouncilPost post, List<String> images, Long currentUserId) {
 		var writer = post.getWriter();
 		var builder = PostResponse.builder()
 			.id(post.getId())
@@ -53,7 +59,7 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public static StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto, LocalDateTime startDateTime,
+	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto, LocalDateTime startDateTime,
 		LocalDateTime endDateTime) {
 		return StudentCouncilPost.builder()
 			.writer(writer)
@@ -68,7 +74,7 @@ public class StudentCouncilPostMapper {
 			.build();
 	}
 
-	public static PostImage createPostImage(StudentCouncilPost post, String imageUrl) {
+	public PostImage createPostImage(StudentCouncilPost post, String imageUrl) {
 		return PostImage.builder()
 			.post(post)
 			.imageUrl(imageUrl)

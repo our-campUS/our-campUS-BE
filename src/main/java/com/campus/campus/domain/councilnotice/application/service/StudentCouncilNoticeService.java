@@ -25,6 +25,7 @@ import com.campus.campus.domain.councilnotice.domain.entity.StudentCouncilNotice
 import com.campus.campus.domain.councilnotice.domain.repository.NoticeImageRepository;
 import com.campus.campus.domain.councilnotice.domain.repository.StudentCouncilNoticeRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
+import com.campus.campus.global.oci.mapper.PresignedUrlMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,8 @@ public class StudentCouncilNoticeService {
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final NoticeImageRepository noticeImageRepository;
 	private final PresignedUrlService presignedUrlService;
+	private final StudentCouncilNoticeMapper studentCouncilNoticeMapper;
+	private final PresignedUrlMapper presignedUrlMapper;
 
 	@Transactional
 	public NoticeResponse create(Long councilId, NoticeRequest dto) {
@@ -52,7 +55,7 @@ public class StudentCouncilNoticeService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		StudentCouncilNotice notice =
-			noticeRepository.save(StudentCouncilNoticeMapper.createStudentCouncilNotice(writer, dto));
+			noticeRepository.save(studentCouncilNoticeMapper.createStudentCouncilNotice(writer, dto));
 
 		if (dto.imageUrls() != null && !dto.imageUrls().isEmpty()) {
 			List<NoticeImage> images = dto.imageUrls().stream()
@@ -126,7 +129,8 @@ public class StudentCouncilNoticeService {
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				noticeImageRepository.save(StudentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl));
+				noticeImageRepository.save(
+					StudentCouncilNoticeMapper.createStudentCouncilNoticeImage(notice, imageUrl));
 			}
 		}
 

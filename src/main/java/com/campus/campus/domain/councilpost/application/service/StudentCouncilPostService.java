@@ -43,10 +43,14 @@ public class StudentCouncilPostService {
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
 	private final PresignedUrlService presignedUrlService;
+	private final StudentCouncilPostMapper studentCouncilPostMapper;
+
+	private static final int MAX_IMAGE_COUNT = 10;
+	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 
 	@Transactional
 	public PostResponse create(Long councilId, PostRequest dto) {
-		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
+		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new PostImageLimitExceededException();
 		}
 
@@ -59,7 +63,7 @@ public class StudentCouncilPostService {
 
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
-		StudentCouncilPost post = StudentCouncilPostMapper.createStudentCouncilPost(
+		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
 			writer, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
@@ -67,7 +71,7 @@ public class StudentCouncilPostService {
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				postImageRepository.save(StudentCouncilPostMapper.createPostImage(post, imageUrl));
+				postImageRepository.save(studentCouncilPostMapper.createPostImage(post, imageUrl));
 			}
 		}
 
@@ -77,7 +81,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
@@ -91,7 +95,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toPostResponse(post, imageUrls, currentUserId);
+		return studentCouncilPostMapper.toPostResponse(post, imageUrls, currentUserId);
 	}
 
 	@Transactional(readOnly = true)
@@ -103,7 +107,7 @@ public class StudentCouncilPostService {
 			: postRepository.findAllByCategory(category, pageable);
 
 		return posts.map(post ->
-			StudentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
+			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
 		);
 	}
 
@@ -116,12 +120,12 @@ public class StudentCouncilPostService {
 		);
 
 		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime limit = now.plusHours(72);
+		LocalDateTime limit = now.plusHours(UPCOMING_EVENT_WINDOW_HOURS);
 
 		Page<StudentCouncilPost> posts = postRepository.findUpcomingEvents(PostCategory.EVENT, now, limit, pageable);
 
 		return posts.map(post ->
-			StudentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
+			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
 		);
 	}
 
@@ -196,7 +200,7 @@ public class StudentCouncilPostService {
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				postImageRepository.save(StudentCouncilPostMapper.createPostImage(post, imageUrl));
+				postImageRepository.save(studentCouncilPostMapper.createPostImage(post, imageUrl));
 			}
 		}
 
@@ -208,7 +212,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
 	}
 
 	//이미지 삭제
