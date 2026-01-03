@@ -1,7 +1,7 @@
 package com.campus.campus.domain.place.application.mapper;
 
-import static com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo.*;
-
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -10,11 +10,21 @@ import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.entity.PlaceImages;
 
 @Component
 public class PlaceMapper {
 
-	public SavedPlaceInfo toSavedPlaceInfo(NaverSearchResponse.Item item, String placeKey) {
+	public static String buildNaverPlaceUrl(NaverSearchResponse.Item item) {
+		return String.format(
+			"https://map.naver.com/v5/search/%s?c=%f,%f,15,0,0,0,dh",
+			URLEncoder.encode(item.title(), StandardCharsets.UTF_8),
+			Double.parseDouble(item.mapy()),
+			Double.parseDouble(item.mapx())
+		);
+	}
+
+	public SavedPlaceInfo toSavedPlaceInfo(NaverSearchResponse.Item item, String placeKey, List<String> images) {
 
 		return new SavedPlaceInfo(
 			stripHtml(item.title()),
@@ -27,21 +37,29 @@ public class PlaceMapper {
 				Double.parseDouble(item.mapy()), //위도
 				Double.parseDouble(item.mapx()) //경도
 			),
-			List.of() // imgUrls는 나중에 Google에서 채움
+			images
 		);
 	}
 
-	public Place toEntity(SavedPlaceInfo savedPlaceInfo) {
+	public static Place createPlace(
+		SavedPlaceInfo savedPlaceInfo
+	) {
+		return Place.builder()
+			.placeKey(savedPlaceInfo.placeKey())
+			.placeName(stripHtml(savedPlaceInfo.placeName()))
+			.placeCategory(savedPlaceInfo.category())
+			.phone(savedPlaceInfo.telephone())
+			.address(savedPlaceInfo.address())
+			.naverPlaceUrl(savedPlaceInfo.link())
+			.coordinate(savedPlaceInfo.coordinate())
+			.build();
+	}
 
-		return new Place(
-			savedPlaceInfo.placeKey(),
-			savedPlaceInfo.placeName(),
-			savedPlaceInfo.category(),
-			savedPlaceInfo.telephone(),
-			savedPlaceInfo.address(),
-			savedPlaceInfo.link(),
-			savedPlaceInfo.coordinate()
-		);
+	public PlaceImages createPlaceImages(
+		String placeKey,
+		String googleImageUrl
+	) {
+		return new PlaceImages(placeKey, googleImageUrl);
 	}
 
 	/**

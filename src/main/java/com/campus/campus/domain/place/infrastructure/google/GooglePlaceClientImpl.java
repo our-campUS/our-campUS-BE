@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GooglePlaceClientImpl implements GooglePlaceClient {
 
 	private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place";
-
 	private final WebClient webClient;
 	private final String apiKey;
 
@@ -121,7 +120,7 @@ public class GooglePlaceClientImpl implements GooglePlaceClient {
 	 */
 	private String buildPhotoUrl(String photoRef) {
 		return "https://maps.googleapis.com/maps/api/place/photo"
-			+ "?maxwidth=800"
+			+ "?maxWidth=800"
 			+ "&photo_reference=" + photoRef
 			+ "&key=" + apiKey;
 	}

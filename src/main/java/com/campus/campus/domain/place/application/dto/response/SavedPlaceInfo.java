@@ -1,10 +1,7 @@
 package com.campus.campus.domain.place.application.dto.response;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,26 +33,5 @@ public record SavedPlaceInfo(
 	List<String> imgUrls
 
 ) {
-	public static String buildNaverPlaceUrl(NaverSearchResponse.Item item) {
-		return String.format(
-			"https://map.naver.com/v5/search/%s?c=%f,%f,15,0,0,0,dh",
-			URLEncoder.encode(item.title(), StandardCharsets.UTF_8),
-			Double.parseDouble(item.mapy()),
-			Double.parseDouble(item.mapx())
-		);
-	}
-
-	public SavedPlaceInfo withImages(List<String> images) {
-		return new SavedPlaceInfo(
-			this.placeName,
-			this.placeKey,
-			this.address,
-			this.category,
-			this.link,
-			this.telephone,
-			this.coordinate,
-			images
-		);
-	}
 
 }

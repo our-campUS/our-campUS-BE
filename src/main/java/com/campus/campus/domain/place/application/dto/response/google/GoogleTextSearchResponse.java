@@ -8,7 +8,8 @@ public record GoogleTextSearchResponse(
 	List<Result> results
 ) {
 	public record Result(
-		@JsonProperty("place_id") String placeId
+		@JsonProperty("place_id")
+		String placeId
 	) {
 	}
 }

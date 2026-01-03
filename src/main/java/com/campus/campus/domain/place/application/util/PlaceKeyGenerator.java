@@ -1,4 +1,4 @@
-package com.campus.campus.domain.place.application.service;
+package com.campus.campus.domain.place.application.util;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,6 +22,8 @@ import lombok.NoArgsConstructor;
 	})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Place {
 
 	@Id
@@ -49,21 +53,5 @@ public class Place {
 
 	@Embedded
 	private Coordinate coordinate;
-
-	public Place(String placeName, String placeKey, String placeCategory, String phone, String address, String url,
-		Coordinate coordinate) {
-		this.placeName = placeName;
-		this.placeKey = placeKey;
-		this.placeCategory = placeCategory;
-		this.phone = phone;
-		this.address = address;
-		this.naverPlaceUrl = url;
-		this.coordinate = coordinate;
-	}
-
-	public static Place create(String placeName, String placeKey, String placeCategory, String phone, String address,
-		String url, Coordinate coordinate) {
-		return new Place(placeName, placeKey, placeCategory, phone, address, url, coordinate);
-	}
 
 }
