@@ -24,7 +24,7 @@ public class StudentCouncilPostMapper {
 				: post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
-			post.getWriter().getId().equals(currentUserId)
+			post.isWrittenByCouncil(currentUserId)
 		);
 	}
 
