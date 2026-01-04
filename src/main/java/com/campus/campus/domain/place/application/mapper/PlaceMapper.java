@@ -73,7 +73,10 @@ public class PlaceMapper {
 		String placeKey,
 		String googleImageUrl
 	) {
-		return new PlaceImages(placeKey, googleImageUrl);
+		return PlaceImages.builder()
+			.placeKey(placeKey)
+			.imageUrl(googleImageUrl)
+			.buidl();
 	}
 
 	public LikedPlace createLikedPlace(User user, Place place) {

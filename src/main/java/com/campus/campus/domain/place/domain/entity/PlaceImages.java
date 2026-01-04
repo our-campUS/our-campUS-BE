@@ -10,12 +10,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "place_images")
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlaceImages {
 
@@ -32,15 +36,5 @@ public class PlaceImages {
 
 	@Column(name = "image_url", nullable = false, columnDefinition = "TEXT")
 	private String imageUrl;
-
-	public PlaceImages(String placeKey, String imageUrl) {
-		this.placeKey = placeKey;
-		this.imageUrl = imageUrl;
-	}
-
-	//google 이미지를 OCI 이미지로 (좋아요 시점에서 호출)
-	public void updateToOci(String ociImageUrl) {
-		this.imageUrl = ociImageUrl;
-	}
 
 }

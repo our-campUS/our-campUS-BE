@@ -15,13 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class GooglePlaceClientImpl {
+public class GooglePlaceClient {
 
 	private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place";
 	private final WebClient webClient;
 	private final String apiKey;
 
-	public GooglePlaceClientImpl(
+	public GooglePlaceClient(
 		@Value("${google.places.api-key}") String apiKey
 	) {
 		this.apiKey = apiKey;

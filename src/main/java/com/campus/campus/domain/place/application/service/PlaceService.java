@@ -19,7 +19,7 @@ import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
-import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClientImpl;
+import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -39,7 +39,7 @@ public class PlaceService {
 	private final NaverMapClient naverMapClient;
 	private final PlaceMapper placeMapper;
 	private final PlaceRepository placeRepository;
-	private final GooglePlaceClientImpl googleClient;
+	private final GooglePlaceClient googleClient;
 	private final PlaceImagesRepository placeImagesRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final LikedPlacesRepository likedPlacesRepository;
@@ -142,7 +142,7 @@ public class PlaceService {
 		return placeMapper.toLikeResponse(place);
 	}
 
-	protected void migrateImagestoOci(String placeKey, List<String> imageUrls) {
+	private void migrateImagestoOci(String placeKey, List<String> imageUrls) {
 
 		//google 이미지 OCI 업로드
 		for (String googleUrl : imageUrls) {
