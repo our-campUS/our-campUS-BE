@@ -33,5 +33,4 @@ public record SavedPlaceInfo(
 	List<String> imgUrls
 
 ) {
-
 }
