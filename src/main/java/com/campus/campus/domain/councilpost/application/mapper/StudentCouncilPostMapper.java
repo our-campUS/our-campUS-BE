@@ -7,11 +7,12 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.place.domain.entity.Place;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +25,7 @@ public class StudentCouncilPostMapper {
 			post.getId(),
 			post.getCategory(),
 			post.getTitle(),
-			post.getPlace(),
+			post.getPlace().getPlaceId(),
 			post.isEvent()
 				? post.getStartDateTime()
 				: post.getEndDateTime(),
@@ -44,7 +45,7 @@ public class StudentCouncilPostMapper {
 			.category(post.getCategory())
 			.title(post.getTitle())
 			.content(post.getContent())
-			.place(post.getPlace())
+			.placeName(post.getPlace().getPlaceName())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
 			.images(images != null ? images : Collections.emptyList());
@@ -59,14 +60,14 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto, LocalDateTime startDateTime,
-		LocalDateTime endDateTime) {
+	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto,
+		LocalDateTime startDateTime, LocalDateTime endDateTime, Place place) {
 		return StudentCouncilPost.builder()
 			.writer(writer)
 			.category(dto.category())
 			.title(dto.title())
 			.content(dto.content())
-			.place(dto.place())
+			.place(place)
 			.startDateTime(startDateTime)
 			.endDateTime(endDateTime)
 			.thumbnailImageUrl(dto.thumbnailImageUrl())

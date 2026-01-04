@@ -14,9 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
@@ -29,6 +29,8 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.place.application.service.PlaceService;
+import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -47,9 +49,18 @@ public class StudentCouncilPostService {
 
 	private static final int MAX_IMAGE_COUNT = 10;
 	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
+	private final PlaceService placeService;
 
 	@Transactional
-	public PostResponse create(Long councilId, PostRequest dto) {
+	public PostResponse createPartnershipPost(Long councilId, PostRequest dto) {
+		//장소 조회or생성
+		Place place = placeService.findOrCreatePlace(dto.placeName());
+		//기존 게시글 생성 로직 호출
+		return create(councilId, dto, place);
+	}
+
+	@Transactional
+	public PostResponse create(Long councilId, PostRequest dto, Place place) {
 		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new PostImageLimitExceededException();
 		}
@@ -64,7 +75,7 @@ public class StudentCouncilPostService {
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
 		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
-			writer, dto, normalized.startDateTime(), normalized.endDateTime()
+			writer, dto, normalized.startDateTime(), normalized.endDateTime(), place
 		);
 
 		postRepository.save(post);
@@ -163,7 +174,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
+	public PostResponse update(Long councilId, Long postId, PostRequest dto, Place place) {
 		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
 		}
@@ -188,7 +199,7 @@ public class StudentCouncilPostService {
 		post.update(
 			dto.title(),
 			dto.content(),
-			dto.place(),
+			place,
 			normalized.startDateTime(),
 			normalized.endDateTime(),
 			dto.thumbnailImageUrl(),

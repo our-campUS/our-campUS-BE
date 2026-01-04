@@ -67,6 +67,27 @@ public class PlaceService {
 			.toList();
 	}
 
+	@Transactional
+	public Place findOrCreatePlace(String placeName) {
+		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(placeName, 1);
+		NaverSearchResponse.Item item = naverSearchResponse.items().getFirst();
+		//placeKey 생성
+		String placeKey = PlaceKeyGenerator.generate(item.title(), item.roadAddress());
+
+		//이미 Place 존재하는지 확인
+		Optional<Place> existing = placeRepository.findByPlaceKey(placeKey);
+		if (existing.isPresent()) {
+			return existing.get();
+		}
+
+		//Place 생성
+		String name = stripHtml(item.title());
+		String naverPlaceUrl = buildNaverPlaceUrl(item);
+
+		SavedPlaceInfo info = placeMapper.toSavedPlaceInfo(item, name, placeKey, naverPlaceUrl, null);
+		return placeMapper.createPlace(info);
+	}
+
 	//장소 저장
 	@Transactional
 	public LikeResponse likePlace(SavedPlaceInfo placeInfo, Long userId) {
@@ -92,7 +113,7 @@ public class PlaceService {
 				.orElseGet(() -> {
 					//없으면 생성
 					String placeName = stripHtml(placeInfo.placeName());
-					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo, placeName));
+					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo));
 					//신규 생성된 경우에만 이미지 저장
 					migrateImagesToOci(newPlace.getPlaceKey(), placeInfo.imgUrls());
 

@@ -106,7 +106,7 @@ public class StudentCouncilPostController {
 		@CurrentCouncilId Long councilId,
 		@RequestBody @Valid PostRequest requestDto
 	) {
-		PostResponse responseDto = postService.create(councilId, requestDto);
+		PostResponse responseDto = postService.createPartnershipPost(councilId, requestDto);
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_CREATE_SUCCESS, responseDto);
 	}
 

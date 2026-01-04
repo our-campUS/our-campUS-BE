@@ -35,10 +35,10 @@ public class PlaceMapper {
 		);
 	}
 
-	public Place createPlace(SavedPlaceInfo savedPlaceInfo, String placeName) {
+	public Place createPlace(SavedPlaceInfo savedPlaceInfo) {
 		return Place.builder()
 			.placeKey(savedPlaceInfo.placeKey())
-			.placeName(placeName)
+			.placeName(savedPlaceInfo.placeName())
 			.placeCategory(savedPlaceInfo.category())
 			.phone(savedPlaceInfo.telephone())
 			.address(savedPlaceInfo.address())

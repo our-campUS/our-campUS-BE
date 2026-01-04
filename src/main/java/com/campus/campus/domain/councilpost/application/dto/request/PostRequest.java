@@ -22,7 +22,7 @@ public record PostRequest(
 	@NotBlank
 	String content,
 
-	String place,
+	String placeName,
 
 	@Schema(example = "2025-04-10T18:00")
 	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
