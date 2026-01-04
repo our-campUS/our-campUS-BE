@@ -22,7 +22,7 @@ public class GooglePlaceClient {
 	private final String apiKey;
 
 	public GooglePlaceClient(
-		@Value("${google.places.api-key}") String apiKey
+		@Value("${map.google.places.api-key}") String apiKey
 	) {
 		this.apiKey = apiKey;
 		this.webClient = WebClient.builder()
