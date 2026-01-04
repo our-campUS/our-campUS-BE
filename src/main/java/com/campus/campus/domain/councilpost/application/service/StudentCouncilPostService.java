@@ -1,5 +1,6 @@
 package com.campus.campus.domain.councilpost.application.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,12 +15,13 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponseDto;
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequestDto;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponseDto;
+import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
+import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.application.exception.ThumbnailRequiredException;
 import com.campus.campus.domain.councilpost.application.mapper.StudentCouncilPostMapper;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
@@ -41,10 +43,14 @@ public class StudentCouncilPostService {
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
 	private final PresignedUrlService presignedUrlService;
+	private final StudentCouncilPostMapper studentCouncilPostMapper;
+
+	private static final int MAX_IMAGE_COUNT = 10;
+	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 
 	@Transactional
-	public PostResponseDto create(Long councilId, PostRequestDto dto) {
-		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
+	public PostResponse create(Long councilId, PostRequest dto) {
+		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new PostImageLimitExceededException();
 		}
 
@@ -57,7 +63,7 @@ public class StudentCouncilPostService {
 
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
-		StudentCouncilPost post = StudentCouncilPostMapper.toEntity(
+		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
 			writer, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
@@ -65,7 +71,7 @@ public class StudentCouncilPostService {
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				postImageRepository.save(StudentCouncilPostMapper.toEntity(post, imageUrl));
+				postImageRepository.save(studentCouncilPostMapper.createPostImage(post, imageUrl));
 			}
 		}
 
@@ -75,11 +81,11 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toDetail(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
-	public PostResponseDto findById(Long postId, Long currentUserId) {
+	public PostResponse findById(Long postId, Long currentUserId) {
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -89,11 +95,11 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toDetail(post, imageUrls, currentUserId);
+		return studentCouncilPostMapper.toPostResponse(post, imageUrls, currentUserId);
 	}
 
 	@Transactional(readOnly = true)
-	public Page<PostListItemResponseDto> findAll(PostCategory category, int page, int size, Long currentUserId) {
+	public Page<PostListItemResponse> findAll(PostCategory category, int page, int size, Long currentUserId) {
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
 		Page<StudentCouncilPost> posts = (category == null)
@@ -101,13 +107,31 @@ public class StudentCouncilPostService {
 			: postRepository.findAllByCategory(category, pageable);
 
 		return posts.map(post ->
-			StudentCouncilPostMapper.toListItem(post, currentUserId)
+			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<PostListItemResponse> findUpcomingEvents(int page, int size, Long currentUserId) {
+		Pageable pageable = PageRequest.of(
+			Math.max(page - 1, 0),
+			size,
+			Sort.by(Sort.Direction.ASC, "startDateTime")
+		);
+
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime limit = now.plusHours(UPCOMING_EVENT_WINDOW_HOURS);
+
+		Page<StudentCouncilPost> posts = postRepository.findUpcomingEvents(PostCategory.EVENT, now, limit, pageable);
+
+		return posts.map(post ->
+			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
 		);
 	}
 
 	@Transactional
 	public void delete(Long councilId, Long postId) {
-		StudentCouncilPost post = postRepository.findByIdWithWriter(postId)
+		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
 		if (!post.getWriter().getId().equals(councilId)) {
@@ -132,14 +156,14 @@ public class StudentCouncilPostService {
 		for (String imageUrl : deleteTargets) {
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (Exception e) {
-				log.warn("OCI 파일 삭제 실패: {}", imageUrl);
+			} catch (PostOciImageDeleteFailedException e) {
+				log.warn("OCI 파일 삭제 실패: {}", imageUrl, e);
 			}
 		}
 	}
 
 	@Transactional
-	public PostResponseDto update(Long councilId, Long postId, PostRequestDto dto) {
+	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
 		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
 		}
@@ -176,7 +200,7 @@ public class StudentCouncilPostService {
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
-				postImageRepository.save(StudentCouncilPostMapper.toEntity(post, imageUrl));
+				postImageRepository.save(studentCouncilPostMapper.createPostImage(post, imageUrl));
 			}
 		}
 
@@ -188,11 +212,11 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return StudentCouncilPostMapper.toDetail(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
 	}
 
 	//이미지 삭제
-	private void cleanupUnusedImages(String oldThumbnailUrl, List<PostImage> oldImages, PostRequestDto dto) {
+	private void cleanupUnusedImages(String oldThumbnailUrl, List<PostImage> oldImages, PostRequest dto) {
 		List<String> newUrls = dto.imageUrls() == null ? List.of() : dto.imageUrls();
 
 		List<String> deleteTargets = new ArrayList<>();
@@ -216,8 +240,8 @@ public class StudentCouncilPostService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (Exception e) {
-				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl);
+			} catch (PostOciImageDeleteFailedException e) {
+				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}
 	}

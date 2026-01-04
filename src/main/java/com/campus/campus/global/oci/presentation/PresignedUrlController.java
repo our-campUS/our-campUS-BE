@@ -46,4 +46,16 @@ public class PresignedUrlController {
 		return CommonResponse.success(PresignedUrlResponseCode.PRESIGNED_URL_SUCCESS, responseDto);
 	}
 
+	@PostMapping("/notices/images/presigned")
+	@Operation(
+		summary = "공지 이미지 업로드용 Presigned URL 생성",
+		description = "공지 이미지 업로드 전용 Presigned URL을 생성"
+	)
+	public CommonResponse<PresignedUrlResponseDto> createNoticeImagePresignedUrl(
+		@RequestBody @Valid PresignedUrlRequestDto request
+	) {
+		PresignedUrlResponseDto responseDto = presignedUrlService.createPresignedUrl("notices/images", request);
+
+		return CommonResponse.success(PresignedUrlResponseCode.PRESIGNED_URL_SUCCESS, responseDto);
+	}
 }

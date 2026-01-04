@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 
-public record PostListItemResponseDto(
+public record PostListItemResponse(
 	Long id,
 	PostCategory category,
 	String title,

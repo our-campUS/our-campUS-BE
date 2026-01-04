@@ -3,10 +3,16 @@ package com.campus.campus.global.oci.mapper;
 import java.util.Date;
 import java.util.UUID;
 
+import org.springframework.stereotype.Component;
+
 import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
 import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class PresignedUrlMapper {
 
 	public static CreatePreauthenticatedRequestRequest toPutObjectRequest(String bucketName, String namespaceName,
