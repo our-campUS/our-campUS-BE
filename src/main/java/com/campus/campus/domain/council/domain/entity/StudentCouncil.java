@@ -62,6 +62,9 @@ public class StudentCouncil extends BaseEntity {
 	@JoinColumn(name = "major_id")
 	private Major major;
 
+	@Column(name = "manager_approved")
+	private Boolean managerApproved;
+
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
@@ -86,5 +89,9 @@ public class StudentCouncil extends BaseEntity {
 
 	public void changeEmail(String newEmail) {
 		this.email = newEmail;
+	}
+
+	public void mangerApprove() {
+		this.managerApproved = true;
 	}
 }
