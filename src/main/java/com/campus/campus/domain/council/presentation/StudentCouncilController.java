@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeEmailRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangePasswordRequest;
 import com.campus.campus.domain.council.application.service.CouncilService;
-import com.campus.campus.global.annotation.CurrentUserId;
+import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +25,7 @@ public class StudentCouncilController {
 
 	@PatchMapping("/change/email")
 	@Operation(summary = "학생회 이메일 변경")
-	public CommonResponse<Void> changeEmail(@CurrentUserId Long councilId,
+	public CommonResponse<Void> changeEmail(@CurrentCouncilId Long councilId,
 		@Valid @RequestBody StudentCouncilChangeEmailRequest studentCouncilChangeEmailRequest) {
 		councilService.changeEmail(councilId, studentCouncilChangeEmailRequest);
 
@@ -34,7 +34,7 @@ public class StudentCouncilController {
 
 	@PatchMapping("/change/password")
 	@Operation(summary = "학생회 비밀번호 변경")
-	public CommonResponse<Void> changePassword(@CurrentUserId Long councilId,
+	public CommonResponse<Void> changePassword(@CurrentCouncilId Long councilId,
 		@Valid @RequestBody StudentCouncilChangePasswordRequest studentCouncilChangePasswordRequest) {
 		councilService.changePassword(councilId, studentCouncilChangePasswordRequest);
 

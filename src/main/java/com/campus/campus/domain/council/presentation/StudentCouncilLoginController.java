@@ -16,7 +16,7 @@ import com.campus.campus.domain.council.application.dto.request.StudentCouncilWi
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.service.CouncilLoginService;
-import com.campus.campus.global.annotation.CurrentUserId;
+import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,7 +67,7 @@ public class StudentCouncilLoginController {
 	@PatchMapping("/withdraw")
 	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 회원탈퇴 (soft delete 방식)")
-	public CommonResponse<Void> withdraw(@CurrentUserId Long councilId,
+	public CommonResponse<Void> withdraw(@CurrentCouncilId Long councilId,
 		@Valid @RequestBody StudentCouncilWithdrawRequest studentCouncilWithdrawRequest) {
 		councilLoginService.withdrawCouncil(councilId, studentCouncilWithdrawRequest);
 
