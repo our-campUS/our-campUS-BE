@@ -66,7 +66,7 @@ public class CouncilLoginService {
 
 	@Transactional
 	public void signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
-		if(studentCouncilRepository.existsByEmailAndDeletedAtIsNotNull(studentCouncilSignUpRequest.email())){
+		if (studentCouncilRepository.existsByEmailAndDeletedAtIsNotNull(studentCouncilSignUpRequest.email())) {
 			throw new CouncilSignupForbiddenException();
 		}
 		if (studentCouncilRepository.existsByEmail(studentCouncilSignUpRequest.email())) {
@@ -95,7 +95,7 @@ public class CouncilLoginService {
 
 	public StudentCouncilLoginResponse login(StudentCouncilLoginRequest studentCouncilLoginRequest) {
 		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByLoginIdAndDeletedAtIsNull(studentCouncilLoginRequest.loginId())
+			.findByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(studentCouncilLoginRequest.loginId())
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!passwordEncoder.matches(studentCouncilLoginRequest.password(), studentCouncil.getPassword())) {
@@ -119,7 +119,8 @@ public class CouncilLoginService {
 			throw new SignupEmailNotFoundException();
 		}
 
-		StudentCouncil studentCouncil = studentCouncilRepository.findByEmailAndDeletedAtIsNull(email)
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByEmailAndManagerApprovedIsTrueAndDeletedAtIsNull(email)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		emailVerification.use();
@@ -130,7 +131,7 @@ public class CouncilLoginService {
 	@Transactional
 	public void findPassword(StudentCouncilFindPasswordRequest studentCouncilFindPasswordRequest) {
 		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByLoginIdAndDeletedAtIsNull(studentCouncilFindPasswordRequest.loginId())
+			.findByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(studentCouncilFindPasswordRequest.loginId())
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!studentCouncilFindPasswordRequest.email().equals(studentCouncil.getEmail())) {
@@ -149,7 +150,8 @@ public class CouncilLoginService {
 
 	@Transactional
 	public void withdrawCouncil(Long councilId, StudentCouncilWithdrawRequest studentCouncilWithdrawRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!studentCouncilWithdrawRequest.precaution()) {

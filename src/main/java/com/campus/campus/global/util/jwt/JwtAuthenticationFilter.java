@@ -92,7 +92,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			principal = UserPrincipal.from(user);
 		} else if ("COUNCIL".equals(role)) {
 			Long councilId = Long.valueOf(subject);
-			StudentCouncil council = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
+			StudentCouncil council = studentCouncilRepository
+				.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 				.orElseThrow(StudentCouncilNotFoundException::new);
 			principal = StudentCouncilPrincipal.from(council);
 		} else if ("MANAGER".equals(role)) {

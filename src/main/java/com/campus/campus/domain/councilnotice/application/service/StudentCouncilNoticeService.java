@@ -49,7 +49,8 @@ public class StudentCouncilNoticeService {
 			throw new NoticeImageLimitExceededException();
 		}
 
-		StudentCouncil writer = studentCouncilRepository.findByIdWithDetailsAndDeletedAtIsNull(councilId)
+		StudentCouncil writer = studentCouncilRepository.
+			findByIdWithDetailsAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		StudentCouncilNotice notice =
