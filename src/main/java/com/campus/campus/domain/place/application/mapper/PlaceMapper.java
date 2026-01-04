@@ -21,8 +21,8 @@ public class PlaceMapper {
 		);
 	}
 
-	public SavedPlaceInfo toSavedPlaceInfo(NaverSearchResponse.Item item, String placeName, String placeKey, String naverPlaceUrl, List<String> images) {
-
+	public SavedPlaceInfo toSavedPlaceInfo(NaverSearchResponse.Item item, String placeName, String placeKey,
+		String naverPlaceUrl, List<String> images) {
 		return new SavedPlaceInfo(
 			placeName,
 			placeKey,
@@ -35,9 +35,7 @@ public class PlaceMapper {
 		);
 	}
 
-	public Place createPlace(
-		SavedPlaceInfo savedPlaceInfo, String placeName
-	) {
+	public Place createPlace(SavedPlaceInfo savedPlaceInfo, String placeName) {
 		return Place.builder()
 			.placeKey(savedPlaceInfo.placeKey())
 			.placeName(placeName)
@@ -49,10 +47,7 @@ public class PlaceMapper {
 			.build();
 	}
 
-	public PlaceImages createPlaceImages(
-		String placeKey,
-		String googleImageUrl
-	) {
+	public PlaceImages createPlaceImages(String placeKey, String googleImageUrl) {
 		return PlaceImages.builder()
 			.placeKey(placeKey)
 			.imageUrl(googleImageUrl)
