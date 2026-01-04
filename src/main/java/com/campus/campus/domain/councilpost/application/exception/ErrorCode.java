@@ -13,13 +13,15 @@ public enum ErrorCode implements ErrorCodeInterface {
     NOT_POST_WRITER(2402, HttpStatus.FORBIDDEN, "작성자만 해당 작업을 수행할 수 있습니다."),
     THUMBNAIL_REQUIRED(2403, HttpStatus.BAD_REQUEST, "썸네일(이미지 또는 아이콘)은 반드시 필요합니다."),
     POST_IMAGE_LIMIT_EXCEEDED(2404, HttpStatus.BAD_REQUEST, "게시글 이미지는 최대 10개까지 등록할 수 있습니다."),
+    POST_OCI_IMAGE_DELETE_FAILED(2405, HttpStatus.INTERNAL_SERVER_ERROR, "OCI 이미지 삭제에 실패했습니다."),
 
     // EVENT 관련
-    EVENT_START_DATETIME_REQUIRED(2405, HttpStatus.BAD_REQUEST, "행사는 시작 일시가 필요합니다."),
-    EVENT_END_DATETIME_NOT_ALLOWED(2406, HttpStatus.BAD_REQUEST, "행사는 종료 일시를 가질 수 없습니다."),
+    EVENT_START_DATETIME_REQUIRED(2406, HttpStatus.BAD_REQUEST, "행사는 시작 일시가 필요합니다."),
+    EVENT_END_DATETIME_NOT_ALLOWED(2407, HttpStatus.BAD_REQUEST, "행사는 종료 일시를 가질 수 없습니다."),
 
     // PARTNERSHIP 관련
-    PARTNERSHIP_DATE_REQUIRED(2407, HttpStatus.BAD_REQUEST, "제휴는 시작일과 종료일이 필요합니다.");
+    PARTNERSHIP_DATE_REQUIRED(2408, HttpStatus.BAD_REQUEST, "제휴는 시작일과 종료일이 필요합니다.");
+
 
     private final int code;
     private final HttpStatus status;

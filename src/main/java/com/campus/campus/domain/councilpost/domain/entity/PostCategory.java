@@ -3,7 +3,7 @@ package com.campus.campus.domain.councilpost.domain.entity;
 import java.time.LocalTime;
 
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequestDto;
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.exception.EventEndDateTimeNotAllowedException;
 import com.campus.campus.domain.councilpost.application.exception.EventStartDateTimeRequiredException;
 import com.campus.campus.domain.councilpost.application.exception.PartnershipDateRequiredException;
@@ -12,7 +12,7 @@ public enum PostCategory {
 
 	EVENT {
 		@Override
-		public NormalizedDateTime validateAndNormalize(PostRequestDto dto) {
+		public NormalizedDateTime validateAndNormalize(PostRequest dto) {
 			if (dto.startDateTime() == null) {
 				throw new EventStartDateTimeRequiredException();
 			}
@@ -25,7 +25,7 @@ public enum PostCategory {
 
 	PARTNERSHIP {
 		@Override
-		public NormalizedDateTime validateAndNormalize(PostRequestDto dto) {
+		public NormalizedDateTime validateAndNormalize(PostRequest dto) {
 			if (dto.startDateTime() == null || dto.endDateTime() == null) {
 				throw new PartnershipDateRequiredException();
 			}
@@ -36,5 +36,5 @@ public enum PostCategory {
 		}
 	};
 
-	public abstract NormalizedDateTime validateAndNormalize(PostRequestDto dto);
+	public abstract NormalizedDateTime validateAndNormalize(PostRequest dto);
 }

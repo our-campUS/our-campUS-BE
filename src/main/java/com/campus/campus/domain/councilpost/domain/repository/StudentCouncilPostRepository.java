@@ -1,5 +1,6 @@
 package com.campus.campus.domain.councilpost.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -23,12 +24,17 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		"WHERE p.id = :postId")
 	Optional<StudentCouncilPost> findByIdWithFullInfo(@Param("postId") Long postId);
 
-	@Query("SELECT p FROM StudentCouncilPost p " +
-		"JOIN FETCH p.writer w " +
-		"LEFT JOIN FETCH w.school " +
-		"LEFT JOIN FETCH w.college " +
-		"LEFT JOIN FETCH w.major " +
-		"WHERE p.id = :postId")
-	Optional<StudentCouncilPost> findByIdWithWriter(@Param("postId") Long postId);
+	@Query("""
+			SELECT p
+			FROM StudentCouncilPost p
+			WHERE p.category = :category
+			AND p.startDateTime BETWEEN :now AND :limit
+		""")
+	Page<StudentCouncilPost> findUpcomingEvents(
+		@Param("category") PostCategory category,
+		@Param("now") LocalDateTime now,
+		@Param("limit") LocalDateTime limit,
+		Pageable pageable
+	);
 
 }
