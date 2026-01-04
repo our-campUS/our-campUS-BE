@@ -13,7 +13,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         default_batch_fetch_size: 100
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
   mail:
     host: smtp.gmail.com
     port: 587
@@ -54,5 +54,13 @@ oci:
   namespace: ${OCI_NAMESPACE}
   bucket-name: ${BUCKET_NAME}
   region: ${OCI_REGION}
+
+map:
+  naver:
+    client-id: ${MAP_CLIENT_ID}
+    client-secret: ${MAP_CLIENT_SECRET}
+  google:
+    places:
+      api-key: ${GOOGLE_PLACES_API_KEY}
 
 server-uri: http://localhost:8080
