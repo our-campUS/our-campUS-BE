@@ -9,15 +9,15 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import com.campus.campus.global.util.jwt.UserPrincipal;
+import com.campus.campus.global.util.jwt.ManagerPrincipal;
 import com.campus.campus.global.util.jwt.exception.UnAuthorizedException;
 
 @Component
-public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {
+public class CurrentManagerIdArgumentResolver implements HandlerMethodArgumentResolver {
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
-		boolean hasAnnotation = parameter.hasParameterAnnotation(CurrentUserId.class);
+		boolean hasAnnotation = parameter.hasParameterAnnotation(CurrentManagerId.class);
 		boolean hasSupportedType =
 			Long.class.equals(parameter.getParameterType()) ||
 				long.class.equals(parameter.getParameterType());
@@ -32,7 +32,7 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 		NativeWebRequest webRequest,
 		WebDataBinderFactory binderFactory
 	) {
-		CurrentUserId anno = parameter.getParameterAnnotation(CurrentUserId.class);
+		CurrentManagerId anno = parameter.getParameterAnnotation(CurrentManagerId.class);
 		boolean required = anno == null || anno.required();
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -47,9 +47,9 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 
 		Object principal = authentication.getPrincipal();
 
-		// 2) JwtAuthenticationFilter 에서 principal 을 UserPrincipal 로 넣어뒀음
-		if (principal instanceof UserPrincipal userPrincipal) {
-			Long id = userPrincipal.getUserId();
+		// 2) JwtAuthenticationFilter 에서 principal 을 ManagerPrincipal 로 넣어뒀음
+		if (principal instanceof ManagerPrincipal managerPrincipal) {
+			Long id = managerPrincipal.getManagerId();
 			if (id == null && required) {
 				throw new UnAuthorizedException();
 			}
