@@ -76,7 +76,7 @@ public class PlaceMapper {
 		return PlaceImages.builder()
 			.placeKey(placeKey)
 			.imageUrl(googleImageUrl)
-			.buidl();
+			.build();
 	}
 
 	public LikedPlace createLikedPlace(User user, Place place) {
