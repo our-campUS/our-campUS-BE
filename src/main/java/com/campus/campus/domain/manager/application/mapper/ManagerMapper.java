@@ -2,6 +2,7 @@ package com.campus.campus.domain.manager.application.mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
 import com.campus.campus.domain.manager.domain.entity.Manager;
 
@@ -16,6 +17,13 @@ public class ManagerMapper {
 			refreshToken,
 			manager.getId(),
 			manager.getManagerName()
+		);
+	}
+
+	public CouncilApproveOrDenyResponse toCouncilApproveOrDenyResponse(Long councilId, boolean certifyResult) {
+		return new CouncilApproveOrDenyResponse(
+			councilId,
+			certifyResult
 		);
 	}
 }

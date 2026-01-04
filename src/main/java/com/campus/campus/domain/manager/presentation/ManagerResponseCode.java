@@ -10,7 +10,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ManagerResponseCode implements ResponseCodeInterface {
-	MANAGER_LOGIN_SUCCESS(200, HttpStatus.OK, "관리자 로그인에 성공했습니다.");
+	MANAGER_LOGIN_SUCCESS(200, HttpStatus.OK, "관리자 로그인에 성공했습니다."),
+	COUNCIL_APPROVE_OR_DENY_SUCCESS(200, HttpStatus.OK, "학생회 승인 혹은 거부 및 메일 전송에 성공했습니다.");
 
 	private final int code;
 	private final HttpStatus status;
