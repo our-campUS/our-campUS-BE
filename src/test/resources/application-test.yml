@@ -37,10 +37,9 @@ map:
   naver:
     client-id: dummy
     client-secret: dummy
-
-google:
-  places:
-    api-key: dummy
+  google:
+    places:
+      api-key: dummy
 
 jwt:
   access:
