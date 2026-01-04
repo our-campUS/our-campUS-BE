@@ -50,6 +50,7 @@ public class StudentCouncilPostService {
 	private static final int MAX_IMAGE_COUNT = 10;
 	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 	private final PlaceService placeService;
+	private final StudentCouncilPostRepository studentCouncilPostRepository;
 
 	@Transactional
 	public PostResponse createPartnershipPost(Long councilId, PostRequest dto) {
@@ -57,6 +58,22 @@ public class StudentCouncilPostService {
 		Place place = placeService.findOrCreatePlace(dto.placeName());
 		//기존 게시글 생성 로직 호출
 		return create(councilId, dto, place);
+	}
+
+	@Transactional
+	public PostResponse updatePartnershipPost(Long councilId, Long postId, PostRequest dto) {
+		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
+			.orElseThrow(PostNotFoundException::new);
+
+		Place place = post.getPlace();
+		if (isPlaceChanged(post, dto)) {
+			place = placeService.findOrCreatePlace(dto.placeName());
+		}
+		return update(councilId, postId, dto, place);
+	}
+
+	private boolean isPlaceChanged(StudentCouncilPost post, PostRequest dto) {
+		return !post.getPlace().getPlaceName().equals(dto.placeName());
 	}
 
 	@Transactional
