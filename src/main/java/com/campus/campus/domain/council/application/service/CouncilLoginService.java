@@ -65,7 +65,7 @@ public class CouncilLoginService {
 	private long refreshTokenExpirationSeconds;
 
 	@Transactional
-	public StudentCouncilLoginResponse signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
+	public void signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
 		if(studentCouncilRepository.existsByEmailAndDeletedAtIsNotNull(studentCouncilSignUpRequest.email())){
 			throw new CouncilSignupForbiddenException();
 		}
@@ -90,15 +90,7 @@ public class CouncilLoginService {
 
 		studentCouncilRepository.save(studentCouncil);
 
-		String accessToken = jwtProvider.createCouncilAccessToken(studentCouncil.getId());
-		String refreshToken = jwtProvider.createCouncilRefreshToken(studentCouncil.getId());
-
-		redisTokenService.setRefreshToken("COUNCIL", String.valueOf(studentCouncil.getId()), refreshToken,
-			refreshTokenExpirationSeconds);
-
 		emailVerification.use();
-
-		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
 	}
 
 	public StudentCouncilLoginResponse login(StudentCouncilLoginRequest studentCouncilLoginRequest) {

@@ -30,6 +30,7 @@ public class StudentCouncilLoginMapper {
 			.school(school)
 			.college(college)
 			.major(major)
+			.managerApproved(false)
 			.build();
 	}
 

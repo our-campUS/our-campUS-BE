@@ -31,11 +31,10 @@ public class StudentCouncilLoginController {
 
 	@PostMapping("/signup")
 	@Operation(summary = "학생회 회원가입")
-	public CommonResponse<StudentCouncilLoginResponse> Signup(
-		@Valid @RequestBody StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
-		StudentCouncilLoginResponse response = councilLoginService.signUp(studentCouncilSignUpRequest);
+	public CommonResponse<Void> Signup(@Valid @RequestBody StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
+		councilLoginService.signUp(studentCouncilSignUpRequest);
 
-		return CommonResponse.success(StudentCouncilResponseCode.SIGNUP_SUCCESS, response);
+		return CommonResponse.success(StudentCouncilResponseCode.SIGNUP_REQUEST_SUCCESS);
 	}
 
 	@PostMapping("/login")
