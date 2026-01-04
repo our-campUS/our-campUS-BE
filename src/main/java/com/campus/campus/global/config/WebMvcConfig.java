@@ -7,6 +7,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.campus.campus.global.annotation.CurrentCouncilIdArgumentResolver;
+import com.campus.campus.global.annotation.CurrentManagerIdArgumentResolver;
 import com.campus.campus.global.annotation.CurrentUserIdArgumentResolver;
 
 import lombok.RequiredArgsConstructor;
@@ -17,10 +18,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
 	private final CurrentUserIdArgumentResolver currentUserIdArgumentResolver;
 	private final CurrentCouncilIdArgumentResolver currentCouncilIdArgumentResolver;
+	private final CurrentManagerIdArgumentResolver currentManagerIdArgumentResolver;
 
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
 		resolvers.add(currentUserIdArgumentResolver);
 		resolvers.add(currentCouncilIdArgumentResolver);
+		resolvers.add(currentManagerIdArgumentResolver);
 	}
 }
