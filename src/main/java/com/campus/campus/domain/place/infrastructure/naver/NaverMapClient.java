@@ -7,21 +7,24 @@ import org.springframework.web.client.RestClient;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class NaverMapClient {
 
 	private final RestClient restClient;
+	private final String clientId;
+	private final String clientSecret;
 
-	@Value("${map.naver.client-id}")
-	private String clientId;
-
-	@Value("${map.naver.client-secret}")
-	private String clientSecret;
+	public NaverMapClient(
+		RestClient restClient,
+		@Value("${map.naver.client-id}") String clientId,
+		@Value("${map.naver.client-secret}") String clientSecret) {
+		this.restClient = restClient;
+		this.clientId = clientId;
+		this.clientSecret = clientSecret;
+	}
 
 	/**
 	 * 사용자가 클릭한 장소를 조회

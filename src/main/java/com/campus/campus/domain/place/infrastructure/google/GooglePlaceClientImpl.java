@@ -10,13 +10,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.campus.campus.domain.place.application.dto.response.google.GooglePhoto;
 import com.campus.campus.domain.place.application.dto.response.google.GooglePlaceDetailResponse;
 import com.campus.campus.domain.place.application.dto.response.google.GoogleTextSearchResponse;
-import com.campus.campus.domain.place.infrastructure.GooglePlaceClient;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class GooglePlaceClientImpl implements GooglePlaceClient {
+public class GooglePlaceClientImpl {
 
 	private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place";
 	private final WebClient webClient;
@@ -34,7 +33,6 @@ public class GooglePlaceClientImpl implements GooglePlaceClient {
 	/*
 	 * 장소 이름 + 주소를 기준으로 google places에서 이미지 URL 목록을 가져옴
 	 */
-	@Override
 	public List<String> fetchImages(String name, String address, int limit) {
 
 		String placeId = findPlaceId(name, address);
@@ -136,6 +134,7 @@ public class GooglePlaceClientImpl implements GooglePlaceClient {
 				.uri(imageUrl)               // Google 이미지 URL
 				.retrieve()                  // 응답 수신
 				.bodyToMono(byte[].class)    // 이미지 바이너리를 byte[]로 변환
+				.timeout(Duration.ofSeconds(10)) //타임아웃 제한
 				.block();                    // 동기 방식으로 결과 대기
 
 		} catch (Exception e) {

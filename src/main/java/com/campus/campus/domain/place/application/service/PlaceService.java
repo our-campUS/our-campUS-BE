@@ -3,12 +3,14 @@ package com.campus.campus.domain.place.application.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.util.PlaceKeyGenerator;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
@@ -27,9 +29,11 @@ import com.campus.campus.global.oci.application.dto.response.PresignedUrlRespons
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PlaceService {
 
 	private final NaverMapClient naverMapClient;
@@ -94,34 +98,6 @@ public class PlaceService {
 			.toList();
 	}
 
-	@Transactional
-	protected void migrateImagestoOci(String placeKey, List<String> imageUrls) {
-
-		//google 이미지 OCI 업로드
-		for (String googleUrl : imageUrls) {
-
-			// google 이미지 다운로드
-			byte[] bytes = googleClient.downloadImage(googleUrl);
-
-			//OCI 업로드->objectKey 반환
-			PresignedUrlResponseDto presigned =
-				presignedUrlService.createPresignedUrl(
-					"places",
-					new PresignedUrlRequestDto("image/jpeg")
-				);
-
-			presignedUrlService.uploadToOci(
-				presigned.uploadUrl(),
-				bytes,
-				"image/jpeg"
-			);
-
-			placeImagesRepository.save(
-				placeMapper.createPlaceImages(placeKey, presigned.imageUrl())
-			);
-		}
-	}
-
 	//장소 저장
 	@Transactional
 	public LikeResponse likePlace(SavedPlaceInfo placeInfo, Long userId) {
@@ -132,7 +108,7 @@ public class PlaceService {
 
 		//이미 좋아요가 존재하는지 확인
 		Optional<LikedPlace> likedPlace =
-			likedPlacesRepository.findByUserIdAndPlaceKey(userId, placeKey);
+			likedPlacesRepository.findByUserIdAndPlace_PlaceKey(userId, placeKey);
 
 		if (likedPlace.isPresent()) {
 			//이미 좋아요 상태->좋아요 취소
@@ -142,26 +118,59 @@ public class PlaceService {
 
 		//Place 엔티티 생성
 		Place place;
-		Optional<Place> optionalPlace = placeRepository.findByPlaceKey(placeKey);
-
-		if (optionalPlace.isPresent()) {
-			//기존 place 존재->그대로 사용
-			place = optionalPlace.get();
-		} else {
-			//place 신규 생성
-			place = placeRepository.save(
-				PlaceMapper.createPlace(placeInfo)
-			);
-
-			//신규 생성된 경우에만 이미지 저장
-			migrateImagestoOci(
-				place.getPlaceKey(),
-				placeInfo.imgUrls()
-			);
+		try {
+			//조회
+			place = placeRepository.findByPlaceKey(placeKey)
+				.orElseGet(() -> {
+					//없으면 생성
+					Place newPlace = placeRepository.save(
+						placeMapper.createPlace(placeInfo)
+					);
+					//신규 생성된 경우에만 이미지 저장
+					migrateImagestoOci(newPlace.getPlaceKey(), placeInfo.imgUrls());
+					return newPlace;
+				});
+		} catch (DataIntegrityViolationException e) {
+			//동시 생성으로 unique 제약 위반 시 다시 조회
+			place = placeRepository.findByPlaceKey(placeKey)
+				.orElseThrow(PlaceCreationException::new);
 		}
 		//likedPlace 저장
-		likedPlacesRepository.save(new LikedPlace(user, place));
-		return new LikeResponse(place.getPlaceId(), true);
+		LikedPlace savedLikedPlace = placeMapper.createLikedPlace(user, place);
+		likedPlacesRepository.save(savedLikedPlace);
+
+		return placeMapper.toLikeResponse(place);
+	}
+
+	protected void migrateImagestoOci(String placeKey, List<String> imageUrls) {
+
+		//google 이미지 OCI 업로드
+		for (String googleUrl : imageUrls) {
+			try {
+				// google 이미지 다운로드
+				byte[] bytes = googleClient.downloadImage(googleUrl);
+
+				//OCI 업로드->objectKey 반환
+				PresignedUrlResponseDto presigned =
+					presignedUrlService.createPresignedUrl(
+						"places",
+						new PresignedUrlRequestDto("image/jpeg")
+					);
+
+				presignedUrlService.uploadToOci(
+					presigned.uploadUrl(),
+					bytes,
+					"image/jpeg"
+				);
+
+				placeImagesRepository.save(
+					placeMapper.createPlaceImages(placeKey, presigned.imageUrl())
+				);
+			} catch (Exception e) {
+				log.warn("이미지를 OCI에 업로드하여 저장하는 것을 실패했어요. placeKey={},imageUrl={}", placeKey, googleUrl, e);
+			}
+
+		}
 	}
 
 }

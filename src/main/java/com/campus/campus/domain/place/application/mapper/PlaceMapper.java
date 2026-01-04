@@ -6,21 +6,35 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
+import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
+import com.campus.campus.domain.user.domain.entity.User;
 
 @Component
 public class PlaceMapper {
 
-	public static String buildNaverPlaceUrl(NaverSearchResponse.Item item) {
-		return String.format(
-			"https://map.naver.com/v5/search/%s?c=%f,%f,15,0,0,0,dh",
-			URLEncoder.encode(item.title(), StandardCharsets.UTF_8),
-			Double.parseDouble(item.mapy()),
-			Double.parseDouble(item.mapx())
+	public String buildNaverPlaceUrl(NaverSearchResponse.Item item) {
+		try {
+			return String.format(
+				"https://map.naver.com/v5/search/%s?c=%f,%f,15,0,0,0,dh",
+				URLEncoder.encode(item.title(), StandardCharsets.UTF_8),
+				Double.parseDouble(item.mapy()),
+				Double.parseDouble(item.mapx())
+			);
+		} catch (Exception e) {
+			throw new NaverMapAPIException();
+		}
+	}
+
+	public LikeResponse toLikeResponse(Place place) {
+		return new LikeResponse(
+			place.getPlaceId(), true
 		);
 	}
 
@@ -41,7 +55,7 @@ public class PlaceMapper {
 		);
 	}
 
-	public static Place createPlace(
+	public Place createPlace(
 		SavedPlaceInfo savedPlaceInfo
 	) {
 		return Place.builder()
@@ -62,10 +76,17 @@ public class PlaceMapper {
 		return new PlaceImages(placeKey, googleImageUrl);
 	}
 
+	public LikedPlace createLikedPlace(User user, Place place) {
+		return LikedPlace.builder()
+			.user(user)
+			.place(place)
+			.build();
+	}
+
 	/**
 	 * 태그 제거용
 	 */
-	public static String stripHtml(String text) {
+	public String stripHtml(String text) {
 		return text.replaceAll("<[^>]*>", "");
 	}
 }

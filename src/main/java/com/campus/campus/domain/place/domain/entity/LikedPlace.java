@@ -13,6 +13,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,6 +25,8 @@ import lombok.NoArgsConstructor;
 		@UniqueConstraint(columnNames = {"user_id", "place_id"})
 	})
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LikedPlace extends BaseEntity {
 
@@ -37,10 +41,5 @@ public class LikedPlace extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "place_id")
 	private Place place;
-
-	public LikedPlace(User user, Place place) {
-		this.user = user;
-		this.place = place;
-	}
 
 }

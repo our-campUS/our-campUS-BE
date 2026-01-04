@@ -8,7 +8,7 @@ import com.campus.campus.domain.place.domain.entity.LikedPlace;
 
 public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 
-	boolean existsByUserIdAndPlaceKey(Long userId, String placeKey);
+	boolean existsByUserIdAndPlace_PlaceKey(Long userId, String placeKey);
 
-	Optional<LikedPlace> findByUserIdAndPlaceKey(Long userId, String placeKey);
+	Optional<LikedPlace> findByUserIdAndPlace_PlaceKey(Long userId, String placeKey);
 }
