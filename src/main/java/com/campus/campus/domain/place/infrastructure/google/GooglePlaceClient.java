@@ -2,6 +2,7 @@ package com.campus.campus.domain.place.infrastructure.google;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,8 @@ public class GooglePlaceClient {
 	private final WebClient webClient;
 	private final String apiKey;
 
+	private final Semaphore googleApiSemaphore = new Semaphore(20);
+
 	public GooglePlaceClient(
 		@Value("${map.google.places.api-key}") String apiKey
 	) {
@@ -34,26 +37,35 @@ public class GooglePlaceClient {
 	 * 장소 이름 + 주소를 기준으로 google places에서 이미지 URL 목록을 가져옴
 	 */
 	public List<String> fetchImages(String name, String address, int limit) {
-
-		String placeId = findPlaceId(name, address);
-		if (placeId == null) {
-			return List.of();
+		try{
+			googleApiSemaphore.acquire();
+		} catch (InterruptedException e){
+			throw new RuntimeException("Google API 대기 중 인터럽트 발생", e);
 		}
 
-		//placee details -> photo reference
-		List<String> photoRefs = getPhotoReferences(placeId);
-		if (photoRefs.isEmpty()) {
-			return List.of();
+		try{
+			String placeId = findPlaceId(name, address);
+			if (placeId == null) {
+				return List.of();
+			}
+
+			//placee details -> photo reference
+			List<String> photoRefs = getPhotoReferences(placeId);
+			if (photoRefs.isEmpty()) {
+				return List.of();
+			}
+
+			//imageURL 생성
+			List<String> imageUrls = photoRefs.stream()
+				.limit(3)
+				.map(this::buildPhotoUrl)
+				.toList();
+
+			log.info("imageUrls: {}", imageUrls);
+			return imageUrls;
+		} finally {
+			googleApiSemaphore.release();
 		}
-
-		//imageURL 생성
-		List<String> imageUrls = photoRefs.stream()
-			.limit(3)
-			.map(this::buildPhotoUrl)
-			.toList();
-
-		log.info("imageUrls: {}", imageUrls);
-		return imageUrls;
 	}
 
 	/*
