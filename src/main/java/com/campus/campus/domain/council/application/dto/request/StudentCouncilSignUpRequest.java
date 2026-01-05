@@ -35,6 +35,9 @@ public record StudentCouncilSignUpRequest(
 	Long collegeId,
 
 	@Schema(description = "학과 id", example = "1")
-	Long majorId
+	Long majorId,
+
+	@Schema(description = "당선 사진 url", example = "https://www.election.com.png")
+	String electionImageUrl
 ) {
 }
