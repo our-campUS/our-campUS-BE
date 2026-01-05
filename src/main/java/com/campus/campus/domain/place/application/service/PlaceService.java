@@ -3,10 +3,12 @@ package com.campus.campus.domain.place.application.service;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
@@ -31,6 +34,7 @@ import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.annotation.stopwatch.LogExecutionTime;
 import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
 import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
@@ -53,14 +57,37 @@ public class PlaceService {
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
 
+	@LogExecutionTime
 	public List<SavedPlaceInfo> search(String keyword) {
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
 
-		List<CompletableFuture<SavedPlaceInfo>> futures = naverSearchResponse.items().stream()
-			.map(item -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(item), executorService)
-				.completeOnTimeout(fallback(item), 2, TimeUnit.SECONDS)
-				.exceptionally(ex -> fallback(item)))
+		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
+			.map(item -> {
+				String name = stripHtml(item.title());
+				String address = item.roadAddress();
+				String placeKey = PlaceKeyGenerator.generate(name, address);
+				String naverPlaceUrl = buildNaverPlaceUrl(item);
+				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
+			})
+			.toList();
+
+		List<String> placeKeys = candidates.stream()
+			.map(SearchCandidateResponse::placeKey)
+			.distinct()
+			.toList();
+
+		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
+			.collect(Collectors.groupingBy(
+				PlaceImages::getPlaceKey,
+				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
+			));
+
+		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
+			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
+					executorService)
+				.completeOnTimeout(fallback(response), 2, TimeUnit.SECONDS)
+				.exceptionally(ex -> fallback(response)))
 			.toList();
 
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -110,23 +137,19 @@ public class PlaceService {
 		return placeMapper.toLikeResponse(place);
 	}
 
-	private SavedPlaceInfo convertToSavedPlaceInfo(NaverSearchResponse.Item item) {
-		String name = stripHtml(item.title());
-		String address = item.roadAddress();
-		String placeKey = PlaceKeyGenerator.generate(name, address);
+	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images) {
+		List<String> cached = images.getOrDefault(response.placeKey(), List.of());
+		List<String> placeImages = !cached.isEmpty()
+			? cached : googleClient.fetchImages(response.name(), response.address(), 3);
 
-		// 여기가 병목 지점인데, 이제 별도 스레드에서 동시에 실행됨
-		List<String> placeImages = getPlaceImgs(placeKey, name, address);
-		String naverPlaceUrl = buildNaverPlaceUrl(item);
-
-		return placeMapper.toSavedPlaceInfo(item, name, placeKey, naverPlaceUrl, placeImages);
+		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
+			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages
+		);
 	}
 
-	private SavedPlaceInfo fallback(NaverSearchResponse.Item item) {
-		String name = stripHtml(item.title());
-		String address = item.roadAddress();
-		String placeKey = PlaceKeyGenerator.generate(name, address);
-		return placeMapper.toSavedPlaceInfo(item, name, placeKey, buildNaverPlaceUrl(item), List.of());
+	private SavedPlaceInfo fallback(SearchCandidateResponse response) {
+		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
+			response.naverPlaceUrl(), List.of());
 	}
 
 	/**
