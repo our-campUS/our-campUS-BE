@@ -23,6 +23,7 @@ import com.campus.campus.domain.council.application.exception.PrecautionNotAgree
 import com.campus.campus.domain.council.application.exception.SignupEmailNotFoundException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
+import com.campus.campus.domain.council.application.util.CouncilNameGenerator;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
@@ -60,6 +61,7 @@ public class CouncilLoginService {
 	private final SecurityConfig securityConfig;
 	private final PasswordEncoder passwordEncoder;
 	private final RedisTokenService redisTokenService;
+	private final CouncilNameGenerator councilNameGenerator;
 
 	@Value("${jwt.refresh.expiration-seconds}")
 	private long refreshTokenExpirationSeconds;
@@ -87,6 +89,9 @@ public class CouncilLoginService {
 
 		StudentCouncil studentCouncil = studentCouncilLoginMapper.createStudentCouncil(
 			studentCouncilSignUpRequest, school, scope.college, scope.major);
+
+		String councilName = councilNameGenerator.buildCouncilName(studentCouncil);
+		studentCouncil.setCouncilName(councilName);
 
 		studentCouncilRepository.save(studentCouncil);
 

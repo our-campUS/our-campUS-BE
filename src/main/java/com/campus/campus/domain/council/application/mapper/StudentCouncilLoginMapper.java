@@ -30,6 +30,7 @@ public class StudentCouncilLoginMapper {
 			.school(school)
 			.college(college)
 			.major(major)
+			.electionImageUrl(studentCouncilSignUpRequest.electionImageUrl())
 			.managerApproved(false)
 			.build();
 	}
@@ -45,7 +46,8 @@ public class StudentCouncilLoginMapper {
 			studentCouncil.getCouncilType(),
 			studentCouncil.getSchool().getSchoolName(),
 			studentCouncil.getCollege() != null ? studentCouncil.getCollege().getCollegeName() : null,
-			studentCouncil.getMajor() != null ? studentCouncil.getMajor().getMajorName() : null
+			studentCouncil.getMajor() != null ? studentCouncil.getMajor().getMajorName() : null,
+			studentCouncil.getCouncilName()
 		);
 	}
 
