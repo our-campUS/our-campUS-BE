@@ -86,7 +86,7 @@ public class PlaceService {
 		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
 			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
 					executorService)
-				.completeOnTimeout(fallback(response), 2, TimeUnit.SECONDS)
+				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
 				.exceptionally(ex -> fallback(response)))
 			.toList();
 
@@ -157,34 +157,6 @@ public class PlaceService {
 	 */
 	private String stripHtml(String text) {
 		return text.replaceAll("<[^>]*>", "");
-	}
-
-	/*
-	 * 장소 검색 시 google places로부터 이미지 불러오기
-	 */
-	private List<String> getPlaceImgs(String placeKey, String name, String address) {
-		// DB 확인
-		List<String> images = getImages(placeKey);
-		if (!images.isEmpty()) {
-			return images;
-		}
-
-		//최초 검색 시 google에서 이미지 url 가져오기
-		List<String> googleImageUrls = googleClient.fetchImages(name, address, 3);
-		if (googleImageUrls.isEmpty()) {
-			return List.of();
-		}
-
-		return googleImageUrls;
-	}
-
-	/*
-	 * DB 조회
-	 */
-	private List<String> getImages(String placeKey) {
-		return placeImagesRepository.findByPlaceKey(placeKey).stream()
-			.map(PlaceImages::getImageUrl)
-			.toList();
 	}
 
 	private String buildNaverPlaceUrl(NaverSearchResponse.Item item) {
