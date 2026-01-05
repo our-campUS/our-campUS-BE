@@ -63,7 +63,8 @@ public class ManagerService {
 	@Transactional
 	public CouncilApproveOrDenyResponse approveOrDenyCouncil(Long councilId,
 		CouncilApproveOrDenyRequest councilApproveOrDenyRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByIdAndManagerApprovedIsFalseAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		boolean certifyResult = councilApproveOrDenyRequest.certifyResult();
