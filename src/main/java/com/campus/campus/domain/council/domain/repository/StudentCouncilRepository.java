@@ -1,5 +1,6 @@
 package com.campus.campus.domain.council.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +21,13 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 		"WHERE sc.id = :councilId AND sc.deletedAt IS NULL AND sc.managerApproved IS TRUE")
 	Optional<StudentCouncil> findByIdWithDetailsAndManagerApprovedIsTrueAndDeletedAtIsNull(
 		@Param("councilId") Long councilId);
+
+	@Query("SELECT sc FROM StudentCouncil sc " +
+		"LEFT JOIN FETCH sc.school " +
+		"LEFT JOIN FETCH sc.college " +
+		"LEFT JOIN FETCH sc.major " +
+		"WHERE sc.deletedAt IS NULL AND sc.managerApproved IS FALSE")
+	List<StudentCouncil> findByManagerWithDetailsApprovedIsFalseAndDeletedAtIsNull();
 
 	boolean existsByLoginId(String loginId);
 

@@ -1,5 +1,7 @@
 package com.campus.campus.domain.manager.application.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,7 +14,9 @@ import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.manager.application.dto.request.CouncilApproveOrDenyRequest;
 import com.campus.campus.domain.manager.application.dto.request.ManagerLoginRequest;
+import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilResponse;
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
+import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
 import com.campus.campus.domain.manager.application.exception.ManagerNotFoundException;
 import com.campus.campus.domain.manager.application.exception.PasswordNotCorrectException;
@@ -57,8 +61,9 @@ public class ManagerService {
 	}
 
 	@Transactional
-	public CouncilApproveOrDenyResponse approveOrDenyCouncil(CouncilApproveOrDenyRequest councilApproveOrDenyRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilApproveOrDenyRequest.councilId())
+	public CouncilApproveOrDenyResponse approveOrDenyCouncil(Long councilId,
+		CouncilApproveOrDenyRequest councilApproveOrDenyRequest) {
+		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		boolean certifyResult = councilApproveOrDenyRequest.certifyResult();
@@ -73,6 +78,20 @@ public class ManagerService {
 		}
 
 		return managerMapper.toCouncilApproveOrDenyResponse(studentCouncil.getId(), certifyResult);
+	}
+
+	public List<CertifyRequestCouncilListResponse> getCertifyRequestCouncils() {
+		return studentCouncilRepository.findByManagerWithDetailsApprovedIsFalseAndDeletedAtIsNull()
+			.stream()
+			.map(managerMapper::toCertifyRequestCouncilListResponse)
+			.toList();
+	}
+
+	public CertifyRequestCouncilResponse getCertifyRequestCouncil(Long councilId) {
+		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		return managerMapper.toCertifyRequestCouncilResponse(studentCouncil);
 	}
 
 	private void sendCouncilApprovedMail(String to) {
