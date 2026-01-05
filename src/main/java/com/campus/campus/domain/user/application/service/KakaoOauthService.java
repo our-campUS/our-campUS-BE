@@ -96,28 +96,6 @@ public class KakaoOauthService {
 		}
 	}
 
-	private KakaoTokenResponse getToken(String authorizationCode) {
-		RestClient client = RestClient.create();
-
-		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-		body.add("grant_type", "authorization_code");
-		body.add("client_id", kakaoOauthProperty.getClientId());
-		body.add("redirect_uri", kakaoOauthProperty.getRedirectUri());
-		body.add("code", authorizationCode);
-
-		if (kakaoOauthProperty.getClientSecret() != null &&
-			!kakaoOauthProperty.getClientSecret().isBlank()) {
-			body.add("client_secret", kakaoOauthProperty.getClientSecret());
-		}
-
-		return client.post()
-			.uri(KAUTH_BASE_URL + "/oauth/token")
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(body)
-			.retrieve()
-			.body(KakaoTokenResponse.class);
-	}
-
 	private KakaoUserResponse getUserInfo(String kakaoAccessToken) {
 		RestClient client = RestClient.create();
 
