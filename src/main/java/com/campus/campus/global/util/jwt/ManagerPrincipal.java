@@ -14,7 +14,7 @@ import lombok.Getter;
 @Getter
 public class ManagerPrincipal implements UserDetails {
 	private final Long managerId;
-	private final String managerName; // 로그인 아이디 (이메일)
+	private final String managerName;
 	private final List<GrantedAuthority> authorities;
 
 	private ManagerPrincipal(
