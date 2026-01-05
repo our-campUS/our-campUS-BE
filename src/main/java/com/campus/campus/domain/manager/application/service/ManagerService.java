@@ -88,7 +88,8 @@ public class ManagerService {
 	}
 
 	public CertifyRequestCouncilResponse getCertifyRequestCouncil(Long councilId) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByIdAndManagerApprovedIsFalseAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		return managerMapper.toCertifyRequestCouncilResponse(studentCouncil);
