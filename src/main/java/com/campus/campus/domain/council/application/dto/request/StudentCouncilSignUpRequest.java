@@ -38,6 +38,7 @@ public record StudentCouncilSignUpRequest(
 	Long majorId,
 
 	@Schema(description = "당선 사진 url", example = "https://www.election.com.png")
+	@NotBlank
 	String electionImageUrl
 ) {
 }
