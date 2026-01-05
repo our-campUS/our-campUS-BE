@@ -69,7 +69,7 @@ public class ManagerService {
 		boolean certifyResult = councilApproveOrDenyRequest.certifyResult();
 
 		if (certifyResult) {
-			studentCouncil.mangerApprove();
+			studentCouncil.managerApprove();
 			studentCouncilRepository.save(studentCouncil);
 
 			sendCouncilApprovedMail(studentCouncil.getEmail());

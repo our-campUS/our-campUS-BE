@@ -90,7 +90,7 @@ public class StudentCouncil extends BaseEntity {
 		this.councilName = councilName;
 	}
 
-	public void mangerApprove() {
+	public void managerApprove() {
 		this.managerApproved = true;
 	}
 }
