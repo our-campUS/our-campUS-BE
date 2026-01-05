@@ -132,6 +132,9 @@ public class StudentCouncilPostService {
 
 	@Transactional
 	public void delete(Long councilId, Long postId) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -165,6 +168,9 @@ public class StudentCouncilPostService {
 
 	@Transactional
 	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
 		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
 		}
