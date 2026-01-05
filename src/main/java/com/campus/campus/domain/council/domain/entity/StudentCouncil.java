@@ -68,8 +68,8 @@ public class StudentCouncil extends BaseEntity {
 	@Column(name = "election_image_url")
 	private String electionImageUrl;
 
-	@Column(name = "manager_approved")
-	private Boolean managerApproved;
+	@Column(name = "manager_approved", nullable = false)
+	private boolean managerApproved;
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
