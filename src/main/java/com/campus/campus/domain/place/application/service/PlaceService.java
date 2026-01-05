@@ -4,6 +4,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -48,23 +51,20 @@ public class PlaceService {
 	private final PresignedUrlService presignedUrlService;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
+	private final ExecutorService executorService;
 
 	public List<SavedPlaceInfo> search(String keyword) {
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
 
-		return naverSearchResponse.items().stream()
-			.map(item -> {
-
-				String name = stripHtml(item.title());
-				String address = item.roadAddress();
-				String placeKey = PlaceKeyGenerator.generate(name, address);
-				List<String> placeImages = getPlaceImgs(placeKey, name, address);
-				String naverPlaceUrl = buildNaverPlaceUrl(item);
-
-				return placeMapper.toSavedPlaceInfo(item, name, placeKey, naverPlaceUrl, placeImages);
-			})
+		List<CompletableFuture<SavedPlaceInfo>> futures = naverSearchResponse.items().stream()
+			.map(item -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(item), executorService)
+				.completeOnTimeout(fallback(item), 2, TimeUnit.SECONDS)
+				.exceptionally(ex -> fallback(item)))
 			.toList();
+
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
 	//장소 저장
@@ -108,6 +108,25 @@ public class PlaceService {
 		likedPlacesRepository.save(savedLikedPlace);
 
 		return placeMapper.toLikeResponse(place);
+	}
+
+	private SavedPlaceInfo convertToSavedPlaceInfo(NaverSearchResponse.Item item) {
+		String name = stripHtml(item.title());
+		String address = item.roadAddress();
+		String placeKey = PlaceKeyGenerator.generate(name, address);
+
+		// 여기가 병목 지점인데, 이제 별도 스레드에서 동시에 실행됨
+		List<String> placeImages = getPlaceImgs(placeKey, name, address);
+		String naverPlaceUrl = buildNaverPlaceUrl(item);
+
+		return placeMapper.toSavedPlaceInfo(item, name, placeKey, naverPlaceUrl, placeImages);
+	}
+
+	private SavedPlaceInfo fallback(NaverSearchResponse.Item item) {
+		String name = stripHtml(item.title());
+		String address = item.roadAddress();
+		String placeKey = PlaceKeyGenerator.generate(name, address);
+		return placeMapper.toSavedPlaceInfo(item, name, placeKey, buildNaverPlaceUrl(item), List.of());
 	}
 
 	/**
