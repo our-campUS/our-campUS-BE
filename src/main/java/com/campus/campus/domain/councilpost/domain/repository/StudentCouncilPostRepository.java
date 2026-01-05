@@ -16,19 +16,22 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 
 	Page<StudentCouncilPost> findAllByCategory(PostCategory category, Pageable pageable);
 
-	@Query("SELECT p FROM StudentCouncilPost p " +
-		"JOIN FETCH p.writer w " +
-		"JOIN FETCH w.school s " +
-		"LEFT JOIN FETCH w.college c " +
-		"LEFT JOIN FETCH w.major m " +
-		"WHERE p.id = :postId")
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN FETCH p.writer w
+		JOIN FETCH w.school
+		LEFT JOIN FETCH w.college
+		LEFT JOIN FETCH w.major
+		WHERE p.id = :postId
+		AND w.deletedAt IS NULL
+		""")
 	Optional<StudentCouncilPost> findByIdWithFullInfo(@Param("postId") Long postId);
 
 	@Query("""
-			SELECT p
-			FROM StudentCouncilPost p
-			WHERE p.category = :category
-			AND p.startDateTime BETWEEN :now AND :limit
+		SELECT p
+		FROM StudentCouncilPost p
+		WHERE p.category = :category
+		AND p.startDateTime BETWEEN :now AND :limit
 		""")
 	Page<StudentCouncilPost> findUpcomingEvents(
 		@Param("category") PostCategory category,
@@ -37,4 +40,51 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		Pageable pageable
 	);
 
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN FETCH p.writer w
+		JOIN FETCH w.school
+		WHERE w.councilType = 'SCHOOL_COUNCIL'
+		AND w.school.schoolId = :schoolId
+		AND (:category IS NULL OR p.category = :category)
+		AND w.deletedAt IS NULL
+		ORDER BY p.createdAt DESC
+		""")
+	Page<StudentCouncilPost> findBySchoolId(
+		@Param("schoolId") Long schoolId,
+		@Param("category") PostCategory category,
+		Pageable pageable
+	);
+
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN FETCH p.writer w
+		JOIN FETCH w.college
+		WHERE w.councilType = 'COLLEGE_COUNCIL'
+		AND w.college.collegeId = :collegeId
+		AND (:category IS NULL OR p.category = :category)
+		AND w.deletedAt IS NULL
+		ORDER BY p.createdAt DESC
+		""")
+	Page<StudentCouncilPost> findByCollegeId(
+		@Param("collegeId") Long collegeId,
+		@Param("category") PostCategory category,
+		Pageable pageable
+	);
+
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN FETCH p.writer w
+		JOIN FETCH w.major
+		WHERE w.councilType = 'MAJOR_COUNCIL'
+		AND w.major.majorId = :majorId
+		AND (:category IS NULL OR p.category = :category)
+		AND w.deletedAt IS NULL
+		ORDER BY p.createdAt DESC
+		""")
+	Page<StudentCouncilPost> findByMajorId(
+		@Param("majorId") Long majorId,
+		@Param("category") PostCategory category,
+		Pageable pageable
+	);
 }
