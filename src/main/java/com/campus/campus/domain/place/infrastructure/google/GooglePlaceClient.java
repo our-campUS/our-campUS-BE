@@ -3,6 +3,7 @@ package com.campus.campus.domain.place.infrastructure.google;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -37,19 +38,20 @@ public class GooglePlaceClient {
 	 * 장소 이름 + 주소를 기준으로 google places에서 이미지 URL 목록을 가져옴
 	 */
 	public List<String> fetchImages(String name, String address, int limit) {
-		try{
-			googleApiSemaphore.acquire();
-		} catch (InterruptedException e){
-			throw new RuntimeException("Google API 대기 중 인터럽트 발생", e);
-		}
+		boolean acquired = false;
+		try {
+			acquired = googleApiSemaphore.tryAcquire(5, TimeUnit.SECONDS);
+			if (!acquired) {
+				log.warn("Google API 요청 폭주로 인한 대기 시간 초과 (Timeout): {}, {}", name, address);
+				return List.of();
+			}
 
-		try{
 			String placeId = findPlaceId(name, address);
 			if (placeId == null) {
 				return List.of();
 			}
 
-			//placee details -> photo reference
+			//place details -> photo reference
 			List<String> photoRefs = getPhotoReferences(placeId);
 			if (photoRefs.isEmpty()) {
 				return List.of();
@@ -63,8 +65,19 @@ public class GooglePlaceClient {
 
 			log.info("imageUrls: {}", imageUrls);
 			return imageUrls;
+		} catch (InterruptedException e) {
+			log.warn("Google API 대기 중 인터럽트 발생", e);
+			Thread.currentThread().interrupt();
+
+			return List.of();
+		} catch (Exception e) {
+			log.error("Google API 호출 중 예상치 못한 에러 발생", e);
+
+			return List.of();
 		} finally {
-			googleApiSemaphore.release();
+			if (acquired) {
+				googleApiSemaphore.release();
+			}
 		}
 	}
 
