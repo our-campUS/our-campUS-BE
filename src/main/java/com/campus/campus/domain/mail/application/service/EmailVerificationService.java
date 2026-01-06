@@ -25,7 +25,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class EmailVerificationService {
 	private static final long EXPIRE_TIME = 5L;
-	private static final String SCHOOL_EMAIL_SUFFIX = ".ac.kr";
+	private static final String SCHOOL_EMAIL_SUFFIX_AC = ".ac.kr";
+	private static final String SCHOOL_EMAIL_SUFFIX_EDU = ".edu";
 
 	private final JavaMailSender javaMailSender;
 	private final EmailVerificationMapper emailVerificationMapper;
@@ -188,7 +189,7 @@ public class EmailVerificationService {
 	}
 
 	private void validateSchoolEmail(String email) {
-		if (!email.endsWith(SCHOOL_EMAIL_SUFFIX)) {
+		if (!email.endsWith(SCHOOL_EMAIL_SUFFIX_AC) && !email.endsWith(SCHOOL_EMAIL_SUFFIX_EDU)) {
 			throw new InvalidSchoolEmailException();
 		}
 	}
