@@ -89,6 +89,11 @@ public class GooglePlaceClient {
 			return null;
 		}
 
+		if (response.results() == null || response.results().isEmpty()) {
+			log.info("Google Place 검색 결과 없음: query={}", query);
+			return null;
+		}
+
 		String placeId = response.results().get(0).placeId();
 		if (placeId == null || placeId.isBlank()) {
 			return null;
