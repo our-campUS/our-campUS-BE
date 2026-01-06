@@ -47,6 +47,8 @@ public class SchoolFindMapper {
 
 	public MajorFindResponse toMajorFindResponse(Major major) {
 		return new MajorFindResponse(
+			major.getCollege().getCollegeId(),
+			major.getCollege().getCollegeName(),
 			major.getMajorId(),
 			major.getMajorName()
 		);
