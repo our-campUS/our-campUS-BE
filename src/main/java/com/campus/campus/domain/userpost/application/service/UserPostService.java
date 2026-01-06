@@ -1,5 +1,7 @@
 package com.campus.campus.domain.userpost.application.service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -9,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
@@ -21,6 +24,8 @@ import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPost
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.domain.userpost.application.exception.CollegeNotSetException;
+import com.campus.campus.domain.userpost.application.exception.MajorNotSetException;
 import com.campus.campus.domain.userpost.policy.PostAccessPolicy;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +42,9 @@ public class UserPostService {
 	private final UserRepository userRepository;
 	private final PostAccessPolicy postAccessPolicy;
 
+	private static final int UPCOMING_HOURS = 72;
+	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
 	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId)
@@ -45,7 +53,7 @@ public class UserPostService {
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findBySchoolId(user.getSchool().getSchoolId(), category, pageable);
+			.findBySchoolId(user.getSchool().getSchoolId(), category,CouncilType.SCHOOL_COUNCIL, pageable);
 
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
@@ -55,10 +63,14 @@ public class UserPostService {
 		User user = userRepository.findByIdWithAcademicInfo(userId)
 			.orElseThrow(UserNotFoundException::new);
 
+		if (user.isProfileNotCompleted() || user.getCollege() == null) {
+			throw new CollegeNotSetException();
+		}
+
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByCollegeId(user.getCollege().getCollegeId(), category, pageable);
+			.findByCollegeId(user.getCollege().getCollegeId(), category, CouncilType.COLLEGE_COUNCIL, pageable);
 
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
@@ -71,7 +83,93 @@ public class UserPostService {
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByMajorId(user.getMajor().getMajorId(), category, pageable);
+			.findByMajorId(user.getMajor().getMajorId(), category, CouncilType.MAJOR_COUNCIL, pageable);
+
+		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+	}
+
+	@Transactional(readOnly = true)
+	public Page<PostListItemResponse> findUpcomingSchoolEvents72h(int page, int size, Long userId) {
+		User user = userRepository.findByIdWithAcademicInfo(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Pageable pageable = PageRequest.of(
+			Math.max(page - 1, 0),
+			size,
+			Sort.by(Sort.Direction.ASC, "startDateTime")
+		);
+
+		LocalDateTime now = LocalDateTime.now(KST);
+		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);
+
+		Page<StudentCouncilPost> posts = studentCouncilPostRepository.findUpcomingSchoolEvents(
+			user.getSchool().getSchoolId(),
+			PostCategory.EVENT,
+			CouncilType.SCHOOL_COUNCIL,
+			now,
+			limit,
+			pageable
+		);
+
+		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+	}
+
+	@Transactional(readOnly = true)
+	public Page<PostListItemResponse> findUpcomingCollegeEvents72h(int page, int size, Long userId) {
+		User user = userRepository.findByIdWithAcademicInfo(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (user.isProfileNotCompleted() || user.getCollege() == null) {
+			throw new CollegeNotSetException();
+		}
+
+		Pageable pageable = PageRequest.of(
+			Math.max(page - 1, 0),
+			size,
+			Sort.by(Sort.Direction.ASC, "startDateTime")
+		);
+
+		LocalDateTime now = LocalDateTime.now(KST);
+		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);
+
+		Page<StudentCouncilPost> posts = studentCouncilPostRepository.findUpcomingCollegeEvents(
+			user.getCollege().getCollegeId(),
+			PostCategory.EVENT,
+			CouncilType.COLLEGE_COUNCIL,
+			now,
+			limit,
+			pageable
+		);
+
+		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+	}
+
+	@Transactional(readOnly = true)
+	public Page<PostListItemResponse> findUpcomingMajorEvents72h(int page, int size, Long userId) {
+		User user = userRepository.findByIdWithAcademicInfo(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (user.isProfileNotCompleted() || user.getMajor() == null) {
+			throw new MajorNotSetException();
+		}
+
+		Pageable pageable = PageRequest.of(
+			Math.max(page - 1, 0),
+			size,
+			Sort.by(Sort.Direction.ASC, "startDateTime")
+		);
+
+		LocalDateTime now = LocalDateTime.now(KST);
+		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);
+
+		Page<StudentCouncilPost> posts = studentCouncilPostRepository.findUpcomingMajorEvents(
+			user.getMajor().getMajorId(),
+			PostCategory.EVENT,
+			CouncilType.MAJOR_COUNCIL,
+			now,
+			limit,
+			pageable
+		);
 
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}

@@ -89,4 +89,46 @@ public class UserPostController {
 			postService.findById(postId, userId)
 		);
 	}
+
+	@GetMapping("/school/events/upcoming")
+	@Operation(
+		summary = "학교 범위 72시간 이내 행사 조회",
+		description = "사용자의 학교 범위에서 현재 시각 기준 72시간 이내에 시작하는 행사(EVENT) 게시글을 조회합니다. (startDateTime 기준)"
+	)
+	public CommonResponse<Page<PostListItemResponse>> getUpcomingSchoolEvents(
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "3") int size,
+		@CurrentUserId Long userId
+	) {
+		Page<PostListItemResponse> responseDto = postService.findUpcomingSchoolEvents72h(page, size, userId);
+		return CommonResponse.success(UserPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+	}
+
+	@GetMapping("/college/events/upcoming")
+	@Operation(
+		summary = "단과대 범위 72시간 이내 행사 조회",
+		description = "사용자의 단과대 범위에서 현재 시각 기준 72시간 이내에 시작하는 행사(EVENT) 게시글을 조회합니다. (startDateTime 기준)"
+	)
+	public CommonResponse<Page<PostListItemResponse>> getUpcomingCollegeEvents(
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "3") int size,
+		@CurrentUserId Long userId
+	) {
+		Page<PostListItemResponse> responseDto = postService.findUpcomingCollegeEvents72h(page, size, userId);
+		return CommonResponse.success(UserPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+	}
+
+	@GetMapping("/major/events/upcoming")
+	@Operation(
+		summary = "학과 범위 72시간 이내 행사 조회",
+		description = "사용자의 학과 범위에서 현재 시각 기준 72시간 이내에 시작하는 행사(EVENT) 게시글을 조회합니다. (startDateTime 기준)"
+	)
+	public CommonResponse<Page<PostListItemResponse>> getUpcomingMajorEvents(
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "3") int size,
+		@CurrentUserId Long userId
+	) {
+		Page<PostListItemResponse> responseDto = postService.findUpcomingMajorEvents72h(page, size, userId);
+		return CommonResponse.success(UserPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+	}
 }
