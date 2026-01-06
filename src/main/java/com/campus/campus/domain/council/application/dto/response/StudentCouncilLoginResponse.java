@@ -32,6 +32,9 @@ public record StudentCouncilLoginResponse(
 	String collegeName,
 
 	@Schema(description = "학과 이름 (없으면 null)", example = "컴퓨터공학과")
-	String majorName
+	String majorName,
+
+	@Schema(description = "학생회 이름", example = "가천대학교 총학생회")
+	String councilName
 ) {
 }

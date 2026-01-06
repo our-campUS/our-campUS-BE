@@ -62,6 +62,15 @@ public class StudentCouncil extends BaseEntity {
 	@JoinColumn(name = "major_id")
 	private Major major;
 
+	@Column(name = "council_name")
+	private String councilName;
+
+	@Column(name = "election_image_url")
+	private String electionImageUrl;
+
+	@Column(name = "manager_approved", nullable = false)
+	private boolean managerApproved;
+
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
@@ -73,18 +82,15 @@ public class StudentCouncil extends BaseEntity {
 		this.password = newPassword;
 	}
 
-	public String getFullCouncilName() {
-		StringBuilder fullName = new StringBuilder();
-		if (school != null)
-			fullName.append(school.getSchoolName());
-		if (college != null)
-			fullName.append(" ").append(college.getCollegeName());
-		if (major != null)
-			fullName.append(" ").append(major.getMajorName());
-		return fullName.append(" 학생회").toString().trim();
-	}
-
 	public void changeEmail(String newEmail) {
 		this.email = newEmail;
+	}
+
+	public void generateCouncilName(String councilName) {
+		this.councilName = councilName;
+	}
+
+	public void managerApprove() {
+		this.managerApproved = true;
 	}
 }

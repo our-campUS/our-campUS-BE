@@ -82,7 +82,8 @@ public class StudentCouncilPostService {
 			throw new PostImageLimitExceededException();
 		}
 
-		StudentCouncil writer = studentCouncilRepository.findByIdWithDetailsAndDeletedAtIsNull(councilId)
+		StudentCouncil writer = studentCouncilRepository
+			.findByIdWithDetailsAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (dto.thumbnailImageUrl() == null && dto.thumbnailIcon() == null) {
@@ -159,6 +160,9 @@ public class StudentCouncilPostService {
 
 	@Transactional
 	public void delete(Long councilId, Long postId) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -191,7 +195,10 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponse update(Long councilId, Long postId, PostRequest dto, Place place) {
+	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
 		if (dto.imageUrls() != null && dto.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
 		}
@@ -216,7 +223,7 @@ public class StudentCouncilPostService {
 		post.update(
 			dto.title(),
 			dto.content(),
-			place,
+			dto.place(),
 			normalized.startDateTime(),
 			normalized.endDateTime(),
 			dto.thumbnailImageUrl(),

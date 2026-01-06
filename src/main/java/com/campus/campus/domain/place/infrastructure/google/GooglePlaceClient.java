@@ -2,6 +2,8 @@ package com.campus.campus.domain.place.infrastructure.google;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,8 @@ public class GooglePlaceClient {
 	private final WebClient webClient;
 	private final String apiKey;
 
+	private final Semaphore googleApiSemaphore = new Semaphore(20);
+
 	public GooglePlaceClient(
 		@Value("${map.google.places.api-key}") String apiKey
 	) {
@@ -34,26 +38,47 @@ public class GooglePlaceClient {
 	 * 장소 이름 + 주소를 기준으로 google places에서 이미지 URL 목록을 가져옴
 	 */
 	public List<String> fetchImages(String name, String address, int limit) {
+		boolean acquired = false;
+		try {
+			acquired = googleApiSemaphore.tryAcquire(5, TimeUnit.SECONDS);
+			if (!acquired) {
+				log.warn("Google API 요청 폭주로 인한 대기 시간 초과 (Timeout): {}, {}", name, address);
+				return List.of();
+			}
 
-		String placeId = findPlaceId(name, address);
-		if (placeId == null) {
+			String placeId = findPlaceId(name, address);
+			if (placeId == null) {
+				return List.of();
+			}
+
+			//place details -> photo reference
+			List<String> photoRefs = getPhotoReferences(placeId);
+			if (photoRefs.isEmpty()) {
+				return List.of();
+			}
+
+			//imageURL 생성
+			List<String> imageUrls = photoRefs.stream()
+				.limit(3)
+				.map(this::buildPhotoUrl)
+				.toList();
+
+			log.info("imageUrls: {}", imageUrls);
+			return imageUrls;
+		} catch (InterruptedException e) {
+			log.warn("Google API 대기 중 인터럽트 발생", e);
+			Thread.currentThread().interrupt();
+
 			return List.of();
-		}
+		} catch (Exception e) {
+			log.error("Google API 호출 중 예상치 못한 에러 발생", e);
 
-		//placee details -> photo reference
-		List<String> photoRefs = getPhotoReferences(placeId);
-		if (photoRefs.isEmpty()) {
 			return List.of();
+		} finally {
+			if (acquired) {
+				googleApiSemaphore.release();
+			}
 		}
-
-		//imageURL 생성
-		List<String> imageUrls = photoRefs.stream()
-			.limit(3)
-			.map(this::buildPhotoUrl)
-			.toList();
-
-		log.info("imageUrls: {}", imageUrls);
-		return imageUrls;
 	}
 
 	/*
@@ -74,6 +99,11 @@ public class GooglePlaceClient {
 			.block();
 
 		if (response == null) {
+			return null;
+		}
+
+		if (response.results() == null || response.results().isEmpty()) {
+			log.info("Google Place 검색 결과 없음: query={}", query);
 			return null;
 		}
 

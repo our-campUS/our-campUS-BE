@@ -47,9 +47,8 @@ public class KakaoOauthService {
 	private long refreshTokenExpirationSeconds;
 
 	@Transactional
-	public OauthLoginResponse login(String authorizationCode) {
-		KakaoTokenResponse kakaoToken = getToken(authorizationCode);
-		KakaoUserResponse kakaoUser = getUserInfo(kakaoToken.accessToken());
+	public OauthLoginResponse login(String kakaoAccessToken) {
+		KakaoUserResponse kakaoUser = getUserInfo(kakaoAccessToken);
 
 		User user = findOrCreateUser(kakaoUser);
 
@@ -95,28 +94,6 @@ public class KakaoOauthService {
 			System.err.println("카카오 연결 끊기 실패: " + e.getMessage());
 			return false;
 		}
-	}
-
-	private KakaoTokenResponse getToken(String authorizationCode) {
-		RestClient client = RestClient.create();
-
-		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-		body.add("grant_type", "authorization_code");
-		body.add("client_id", kakaoOauthProperty.getClientId());
-		body.add("redirect_uri", kakaoOauthProperty.getRedirectUri());
-		body.add("code", authorizationCode);
-
-		if (kakaoOauthProperty.getClientSecret() != null &&
-			!kakaoOauthProperty.getClientSecret().isBlank()) {
-			body.add("client_secret", kakaoOauthProperty.getClientSecret());
-		}
-
-		return client.post()
-			.uri(KAUTH_BASE_URL + "/oauth/token")
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(body)
-			.retrieve()
-			.body(KakaoTokenResponse.class);
 	}
 
 	private KakaoUserResponse getUserInfo(String kakaoAccessToken) {

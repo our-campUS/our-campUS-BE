@@ -40,7 +40,7 @@ public class StudentCouncilPostMapper {
 		var builder = PostResponse.builder()
 			.id(post.getId())
 			.writerId(writer.getId())
-			.writerName(writer.getFullCouncilName())
+			.writerName(writer.getCouncilName())
 			.isWriter(post.isWrittenByCouncil(currentUserId))
 			.category(post.getCategory())
 			.title(post.getTitle())

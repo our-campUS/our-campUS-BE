@@ -12,6 +12,7 @@ public class PermitUrlConfig {
 			"/actuator/health",
 			"/auth/login/kakao",
 			"/auth/council/signup",
+			"/auth/council/signup/validate",
 			"/auth/council/login",
 			"/auth/council/find/id",
 			"/auth/council/find/password",
@@ -25,7 +26,9 @@ public class PermitUrlConfig {
 			"/search/colleges",
 			"/search/majors",
 			"/jwt/token/reissue",
-			"/places/search"
+			"/managers/login",
+			"/places/search",
+			"/storage/presigned"
 		};
 	}
 }
