@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginIdValidateRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilWithdrawRequest;
@@ -96,6 +97,12 @@ public class CouncilLoginService {
 		studentCouncilRepository.save(studentCouncil);
 
 		emailVerification.use();
+	}
+
+	public void validateLoginId(StudentCouncilLoginIdValidateRequest studentCouncilLoginIdValidateRequest) {
+		if (studentCouncilRepository.existsByLoginId(studentCouncilLoginIdValidateRequest.loginId())) {
+			throw new LoginIdAlreadyExistsException();
+		}
 	}
 
 	public StudentCouncilLoginResponse login(StudentCouncilLoginRequest studentCouncilLoginRequest) {
