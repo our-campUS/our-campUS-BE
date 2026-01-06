@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipPlaceSummary;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipScrollResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
@@ -32,6 +35,27 @@ public class PlaceMapper {
 			item.telephone(),
 			toCoordinate(item),
 			images
+		);
+	}
+
+	public PartnershipScrollResponse toPartnershipScrollResponse(List<PartnershipResponse> items, boolean hasNext,
+		Long nextCursor) {
+		return new PartnershipScrollResponse(items, hasNext, nextCursor);
+	}
+
+	public PartnershipResponse toPartnershipResponse(PartnershipPlaceSummary summary, List<String> tags,
+		boolean isLiked, List<String> imgUrls) {
+		return new PartnershipResponse(
+			summary.placeId(),
+			summary.placeKey(),
+			summary.name(),
+			summary.category(),
+			summary.address(),
+			summary.latitude(),
+			summary.longitude(),
+			tags,
+			isLiked,
+			imgUrls
 		);
 	}
 

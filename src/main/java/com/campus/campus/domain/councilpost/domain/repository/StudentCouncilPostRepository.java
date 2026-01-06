@@ -37,4 +37,17 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		Pageable pageable
 	);
 
+	@Query("""
+		SELECT p
+		FROM StudentCouncilPost p
+		WHERE p.place.placeId=:placeId
+				and p.writer.id=:councilId
+				and p.category='PARTNERSHIP'
+		order by p.createdAt desc
+		""")
+	Optional<StudentCouncilPost> findByCouncilIdAndPlaceId(
+		@Param("placeId") Long placeId,
+		@Param("councilId") Long councilId
+	);
+
 }

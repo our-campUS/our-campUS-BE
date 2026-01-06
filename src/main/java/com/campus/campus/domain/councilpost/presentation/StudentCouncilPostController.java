@@ -118,7 +118,7 @@ public class StudentCouncilPostController {
 		@PathVariable Long postId,
 		@RequestBody @Valid PostRequest requestDto
 	) {
-		PostResponse responseDto = postService.update(councilId, postId, requestDto);
+		PostResponse responseDto = postService.updatePartnershipPost(councilId, postId, requestDto);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_UPDATE_SUCCESS, responseDto);
 	}

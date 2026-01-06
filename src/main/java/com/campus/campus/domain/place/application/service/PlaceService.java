@@ -3,15 +3,27 @@ package com.campus.campus.domain.place.application.service;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
+import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
+import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipPlaceSummary;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipScrollResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PostImageSummary;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
@@ -48,6 +60,8 @@ public class PlaceService {
 	private final PresignedUrlService presignedUrlService;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
+	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final PostImageRepository postImageRepository;
 
 	public List<SavedPlaceInfo> search(String keyword) {
 		//네이버에서 특정 장소 기본정보 받아오기
@@ -129,6 +143,84 @@ public class PlaceService {
 		likedPlacesRepository.save(savedLikedPlace);
 
 		return placeMapper.toLikeResponse(place);
+	}
+
+	@Transactional(readOnly = true)
+	public PartnershipScrollResponse getPartnershipPlaces(Long userId, Long cursor, int size) {
+		Pageable pageable = PageRequest.of(0, size + 1);
+
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Long majorId = user.getMajor().getMajorId();
+		Long collegeId = user.getCollege().getCollegeId();
+		Long schoolId = user.getSchool().getSchoolId();
+
+		//유저가 속한 과/단과대/학교 학생회에서 올린 제휴 전부 조회
+		List<PartnershipPlaceSummary> response = placeRepository.findPartnershipPlaces(PostCategory.PARTNERSHIP,
+			majorId, collegeId, schoolId, cursor, pageable);
+
+		//placeId 목록 추출
+		List<Long> placeIds = response.stream()
+			.map(PartnershipPlaceSummary::placeId)
+			.distinct().toList();
+
+		//유저가 좋아요 한 placeId 조회
+		Set<Long> likedPlaceIds =
+			likedPlacesRepository.findLikedPlaceIds(userId, placeIds);
+
+		//이미지 조회
+		List<PostImageSummary> images = postImageRepository.findPartnershipImagesByPlaceIds(placeIds);
+
+		//placeId 기준으로 이미지 묶기
+		Map<Long, List<String>> imageMap =
+			images.stream()
+				.collect(Collectors.groupingBy(
+					PostImageSummary::placeId,
+					Collectors.mapping(PostImageSummary::imageUrl, Collectors.toList())
+				));
+
+		//placeId 기준으로 묶기
+		Map<Long, List<PartnershipPlaceSummary>> grouped = response.stream()
+			.collect(Collectors.groupingBy(PartnershipPlaceSummary::placeId));
+
+		//다음 페이지 판단
+		boolean hasNext = grouped.size() > size;
+
+		//그룹 단위 Response 생성
+		List<PartnershipResponse> items = grouped.values().stream()
+			.limit(size)
+			.map(group -> {
+				PartnershipPlaceSummary first = group.get(0);
+
+				List<String> tags = group.stream()
+					.map(r -> resolveTag(r, user))
+					.distinct()
+					.toList();
+
+				//이미지
+				List<String> imageUrls =
+					imageMap.getOrDefault(first.placeId(), List.of())
+						.stream()
+						.toList();
+
+				boolean isLiked = likedPlaceIds.contains(first.placeId());
+
+				return placeMapper.toPartnershipResponse(first, tags, isLiked, imageUrls);
+			})
+			.toList();
+
+		Long nextCursor = hasNext ? items.get(items.size() - 1).placeId() : null;
+		return placeMapper.toPartnershipScrollResponse(items, hasNext, nextCursor);
+
+	}
+
+	private String resolveTag(PartnershipPlaceSummary summary, User user) {
+		return switch (summary.councilType()) {
+			case SCHOOL_COUNCIL -> "총학생회";
+			case COLLEGE_COUNCIL -> user.getCollege().getCollegeName();
+			case MAJOR_COUNCIL -> user.getMajor().getMajorName();
+		};
 	}
 
 	/**

@@ -13,7 +13,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         default_batch_fetch_size: 100
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
   mail:
     host: smtp.gmail.com
     port: 587
