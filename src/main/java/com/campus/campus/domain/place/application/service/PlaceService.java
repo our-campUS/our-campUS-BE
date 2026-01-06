@@ -34,7 +34,6 @@ import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
-import com.campus.campus.global.annotation.stopwatch.LogExecutionTime;
 import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
 import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
@@ -57,7 +56,6 @@ public class PlaceService {
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
 
-	@LogExecutionTime
 	public List<SavedPlaceInfo> search(String keyword) {
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
