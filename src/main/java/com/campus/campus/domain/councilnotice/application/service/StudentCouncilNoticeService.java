@@ -49,7 +49,8 @@ public class StudentCouncilNoticeService {
 			throw new NoticeImageLimitExceededException();
 		}
 
-		StudentCouncil writer = studentCouncilRepository.findByIdWithDetailsAndDeletedAtIsNull(councilId)
+		StudentCouncil writer = studentCouncilRepository.
+			findByIdWithDetailsAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		StudentCouncilNotice notice =
@@ -105,6 +106,8 @@ public class StudentCouncilNoticeService {
 
 	@Transactional
 	public NoticeResponse update(Long councilId, Long noticeId, NoticeRequest dto) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new NoticeImageLimitExceededException();
@@ -145,6 +148,8 @@ public class StudentCouncilNoticeService {
 
 	@Transactional
 	public void delete(Long councilId, Long noticeId) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		StudentCouncilNotice notice = noticeRepository.findByIdWithFullInfo(noticeId)
 			.orElseThrow(NoticeNotFoundException::new);

@@ -74,7 +74,7 @@ public class TokenReissueService {
 				throw new UserNotFoundException();
 			}
 		} else if ("COUNCIL".equals(role)) {
-			if (!studentCouncilRepository.existsByIdAndDeletedAtIsNull(id)) {
+			if (!studentCouncilRepository.existsByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(id)) {
 				throw new StudentCouncilNotFoundException();
 			}
 		}

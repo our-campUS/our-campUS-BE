@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginIdValidateRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilWithdrawRequest;
@@ -31,11 +32,19 @@ public class StudentCouncilLoginController {
 
 	@PostMapping("/signup")
 	@Operation(summary = "학생회 회원가입")
-	public CommonResponse<StudentCouncilLoginResponse> Signup(
-		@Valid @RequestBody StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
-		StudentCouncilLoginResponse response = councilLoginService.signUp(studentCouncilSignUpRequest);
+	public CommonResponse<Void> Signup(@Valid @RequestBody StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
+		councilLoginService.signUp(studentCouncilSignUpRequest);
 
-		return CommonResponse.success(StudentCouncilResponseCode.SIGNUP_SUCCESS, response);
+		return CommonResponse.success(StudentCouncilResponseCode.SIGNUP_REQUEST_SUCCESS);
+	}
+
+	@PostMapping("/signup/validate")
+	@Operation(summary = "학생회 회원가입 id 중복 검증")
+	public CommonResponse<Void> validateLoginId(
+		@Valid @RequestBody StudentCouncilLoginIdValidateRequest studentCouncilLoginIdValidateRequest) {
+		councilLoginService.validateLoginId(studentCouncilLoginIdValidateRequest);
+
+		return CommonResponse.success(StudentCouncilResponseCode.VALIDATE_LOGIN_ID_SUCCESS);
 	}
 
 	@PostMapping("/login")
