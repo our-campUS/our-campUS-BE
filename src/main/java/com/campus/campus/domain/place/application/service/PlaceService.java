@@ -3,7 +3,12 @@ package com.campus.campus.domain.place.application.service;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -11,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
@@ -48,23 +54,42 @@ public class PlaceService {
 	private final PresignedUrlService presignedUrlService;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
+	private final ExecutorService executorService;
 
 	public List<SavedPlaceInfo> search(String keyword) {
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
 
-		return naverSearchResponse.items().stream()
+		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
 			.map(item -> {
-
 				String name = stripHtml(item.title());
 				String address = item.roadAddress();
 				String placeKey = PlaceKeyGenerator.generate(name, address);
-				List<String> placeImages = getPlaceImgs(placeKey, name, address);
 				String naverPlaceUrl = buildNaverPlaceUrl(item);
-
-				return placeMapper.toSavedPlaceInfo(item, name, placeKey, naverPlaceUrl, placeImages);
+				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
 			})
 			.toList();
+
+		List<String> placeKeys = candidates.stream()
+			.map(SearchCandidateResponse::placeKey)
+			.distinct()
+			.toList();
+
+		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
+			.collect(Collectors.groupingBy(
+				PlaceImages::getPlaceKey,
+				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
+			));
+
+		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
+			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
+					executorService)
+				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
+				.exceptionally(ex -> fallback(response)))
+			.toList();
+
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
 	//장소 저장
@@ -110,39 +135,26 @@ public class PlaceService {
 		return placeMapper.toLikeResponse(place);
 	}
 
+	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images) {
+		List<String> cached = images.getOrDefault(response.placeKey(), List.of());
+		List<String> placeImages = !cached.isEmpty()
+			? cached : googleClient.fetchImages(response.name(), response.address(), 3);
+
+		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
+			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages
+		);
+	}
+
+	private SavedPlaceInfo fallback(SearchCandidateResponse response) {
+		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
+			response.naverPlaceUrl(), List.of());
+	}
+
 	/**
 	 * 태그 제거용
 	 */
 	private String stripHtml(String text) {
 		return text.replaceAll("<[^>]*>", "");
-	}
-
-	/*
-	 * 장소 검색 시 google places로부터 이미지 불러오기
-	 */
-	private List<String> getPlaceImgs(String placeKey, String name, String address) {
-		// DB 확인
-		List<String> images = getImages(placeKey);
-		if (!images.isEmpty()) {
-			return images;
-		}
-
-		//최초 검색 시 google에서 이미지 url 가져오기
-		List<String> googleImageUrls = googleClient.fetchImages(name, address, 3);
-		if (googleImageUrls.isEmpty()) {
-			return List.of();
-		}
-
-		return googleImageUrls;
-	}
-
-	/*
-	 * DB 조회
-	 */
-	private List<String> getImages(String placeKey) {
-		return placeImagesRepository.findByPlaceKey(placeKey).stream()
-			.map(PlaceImages::getImageUrl)
-			.toList();
 	}
 
 	private String buildNaverPlaceUrl(NaverSearchResponse.Item item) {
