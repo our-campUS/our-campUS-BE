@@ -92,7 +92,7 @@ public class CouncilLoginService {
 			studentCouncilSignUpRequest, school, scope.college, scope.major);
 
 		String councilName = councilNameGenerator.buildCouncilName(studentCouncil);
-		studentCouncil.setCouncilName(councilName);
+		studentCouncil.generateCouncilName(councilName);
 
 		studentCouncilRepository.save(studentCouncil);
 

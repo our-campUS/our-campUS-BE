@@ -86,7 +86,7 @@ public class StudentCouncil extends BaseEntity {
 		this.email = newEmail;
 	}
 
-	public void setCouncilName(String councilName) {
+	public void generateCouncilName(String councilName) {
 		this.councilName = councilName;
 	}
 
