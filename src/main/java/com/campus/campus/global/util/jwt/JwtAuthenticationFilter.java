@@ -13,6 +13,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.manager.application.exception.ManagerNotFoundException;
+import com.campus.campus.domain.manager.domain.entity.Manager;
+import com.campus.campus.domain.manager.domain.repository.ManagerRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -37,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtProvider jwtProvider;
 	private final UserRepository userRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
+	private final ManagerRepository managerRepository;
 	private final RedisTokenService redisTokenService;
 
 	@Override
@@ -88,9 +92,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			principal = UserPrincipal.from(user);
 		} else if ("COUNCIL".equals(role)) {
 			Long councilId = Long.valueOf(subject);
-			StudentCouncil council = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
+			StudentCouncil council = studentCouncilRepository
+				.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 				.orElseThrow(StudentCouncilNotFoundException::new);
 			principal = StudentCouncilPrincipal.from(council);
+		} else if ("MANAGER".equals(role)) {
+			Long managerId = Long.valueOf(subject);
+			Manager manager = managerRepository.findById(managerId)
+				.orElseThrow(ManagerNotFoundException::new);
+			principal = ManagerPrincipal.from(manager);
 		} else {
 			throw new InvalidJwtException();
 		}

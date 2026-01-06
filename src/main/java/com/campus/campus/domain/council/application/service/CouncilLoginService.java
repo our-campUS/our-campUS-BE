@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilFindPasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginIdValidateRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilWithdrawRequest;
@@ -23,6 +24,7 @@ import com.campus.campus.domain.council.application.exception.PrecautionNotAgree
 import com.campus.campus.domain.council.application.exception.SignupEmailNotFoundException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
+import com.campus.campus.domain.council.application.util.CouncilNameGenerator;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
@@ -60,13 +62,14 @@ public class CouncilLoginService {
 	private final SecurityConfig securityConfig;
 	private final PasswordEncoder passwordEncoder;
 	private final RedisTokenService redisTokenService;
+	private final CouncilNameGenerator councilNameGenerator;
 
 	@Value("${jwt.refresh.expiration-seconds}")
 	private long refreshTokenExpirationSeconds;
 
 	@Transactional
-	public StudentCouncilLoginResponse signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
-		if(studentCouncilRepository.existsByEmailAndDeletedAtIsNotNull(studentCouncilSignUpRequest.email())){
+	public void signUp(StudentCouncilSignUpRequest studentCouncilSignUpRequest) {
+		if (studentCouncilRepository.existsByEmailAndDeletedAtIsNotNull(studentCouncilSignUpRequest.email())) {
 			throw new CouncilSignupForbiddenException();
 		}
 		if (studentCouncilRepository.existsByEmail(studentCouncilSignUpRequest.email())) {
@@ -88,22 +91,23 @@ public class CouncilLoginService {
 		StudentCouncil studentCouncil = studentCouncilLoginMapper.createStudentCouncil(
 			studentCouncilSignUpRequest, school, scope.college, scope.major);
 
+		String councilName = councilNameGenerator.buildCouncilName(studentCouncil);
+		studentCouncil.generateCouncilName(councilName);
+
 		studentCouncilRepository.save(studentCouncil);
 
-		String accessToken = jwtProvider.createCouncilAccessToken(studentCouncil.getId());
-		String refreshToken = jwtProvider.createCouncilRefreshToken(studentCouncil.getId());
-
-		redisTokenService.setRefreshToken("COUNCIL", String.valueOf(studentCouncil.getId()), refreshToken,
-			refreshTokenExpirationSeconds);
-
 		emailVerification.use();
+	}
 
-		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
+	public void validateLoginId(StudentCouncilLoginIdValidateRequest studentCouncilLoginIdValidateRequest) {
+		if (studentCouncilRepository.existsByLoginId(studentCouncilLoginIdValidateRequest.loginId())) {
+			throw new LoginIdAlreadyExistsException();
+		}
 	}
 
 	public StudentCouncilLoginResponse login(StudentCouncilLoginRequest studentCouncilLoginRequest) {
 		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByLoginIdAndDeletedAtIsNull(studentCouncilLoginRequest.loginId())
+			.findByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(studentCouncilLoginRequest.loginId())
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!passwordEncoder.matches(studentCouncilLoginRequest.password(), studentCouncil.getPassword())) {
@@ -127,7 +131,8 @@ public class CouncilLoginService {
 			throw new SignupEmailNotFoundException();
 		}
 
-		StudentCouncil studentCouncil = studentCouncilRepository.findByEmailAndDeletedAtIsNull(email)
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByEmailAndManagerApprovedIsTrueAndDeletedAtIsNull(email)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		emailVerification.use();
@@ -138,7 +143,7 @@ public class CouncilLoginService {
 	@Transactional
 	public void findPassword(StudentCouncilFindPasswordRequest studentCouncilFindPasswordRequest) {
 		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByLoginIdAndDeletedAtIsNull(studentCouncilFindPasswordRequest.loginId())
+			.findByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(studentCouncilFindPasswordRequest.loginId())
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!studentCouncilFindPasswordRequest.email().equals(studentCouncil.getEmail())) {
@@ -157,7 +162,8 @@ public class CouncilLoginService {
 
 	@Transactional
 	public void withdrawCouncil(Long councilId, StudentCouncilWithdrawRequest studentCouncilWithdrawRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (!studentCouncilWithdrawRequest.precaution()) {

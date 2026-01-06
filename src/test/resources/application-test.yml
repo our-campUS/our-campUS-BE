@@ -33,6 +33,14 @@ oauth:
     client-secret: vMAvuShaneiT1Kovp8CclDJRDOFczt12
     redirect-uri: "http://localhost:8080/auth/login/kakao"
 
+map:
+  naver:
+    client-id: dummy
+    client-secret: dummy
+  google:
+    places:
+      api-key: dummy
+
 jwt:
   access:
     secret: qaed2N33cbYOuhiCT1wDD4YA4Tzq/z9Wc0ZrlEUBK4KeguIBIcDjs9N6Ox09vbVhhI1zxsd1n0GSHuqllHl8SQ==

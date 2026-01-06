@@ -55,4 +55,12 @@ oci:
   bucket-name: ${BUCKET_NAME}
   region: ${OCI_REGION}
 
+map:
+  naver:
+    client-id: ${MAP_CLIENT_ID}
+    client-secret: ${MAP_CLIENT_SECRET}
+  google:
+    places:
+      api-key: ${GOOGLE_PLACES_API_KEY}
+
 server-uri: http://localhost:8080

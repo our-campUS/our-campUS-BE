@@ -36,7 +36,7 @@ public class StudentCouncilNoticeMapper {
 		return NoticeResponse.builder()
 			.id(notice.getId())
 			.writerId(notice.getWriter().getId())
-			.writerName(notice.getWriter().getFullCouncilName())
+			.writerName(notice.getWriter().getCouncilName())
 			.isWriter(notice.isWrittenByCouncil(councilId))
 			.title(notice.getTitle())
 			.content(notice.getContent())

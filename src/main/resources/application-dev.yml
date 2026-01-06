@@ -55,4 +55,12 @@ oci:
   passphrase:
   region: ENC(XcQzPRqLJTALjw6MGL97J1IeENalwcJw)
 
+map:
+  naver:
+    client-id: ENC(XEFN7m5eqTaap0M4Tkzo88/KgVFbtoxsM1fV/tRqV8w=)
+    client-secret: ENC(sYgQFkHB3wuumnIrB3VF6Uyops/kaLgY)
+  google:
+    places:
+      api-key: ENC(RbxPchNxZbeIglHQcB4o6vB6QtMv8QJrC+yNT80jr1vneoa3pSMB4Cw09dADjzxQ)
+
 server-uri: ENC(ZrgPccnQ3mEqVQTFEvGn6hzhP4xcNn6ISnp3TbBcd1J3jpZPb3hlzQ==)

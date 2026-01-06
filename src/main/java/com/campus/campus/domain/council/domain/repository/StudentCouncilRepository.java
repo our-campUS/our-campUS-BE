@@ -1,5 +1,6 @@
 package com.campus.campus.domain.council.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,18 +10,24 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 
 public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, Long> {
-	Optional<StudentCouncil> findByLoginIdAndDeletedAtIsNull(String loginId);
+	Optional<StudentCouncil> findByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(String loginId);
 
-	Optional<StudentCouncil> findByLoginId(String loginId);
-
-	Optional<StudentCouncil> findByEmailAndDeletedAtIsNull(String email);
+	Optional<StudentCouncil> findByEmailAndManagerApprovedIsTrueAndDeletedAtIsNull(String email);
 
 	@Query("SELECT sc FROM StudentCouncil sc " +
 		"LEFT JOIN FETCH sc.school " +
 		"LEFT JOIN FETCH sc.college " +
 		"LEFT JOIN FETCH sc.major " +
-		"WHERE sc.id = :councilId AND sc.deletedAt IS NULL")
-	Optional<StudentCouncil> findByIdWithDetailsAndDeletedAtIsNull(@Param("councilId") Long councilId);
+		"WHERE sc.id = :councilId AND sc.deletedAt IS NULL AND sc.managerApproved IS TRUE")
+	Optional<StudentCouncil> findByIdWithDetailsAndManagerApprovedIsTrueAndDeletedAtIsNull(
+		@Param("councilId") Long councilId);
+
+	@Query("SELECT sc FROM StudentCouncil sc " +
+		"LEFT JOIN FETCH sc.school " +
+		"LEFT JOIN FETCH sc.college " +
+		"LEFT JOIN FETCH sc.major " +
+		"WHERE sc.deletedAt IS NULL AND sc.managerApproved IS FALSE")
+	List<StudentCouncil> findByManagerWithDetailsApprovedIsFalseAndDeletedAtIsNull();
 
 	boolean existsByLoginId(String loginId);
 
@@ -28,9 +35,11 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 
 	boolean existsByEmailAndDeletedAtIsNull(String email);
 
-	Optional<StudentCouncil> findByIdAndDeletedAtIsNull(Long councilId);
+	Optional<StudentCouncil> findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(Long councilId);
 
-	boolean existsByIdAndDeletedAtIsNull(Long councilId);
+	Optional<StudentCouncil> findByIdAndManagerApprovedIsFalseAndDeletedAtIsNull(Long councilId);
+
+	boolean existsByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(Long councilId);
 
 	boolean existsByEmailAndDeletedAtIsNotNull(String email);
 }
