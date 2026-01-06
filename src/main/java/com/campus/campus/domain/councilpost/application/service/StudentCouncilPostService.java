@@ -195,7 +195,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
+	public PostResponse update(Long councilId, Long postId, PostRequest dto, Place place) {
 		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
@@ -223,7 +223,7 @@ public class StudentCouncilPostService {
 		post.update(
 			dto.title(),
 			dto.content(),
-			dto.place(),
+			place,
 			normalized.startDateTime(),
 			normalized.endDateTime(),
 			dto.thumbnailImageUrl(),
