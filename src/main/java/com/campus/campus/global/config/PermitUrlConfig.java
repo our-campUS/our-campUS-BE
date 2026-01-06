@@ -27,7 +27,8 @@ public class PermitUrlConfig {
 			"/search/majors",
 			"/jwt/token/reissue",
 			"/managers/login",
-			"/places/search"
+			"/places/search",
+			"/storage/presigned"
 		};
 	}
 }
