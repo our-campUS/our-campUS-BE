@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapSummary;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipPlaceSummary;
 import com.campus.campus.domain.place.domain.entity.Place;
 
@@ -53,4 +54,37 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
 		@Param("cursor") Long cursor,
 		Pageable pageable
 	);
+
+	@Query("""
+			select distinct new com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapSummary(
+				p.placeId,
+				p.coordinate.latitude,
+				p.coordinate.longitude,
+				council.councilType
+			)
+			from StudentCouncilPost post
+			join post.place p
+			join post.writer council
+			where post.category = 'PARTNERSHIP'
+			  and p.coordinate.latitude between :minLat and :maxLat
+			  and p.coordinate.longitude between :minLng and :maxLng
+			  and (
+				   (council.councilType = 'MAJOR'
+				    and council.major.majorId = :majorId)
+				or (council.councilType = 'COLLEGE'
+				    and council.college.collegeId = :collegeId)
+				or (council.councilType = 'SCHOOL'
+				    and council.school.schoolId = :schoolId)
+			  )
+		""")
+	List<PartnershipMapSummary> findPartnershipPlacesForMap(
+		@Param("minLat") double minLat,
+		@Param("maxLat") double maxLat,
+		@Param("minLng") double minLng,
+		@Param("maxLng") double maxLng,
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId
+	);
+
 }

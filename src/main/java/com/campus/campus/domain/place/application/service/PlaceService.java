@@ -14,12 +14,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
-import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapSummary;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipPlaceSummary;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipScrollResponse;
@@ -60,7 +62,6 @@ public class PlaceService {
 	private final PresignedUrlService presignedUrlService;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
-	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PostImageRepository postImageRepository;
 
 	public List<SavedPlaceInfo> search(String keyword) {
@@ -194,7 +195,7 @@ public class PlaceService {
 				PartnershipPlaceSummary first = group.get(0);
 
 				List<String> tags = group.stream()
-					.map(r -> resolveTag(r, user))
+					.map(r -> resolveTag(r.councilType(), user))
 					.distinct()
 					.toList();
 
@@ -215,12 +216,55 @@ public class PlaceService {
 
 	}
 
-	private String resolveTag(PartnershipPlaceSummary summary, User user) {
-		return switch (summary.councilType()) {
+	private String resolveTag(CouncilType councilType, User user) {
+		return switch (councilType) {
 			case SCHOOL_COUNCIL -> "총학생회";
 			case COLLEGE_COUNCIL -> user.getCollege().getCollegeName();
 			case MAJOR_COUNCIL -> user.getMajor().getMajorName();
 		};
+	}
+
+	public List<PartnershipMapResponse> getPartnershipPlacesForMap(
+		Long userId,
+		double minLat,
+		double maxLat,
+		double minLng,
+		double maxLng
+	) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+		List<PartnershipMapSummary> rows =
+			placeRepository.findPartnershipPlacesForMap(
+				minLat,
+				maxLat,
+				minLng,
+				maxLng,
+				user.getMajor().getMajorId(),
+				user.getCollege().getCollegeId(),
+				user.getSchool().getSchoolId()
+			);
+
+		Map<Long, List<PartnershipMapSummary>> grouped =
+			rows.stream()
+				.collect(Collectors.groupingBy(PartnershipMapSummary::placeId));
+
+		return grouped.values().stream()
+			.map(group -> {
+				PartnershipMapSummary first = group.get(0);
+
+				List<String> tags = group.stream()
+					.map(r -> resolveTag(r.councilType(), user))
+					.distinct()
+					.toList();
+
+				return new PartnershipMapResponse(
+					first.placeId(),
+					first.latitude(),
+					first.longitude(),
+					tags
+				);
+			})
+			.toList();
 	}
 
 	/**

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipScrollResponse;
-import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -29,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 public class PlaceController {
 
 	private final PlaceService placeService;
-	private final PlaceMapper placeMapper;
 
 	@GetMapping("/search")
 	@Operation(summary = "장소 키워드로 검색", description = "검색 결과 5개 검색되도록 함")
@@ -75,6 +74,43 @@ public class PlaceController {
 		@RequestParam(defaultValue = "20") int size) {
 		PartnershipScrollResponse response = placeService.getPartnershipPlaces(userId, cursor, size);
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACE_SUCCESS, response);
+	}
+
+	@GetMapping("/partnership/map")
+	@Operation(
+		summary = "지도에서 제휴 장소 조회",
+		description = """
+				현재 지도 화면(bounds) 안에 있는 제휴 장소들을 조회합니다.
+				- bounds는 지도 화면의 남서/북동 좌표입니다.
+				- 지도 이동 또는 확대/축소 시 재호출됩니다.
+			""")
+	public CommonResponse<List<PartnershipMapResponse>> getPartnershipMap(
+		@CurrentUserId Long userId,
+		@Parameter(
+			description = "지도 화면의 남쪽(최소) 위도",
+			example = "37.497"
+		)
+		@RequestParam double minLat,
+		@Parameter(
+			description = "지도 화면의 북쪽(최대) 위도",
+			example = "37.512"
+		)
+		@RequestParam double maxLat,
+		@Parameter(
+			description = "지도 화면의 서쪽(최소) 경도",
+			example = "126.953"
+		)
+		@RequestParam double minLng,
+		@Parameter(
+			description = "지도 화면의 동쪽(최대) 경도",
+			example = "126.982"
+		)
+		@RequestParam double maxLng
+	) {
+		return CommonResponse.success(
+			PlaceResponseCode.CHECK_PARTNERSHIP_PLACE_SUCCESS,
+			placeService.getPartnershipPlacesForMap(userId, minLat, maxLat, minLng, maxLng)
+		);
 	}
 
 }
