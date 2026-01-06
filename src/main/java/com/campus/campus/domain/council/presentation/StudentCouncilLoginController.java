@@ -38,7 +38,7 @@ public class StudentCouncilLoginController {
 		return CommonResponse.success(StudentCouncilResponseCode.SIGNUP_REQUEST_SUCCESS);
 	}
 
-	@PostMapping("signup/validate")
+	@PostMapping("/signup/validate")
 	@Operation(summary = "학생회 회원가입 id 중복 검증")
 	public CommonResponse<Void> validateLoginId(
 		@Valid @RequestBody StudentCouncilLoginIdValidateRequest studentCouncilLoginIdValidateRequest) {
