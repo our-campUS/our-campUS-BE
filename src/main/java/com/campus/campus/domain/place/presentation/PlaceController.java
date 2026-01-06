@@ -113,4 +113,6 @@ public class PlaceController {
 		);
 	}
 
+	//가게 상세 조회 (리뷰 기능 구현 완료 후)
+
 }
