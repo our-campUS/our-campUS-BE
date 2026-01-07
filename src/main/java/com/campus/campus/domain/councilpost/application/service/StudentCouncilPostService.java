@@ -116,6 +116,14 @@ public class StudentCouncilPostService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		Long schoolId = studentCouncil.getSchool().getSchoolId();
+		Long collegeId = CouncilType.COLLEGE_COUNCIL.equals(councilType)
+			&& studentCouncil.getCollege() != null
+			? studentCouncil.getCollege().getCollegeId()
+			: null;
+		Long majorId = CouncilType.MAJOR_COUNCIL.equals(councilType)
+			&& studentCouncil.getMajor() != null
+			? studentCouncil.getMajor().getMajorId()
+			: null;
 
 		Sort sort;
 		if (category == PostCategory.EVENT) {
@@ -129,7 +137,7 @@ public class StudentCouncilPostService {
 		LocalDateTime now = LocalDateTime.now();
 
 		Page<StudentCouncilPost> posts = postRepository.findPostsBySchoolAndFilters(schoolId, councilType, category,
-			now, pageable);
+			collegeId, majorId, now, pageable);
 
 		return posts.map(studentCouncilPostMapper::toGetPostListForCouncilResponse);
 	}
@@ -145,12 +153,20 @@ public class StudentCouncilPostService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		Long schoolId = studentCouncil.getSchool().getSchoolId();
+		Long collegeId = CouncilType.COLLEGE_COUNCIL.equals(councilType)
+			&& studentCouncil.getCollege() != null
+			? studentCouncil.getCollege().getCollegeId()
+			: null;
+		Long majorId = CouncilType.MAJOR_COUNCIL.equals(councilType)
+			&& studentCouncil.getMajor() != null
+			? studentCouncil.getMajor().getMajorId()
+			: null;
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime limit = now.plusHours(UPCOMING_EVENT_WINDOW_HOURS);
 
 		Page<StudentCouncilPost> posts = postRepository.findUpcomingEventsBySchoolAndFilters(schoolId, councilType,
-			PostCategory.EVENT, now, limit, pageable);
+			PostCategory.EVENT, collegeId, majorId, now, limit, pageable);
 
 		return posts.map(studentCouncilPostMapper::toGetUpcomingEventListForCouncilResponse);
 	}
@@ -161,13 +177,33 @@ public class StudentCouncilPostService {
 		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
+		if (user.getSchool() == null) {
+			return List.of();
+		}
+
 		Long schoolId = user.getSchool().getSchoolId();
+		Long collegeId = null;
+		Long majorId = null;
+
+		if (CouncilType.COLLEGE_COUNCIL.equals(councilType)) {
+			if (user.getCollege() == null) {
+				return List.of();
+			}
+			collegeId = user.getCollege().getCollegeId();
+		}
+
+		if (CouncilType.MAJOR_COUNCIL.equals(councilType)) {
+			if (user.getMajor() == null) {
+				return List.of();
+			}
+			majorId = user.getMajor().getMajorId();
+		}
 
 		LocalDateTime now = LocalDateTime.now();
 		Pageable partnershipCount = PageRequest.of(0, 3);
 
 		List<StudentCouncilPost> partnerships = postRepository.findRandomActivePartnerships(schoolId, councilType,
-			PostCategory.PARTNERSHIP, now, partnershipCount);
+			PostCategory.PARTNERSHIP, collegeId, majorId, now, partnershipCount);
 
 		return partnerships.stream()
 			.map(studentCouncilPostMapper::toGetActivePartnershipListForUserResponse)

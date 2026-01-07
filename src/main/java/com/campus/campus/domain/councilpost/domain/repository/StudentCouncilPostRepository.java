@@ -31,8 +31,12 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN p.writer w
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
 		WHERE w.school.schoolId = :schoolId
 		  AND (:councilType IS NULL OR w.councilType = :councilType)
+		  AND (:collegeId IS NULL OR c.collegeId = :collegeId)
+		  AND (:majorId IS NULL OR m.majorId = :majorId)
 		  AND p.category = :category
 		  AND p.startDateTime BETWEEN :now AND :limit
 		  AND w.deletedAt IS NULL
@@ -42,6 +46,8 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("schoolId") Long schoolId,
 		@Param("councilType") CouncilType councilType,
 		@Param("category") PostCategory category,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
 		@Param("now") LocalDateTime now,
 		@Param("limit") LocalDateTime limit,
 		Pageable pageable
@@ -51,8 +57,12 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN p.writer w
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
 		WHERE w.school.schoolId = :schoolId
 		  AND (:councilType IS NULL OR w.councilType = :councilType)
+		  AND (:collegeId IS NULL OR c.collegeId = :collegeId)
+		  AND (:majorId IS NULL OR m.majorId = :majorId)
 		  AND (:category IS NULL OR p.category = :category)
 		  AND (
 		    (p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.EVENT
@@ -65,6 +75,8 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	Page<StudentCouncilPost> findPostsBySchoolAndFilters(@Param("schoolId") Long schoolId,
 		@Param("councilType") CouncilType councilType,
 		@Param("category") PostCategory category,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
 		@Param("now") LocalDateTime now,
 		Pageable pageable
 	);
@@ -73,8 +85,12 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN p.writer w
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
 		WHERE w.school.schoolId = :schoolId
 		  AND w.councilType = :councilType
+		  AND (:collegeId IS NULL OR c.collegeId = :collegeId)
+		  AND (:majorId IS NULL OR m.majorId = :majorId)
 		  AND p.category = :category
 		  AND :now BETWEEN p.startDateTime AND p.endDateTime
 		  AND w.deletedAt IS NULL
@@ -84,6 +100,8 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("schoolId") Long schoolId,
 		@Param("councilType") CouncilType councilType,
 		@Param("category") PostCategory category,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
 		@Param("now") LocalDateTime now,
 		Pageable pageable
 	);
