@@ -53,9 +53,18 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		WHERE w.school.schoolId = :schoolId
 		  AND (:councilType IS NULL OR w.councilType = :councilType)
 		  AND (:category IS NULL OR p.category = :category)
+		  AND (
+		    (p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.EVENT
+		      AND p.startDateTime >= :now)
+		    OR (p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.PARTNERSHIP
+		      AND p.endDateTime >= :now)
+		  )
 		  AND w.deletedAt IS NULL
 		""")
 	Page<StudentCouncilPost> findPostsBySchoolAndFilters(@Param("schoolId") Long schoolId,
-		@Param("councilType") CouncilType councilType, @Param("category") PostCategory category, Pageable pageable
+		@Param("councilType") CouncilType councilType,
+		@Param("category") PostCategory category,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
 	);
 }

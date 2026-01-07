@@ -121,8 +121,10 @@ public class StudentCouncilPostService {
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, sort);
 
+		LocalDateTime now = LocalDateTime.now();
+
 		Page<StudentCouncilPost> posts = postRepository.findPostsBySchoolAndFilters(schoolId, councilType, category,
-			pageable);
+			now, pageable);
 
 		return posts.map(studentCouncilPostMapper::toGetPostListForCouncilResponse);
 	}
