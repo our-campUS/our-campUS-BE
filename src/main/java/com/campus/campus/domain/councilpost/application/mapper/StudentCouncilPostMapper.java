@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
@@ -56,6 +57,15 @@ public class StudentCouncilPostMapper {
 			post.getPlace(),
 			post.getStartDateTime(),
 			post.getThumbnailIcon()
+		);
+	}
+
+	public GetActivePartnershipListForUserResponse toGetActivePartnershipListForUserResponse(StudentCouncilPost post) {
+		return new GetActivePartnershipListForUserResponse(
+			post.getId(),
+			post.getTitle(),
+			post.getPlace(),
+			post.getThumbnailImageUrl()
 		);
 	}
 

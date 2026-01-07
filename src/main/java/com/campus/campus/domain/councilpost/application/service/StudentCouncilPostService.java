@@ -15,6 +15,7 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
@@ -32,6 +33,9 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
+import com.campus.campus.domain.user.domain.entity.User;
+import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class StudentCouncilPostService {
 
+	private final UserRepository userRepository;
 	private final StudentCouncilPostRepository postRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
@@ -148,6 +153,25 @@ public class StudentCouncilPostService {
 			PostCategory.EVENT, now, limit, pageable);
 
 		return posts.map(studentCouncilPostMapper::toGetUpcomingEventListForCouncilResponse);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GetActivePartnershipListForUserResponse> findActivePartnershipForUser(CouncilType councilType,
+		Long userId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Long schoolId = user.getSchool().getSchoolId();
+
+		LocalDateTime now = LocalDateTime.now();
+		Pageable partnershipCount = PageRequest.of(0, 3);
+
+		List<StudentCouncilPost> partnerships = postRepository.findRandomActivePartnerships(schoolId, councilType,
+			PostCategory.PARTNERSHIP, now, partnershipCount);
+
+		return partnerships.stream()
+			.map(studentCouncilPostMapper::toGetActivePartnershipListForUserResponse)
+			.toList();
 	}
 
 	@Transactional

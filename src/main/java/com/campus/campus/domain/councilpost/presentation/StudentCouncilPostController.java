@@ -1,5 +1,7 @@
 package com.campus.campus.domain.councilpost.presentation;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
@@ -21,6 +24,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.PostRespons
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentCouncilId;
+import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -172,5 +176,15 @@ public class StudentCouncilPostController {
 			councilId, councilType, page, size);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
+	}
+
+	@GetMapping("/partnerships/active")
+	@Operation(summary = "학생회 타입별 현재 이용 가능한 제휴 (일반 유저 전용 로직, 홈 화면)")
+	public CommonResponse<List<GetActivePartnershipListForUserResponse>> getActivePartnershipListForUser(
+		@RequestParam CouncilType councilType, @CurrentUserId Long userId) {
+		List<GetActivePartnershipListForUserResponse> responses = postService.findActivePartnershipForUser(councilType,
+			userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
 	}
 }

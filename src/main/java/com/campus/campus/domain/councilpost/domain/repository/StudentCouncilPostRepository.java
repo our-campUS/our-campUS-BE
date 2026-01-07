@@ -1,6 +1,7 @@
 package com.campus.campus.domain.councilpost.domain.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -28,15 +29,15 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 
 	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
 	@Query("""
-       SELECT p FROM StudentCouncilPost p
-       JOIN p.writer w
-       WHERE w.school.schoolId = :schoolId
-         AND (:councilType IS NULL OR w.councilType = :councilType)
-         AND p.category = :category
-         AND p.startDateTime BETWEEN :now AND :limit
-         AND w.deletedAt IS NULL
-       ORDER BY p.startDateTime ASC
-       """)
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		WHERE w.school.schoolId = :schoolId
+		  AND (:councilType IS NULL OR w.councilType = :councilType)
+		  AND p.category = :category
+		  AND p.startDateTime BETWEEN :now AND :limit
+		  AND w.deletedAt IS NULL
+		ORDER BY p.startDateTime ASC
+		""")
 	Page<StudentCouncilPost> findUpcomingEventsBySchoolAndFilters(
 		@Param("schoolId") Long schoolId,
 		@Param("councilType") CouncilType councilType,
@@ -62,6 +63,25 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		  AND w.deletedAt IS NULL
 		""")
 	Page<StudentCouncilPost> findPostsBySchoolAndFilters(@Param("schoolId") Long schoolId,
+		@Param("councilType") CouncilType councilType,
+		@Param("category") PostCategory category,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		WHERE w.school.schoolId = :schoolId
+		  AND w.councilType = :councilType
+		  AND p.category = :category
+		  AND :now BETWEEN p.startDateTime AND p.endDateTime
+		  AND w.deletedAt IS NULL
+		ORDER BY function('RAND')
+		""")
+	List<StudentCouncilPost> findRandomActivePartnerships(
+		@Param("schoolId") Long schoolId,
 		@Param("councilType") CouncilType councilType,
 		@Param("category") PostCategory category,
 		@Param("now") LocalDateTime now,
