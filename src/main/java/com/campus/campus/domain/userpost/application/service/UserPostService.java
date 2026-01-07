@@ -36,32 +36,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UserPostService {
 
+	private static final int UPCOMING_HOURS = 72;
+	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PostImageRepository postImageRepository;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final UserRepository userRepository;
 	private final PostAccessPolicy postAccessPolicy;
 
-	private static final int UPCOMING_HOURS = 72;
-	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
-
 	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId)
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findBySchoolId(user.getSchool().getSchoolId(), category,CouncilType.SCHOOL_COUNCIL, pageable);
+			.findBySchoolId(user.getSchool().getSchoolId(), category, CouncilType.SCHOOL_COUNCIL, pageable);
 
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
 
 	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findCollegePosts(PostCategory category, int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId)
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		if (user.isProfileNotCompleted() || user.getCollege() == null) {
 			throw new CollegeNotSetException();
@@ -77,8 +74,7 @@ public class UserPostService {
 
 	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId)
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
@@ -90,14 +86,9 @@ public class UserPostService {
 
 	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findUpcomingSchoolEvents72h(int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId)
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
-		Pageable pageable = PageRequest.of(
-			Math.max(page - 1, 0),
-			size,
-			Sort.by(Sort.Direction.ASC, "startDateTime")
-		);
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.ASC, "startDateTime"));
 
 		LocalDateTime now = LocalDateTime.now(KST);
 		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);
@@ -116,8 +107,7 @@ public class UserPostService {
 
 	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findUpcomingCollegeEvents72h(int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId)
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		if (user.isProfileNotCompleted() || user.getCollege() == null) {
 			throw new CollegeNotSetException();
@@ -146,8 +136,7 @@ public class UserPostService {
 
 	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findUpcomingMajorEvents72h(int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId)
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		if (user.isProfileNotCompleted() || user.getMajor() == null) {
 			throw new MajorNotSetException();
@@ -176,8 +165,7 @@ public class UserPostService {
 
 	@Transactional(readOnly = true)
 	public PostResponse findById(Long postId, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId)
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		StudentCouncilPost post = studentCouncilPostRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);

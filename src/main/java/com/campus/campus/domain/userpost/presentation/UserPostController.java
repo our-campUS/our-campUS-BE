@@ -16,11 +16,13 @@ import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/users/posts")
+@Tag(name = "Student Post", description = "사용자가 속한 대학/단과대/전공의 제휴/행사 게시글 목록 조회 API")
 @RequiredArgsConstructor
 @Slf4j
 public class UserPostController {
@@ -38,10 +40,9 @@ public class UserPostController {
 		@RequestParam(defaultValue = "20") int size,
 		@CurrentUserId Long userId
 	) {
-		return CommonResponse.success(
-			StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS,
-			postService.findSchoolPosts(category, page, size, userId)
-		);
+		Page<PostListItemResponse> responseDto = postService.findSchoolPosts(category, page, size, userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping("/college")
@@ -55,10 +56,9 @@ public class UserPostController {
 		@RequestParam(defaultValue = "20") int size,
 		@CurrentUserId Long userId
 	) {
-		return CommonResponse.success(
-			StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS,
-			postService.findCollegePosts(category, page, size, userId)
-		);
+		Page<PostListItemResponse> responseDto = postService.findCollegePosts(category, page, size, userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping("/major")
@@ -72,10 +72,9 @@ public class UserPostController {
 		@RequestParam(defaultValue = "20") int size,
 		@CurrentUserId Long userId
 	) {
-		return CommonResponse.success(
-			StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS,
-			postService.findMajorPosts(category, page, size, userId)
-		);
+		Page<PostListItemResponse> responseDto = postService.findMajorPosts(category, page, size, userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping("/{postId}")
@@ -84,11 +83,11 @@ public class UserPostController {
 		@PathVariable Long postId,
 		@CurrentUserId Long userId
 	) {
-		return CommonResponse.success(
-			StudentCouncilPostResponseCode.POST_READ_SUCCESS,
-			postService.findById(postId, userId)
-		);
+		PostResponse responseDto = postService.findById(postId, userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
+
 
 	@GetMapping("/school/events/upcoming")
 	@Operation(
