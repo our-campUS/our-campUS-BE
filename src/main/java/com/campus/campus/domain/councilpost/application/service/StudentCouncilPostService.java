@@ -112,7 +112,14 @@ public class StudentCouncilPostService {
 
 		Long schoolId = studentCouncil.getSchool().getSchoolId();
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Sort sort;
+		if (category == PostCategory.EVENT) {
+			sort = Sort.by(Sort.Direction.ASC, "startDateTime");
+		} else {
+			sort = Sort.by(Sort.Direction.ASC, "endDateTime");
+		}
+
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, sort);
 
 		Page<StudentCouncilPost> posts = postRepository.findPostsBySchoolAndFilters(schoolId, councilType, category,
 			pageable);
