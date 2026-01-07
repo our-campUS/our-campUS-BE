@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostService;
@@ -144,28 +146,31 @@ public class StudentCouncilPostController {
 	@GetMapping
 	@Operation(summary = "학생회 타입별 제휴/행사 목록 조회 (학생회 유저 전용 로직)")
 	@PreAuthorize("hasRole('COUNCIL')")
-	public CommonResponse<Page<PostListItemResponse>> getPostListByCouncilTypeForCouncil(
+	public CommonResponse<Page<GetPostListForCouncilResponse>> getPostListByCouncilTypeForCouncil(
 		@RequestParam(required = false) PostCategory category,
 		@RequestParam(required = false) CouncilType councilType,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
 		@CurrentCouncilId Long councilId
 	) {
-		Page<PostListItemResponse> response = postService.findPostListByCouncilTypeForCouncil(councilId, category,
-			councilType, page, size);
+		Page<GetPostListForCouncilResponse> response = postService.findPostListByCouncilTypeForCouncil(councilId,
+			category, councilType, page, size);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
 
 	@GetMapping("/events/upcoming")
-	@Operation(summary = "72시간 이내 행사 게시글 조회")
-	public CommonResponse<Page<PostListItemResponse>> getUpcomingEvents(
+	@Operation(summary = "학생회 타입별 72시간 이내 행사 게시글 조회 (학생회 유저 전용 로직)")
+	@PreAuthorize("hasRole('COUNCIL')")
+	public CommonResponse<Page<GetUpcomingEventListForCouncilResponse>> getUpcomingEvents(
+		@RequestParam(required = false) CouncilType councilType,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
-		@CurrentCouncilId(required = false) Long councilId
+		@CurrentCouncilId Long councilId
 	) {
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS,
-			postService.findUpcomingEvents(page, size, councilId)
-		);
+		Page<GetUpcomingEventListForCouncilResponse> response = postService.findUpcomingEventsByCouncilTypeForCouncil(
+			councilId, councilType, page, size);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
 }

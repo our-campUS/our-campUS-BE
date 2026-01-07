@@ -26,13 +26,20 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		"WHERE p.id = :postId")
 	Optional<StudentCouncilPost> findByIdWithFullInfo(@Param("postId") Long postId);
 
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
 	@Query("""
-			SELECT p
-			FROM StudentCouncilPost p
-			WHERE p.category = :category
-			AND p.startDateTime BETWEEN :now AND :limit
-		""")
-	Page<StudentCouncilPost> findUpcomingEvents(
+       SELECT p FROM StudentCouncilPost p
+       JOIN p.writer w
+       WHERE w.school.schoolId = :schoolId
+         AND (:councilType IS NULL OR w.councilType = :councilType)
+         AND p.category = :category
+         AND p.startDateTime BETWEEN :now AND :limit
+         AND w.deletedAt IS NULL
+       ORDER BY p.startDateTime ASC
+       """)
+	Page<StudentCouncilPost> findUpcomingEventsBySchoolAndFilters(
+		@Param("schoolId") Long schoolId,
+		@Param("councilType") CouncilType councilType,
 		@Param("category") PostCategory category,
 		@Param("now") LocalDateTime now,
 		@Param("limit") LocalDateTime limit,

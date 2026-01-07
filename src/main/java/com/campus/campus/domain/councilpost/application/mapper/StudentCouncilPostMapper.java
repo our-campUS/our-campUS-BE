@@ -7,6 +7,8 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
@@ -31,6 +33,29 @@ public class StudentCouncilPostMapper {
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
 			post.isWrittenByCouncil(councilId)
+		);
+	}
+
+	public GetPostListForCouncilResponse toGetPostListForCouncilResponse(StudentCouncilPost post) {
+		return new GetPostListForCouncilResponse(
+			post.getId(),
+			post.getCategory(),
+			post.getTitle(),
+			post.getPlace(),
+			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
+			post.getThumbnailImageUrl(),
+			post.getThumbnailIcon()
+		);
+	}
+
+	public GetUpcomingEventListForCouncilResponse toGetUpcomingEventListForCouncilResponse(StudentCouncilPost post) {
+		return new GetUpcomingEventListForCouncilResponse(
+			post.getId(),
+			post.getCategory(),
+			post.getTitle(),
+			post.getPlace(),
+			post.getStartDateTime(),
+			post.getThumbnailIcon()
 		);
 	}
 
@@ -59,7 +84,8 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto, LocalDateTime startDateTime,
+	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto,
+		LocalDateTime startDateTime,
 		LocalDateTime endDateTime) {
 		return StudentCouncilPost.builder()
 			.writer(writer)
