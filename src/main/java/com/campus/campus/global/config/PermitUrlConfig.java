@@ -16,6 +16,8 @@ public class PermitUrlConfig {
 			"/auth/council/login",
 			"/auth/council/find/id",
 			"/auth/council/find/password",
+			"/auth/council/find/password/validate/id",
+			"/auth/council/find/password/validate/email",
 			"/auth/council/signup/email/code",
 			"/auth/council/signup/email/code/verify",
 			"/auth/council/find/id/email/code",
