@@ -1,5 +1,6 @@
 package com.campus.campus.domain.user.presentation;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus.domain.user.application.dto.request.CampusNicknameUpdateRequest;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
+import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.application.service.UserService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -38,5 +40,13 @@ public class UserController {
 		userService.updateCampusNickname(userId, nicknameUpdateRequest);
 
 		return CommonResponse.success(UserResponseCode.NICKNAME_UPDATE_SUCCESS);
+	}
+
+	@GetMapping
+	@Operation(summary = "사용자 정보 조회(홈 화면)")
+	public CommonResponse<UserInfoResponse> getUserInfo(@CurrentUserId Long userId) {
+		UserInfoResponse userInfoResponse = userService.getUserInfo(userId);
+
+		return CommonResponse.success(UserResponseCode.GET_USER_INFO_SUCCESS, userInfoResponse);
 	}
 }

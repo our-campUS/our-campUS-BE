@@ -14,6 +14,7 @@ import com.campus.campus.domain.school.domain.repository.SchoolRepository;
 import com.campus.campus.domain.user.application.dto.request.CampusNicknameUpdateRequest;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
+import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.application.exception.NicknameAlreadyExistsException;
 import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -68,5 +69,12 @@ public class UserService {
 
 		user.updateCampusNickname(nicknameUpdateRequest.campusNickname());
 		userRepository.save(user);
+	}
+
+	public UserInfoResponse getUserInfo(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		return userMapper.toUserInfoResponse(user);
 	}
 }
