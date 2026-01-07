@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
@@ -100,16 +101,20 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<PostListItemResponse> findAll(PostCategory category, int page, int size, Long currentUserId) {
+	public Page<PostListItemResponse> findPostListByCouncilTypeForCouncil(Long councilId, PostCategory category,
+		CouncilType councilType, int page, int size) {
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		Long schoolId = studentCouncil.getSchool().getSchoolId();
+
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-		Page<StudentCouncilPost> posts = (category == null)
-			? postRepository.findAll(pageable)
-			: postRepository.findAllByCategory(category, pageable);
+		Page<StudentCouncilPost> posts = postRepository.findPostsBySchoolAndFilters(schoolId, councilType, category,
+			pageable);
 
-		return posts.map(post ->
-			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
-		);
+		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, councilId));
 	}
 
 	@Transactional(readOnly = true)

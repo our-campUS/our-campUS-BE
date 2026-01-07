@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StudentCouncilPostMapper {
 
-	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long currentUserId) {
+	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long councilId) {
 		return new PostListItemResponse(
 			post.getId(),
 			post.getCategory(),
@@ -30,7 +30,7 @@ public class StudentCouncilPostMapper {
 				: post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
-			post.isWrittenByCouncil(currentUserId)
+			post.isWrittenByCouncil(councilId)
 		);
 	}
 

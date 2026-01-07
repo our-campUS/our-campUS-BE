@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
@@ -21,7 +22,6 @@ import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -142,24 +142,19 @@ public class StudentCouncilPostController {
 	}
 
 	@GetMapping
-	@Operation(
-		summary = "학생회 게시글 목록 조회 (필터링 포함)",
-		description = "전체 게시글 혹은 제휴(PARTNERSHIP), 행사(EVENT) 카테고리별로 필터링하여 목록을 조회합니다."
-	)
-	public CommonResponse<Page<PostListItemResponse>> getPostList(
-		@Parameter(
-			description = "필터링할 카테고리 (미선택 시 전체 조회)",
-			example = "PARTNERSHIP",
-			schema = @Schema(implementation = PostCategory.class)
-		)
+	@Operation(summary = "학생회 타입별 제휴/행사 목록 조회 (학생회 유저 전용 로직)")
+	@PreAuthorize("hasRole('COUNCIL')")
+	public CommonResponse<Page<PostListItemResponse>> getPostListByCouncilTypeForCouncil(
 		@RequestParam(required = false) PostCategory category,
+		@RequestParam(required = false) CouncilType councilType,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
-		@CurrentCouncilId(required = false) Long councilId
+		@CurrentCouncilId Long councilId
 	) {
-		Page<PostListItemResponse> responseDto = postService.findAll(category, page, size, councilId);
+		Page<PostListItemResponse> response = postService.findPostListByCouncilTypeForCouncil(councilId, category,
+			councilType, page, size);
 
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
 
 	@GetMapping("/events/upcoming")
