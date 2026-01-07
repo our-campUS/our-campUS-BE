@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 public record UserWithdrawRequest(
 	@Schema(description = "카카오 이름", example = "한승현")
 	@NotBlank(message = "카카오 이름을 입력해주세요.")
-	String kakaoName
+	String nickname
 ) {
 }

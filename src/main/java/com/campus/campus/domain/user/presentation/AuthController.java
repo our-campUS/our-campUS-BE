@@ -35,7 +35,7 @@ public class AuthController {
 	@Operation(summary = "카카오 유저 회원탈퇴")
 	public CommonResponse<Void> withdraw(@CurrentUserId Long userId,
 		@RequestBody @Valid UserWithdrawRequest userWithdrawRequest) {
-		kakaoOauthService.withdraw(userId, userWithdrawRequest.kakaoName());
+		kakaoOauthService.withdraw(userId, userWithdrawRequest.nickname());
 
 		return CommonResponse.success(UserResponseCode.WITHDRAW_SUCCESS);
 	}
