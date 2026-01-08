@@ -24,6 +24,7 @@ import com.campus.campus.domain.councilpost.domain.repository.PostImageRepositor
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
+import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapSummary;
@@ -42,6 +43,7 @@ import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
+import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -69,10 +71,20 @@ public class PlaceService {
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
 	private final PostImageRepository postImageRepository;
+	private final GeoCoderClient geoCoderClient;
 
-	public List<SavedPlaceInfo> search(String keyword) {
+	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
+		//현위치 좌표 -> 주소로 변환
+		AddressResponse geocoderRes = geoCoderClient.getAddress(lat, lng);
+		String nowAddress = placeMapper.toStringAddress(geocoderRes);
+
+		//주소 + 키워드 합쳐서 검색하도록 함
+		String searchWord = nowAddress + keyword;
+		log.info("nowAddress={}", nowAddress);
+		log.info("searchWord={}", searchWord);
+
 		//네이버에서 특정 장소 기본정보 받아오기
-		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
+		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
 
 		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
 			.map(item -> {

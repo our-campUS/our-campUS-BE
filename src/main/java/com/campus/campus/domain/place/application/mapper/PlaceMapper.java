@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipPlaceSummary;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
@@ -69,6 +70,14 @@ public class PlaceMapper {
 			.naverPlaceUrl(savedPlaceInfo.link())
 			.coordinate(savedPlaceInfo.coordinate())
 			.build();
+	}
+
+	public String toStringAddress(AddressResponse nowAddress) {
+		return nowAddress.getResponse().getResult().stream()
+			.filter(r -> "road".equalsIgnoreCase(r.getType()) || "parcel".equalsIgnoreCase(r.getType()))
+			.findFirst()
+			.map(AddressResponse.Result::getText)
+			.orElse(null);
 	}
 
 	public PlaceImages createPlaceImages(String placeKey, String googleImageUrl) {

@@ -28,7 +28,8 @@ public class PermitUrlConfig {
 			"/jwt/token/reissue",
 			"/managers/login",
 			"/places/search",
-			"/storage/presigned"
+			"/storage/presigned",
+			"/places"
 		};
 	}
 }

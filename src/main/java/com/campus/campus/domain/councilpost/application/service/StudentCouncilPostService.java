@@ -67,10 +67,7 @@ public class StudentCouncilPostService {
 
 		Place place = post.getPlace();
 		if (isPlaceChanged(post, dto)) {
-			//Place entity
 			place = placeService.findOrCreatePlace(dto);
-
-			//제휴 장소 객체 관련 처리 필요(기존 제휴 장소 객체 삭제해야함)
 		}
 		return update(councilId, postId, dto, place);
 	}
@@ -112,8 +109,6 @@ public class StudentCouncilPostService {
 			.stream()
 			.map(PostImage::getImageUrl)
 			.toList();
-
-		//제휴 엔티티 생성 후 저장 추가해야 함
 
 		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
 	}

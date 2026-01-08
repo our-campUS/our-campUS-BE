@@ -15,7 +15,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 	PLACE_NOT_FOUND(2602, HttpStatus.NOT_FOUND, "해당 장소를 찾을 수 없습니다."),
 	SHA256_NOT_SUPPORTED(2603, HttpStatus.INTERNAL_SERVER_ERROR, "SHA-256이 지원되지 않습니다."),
 	NAVER_API_ERROR(2604, HttpStatus.INTERNAL_SERVER_ERROR, "네이버 api 호출에 실패하였습니다."),
-	PLACE_CREATION_ERROR(2605, HttpStatus.INTERNAL_SERVER_ERROR, "Place 생성에 오류가 발생하였습니다.");
+	PLACE_CREATION_ERROR(2605, HttpStatus.INTERNAL_SERVER_ERROR, "Place 생성에 오류가 발생하였습니다."),
+	GEOCODER_ERROR(2605, HttpStatus.INTERNAL_SERVER_ERROR, "좌표 -> 주소 변환 과정에서 오류가 발생하였습니다..");
 
 	private final int code;
 	private final HttpStatus status;
