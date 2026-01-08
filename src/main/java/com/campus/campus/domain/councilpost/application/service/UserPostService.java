@@ -1,4 +1,4 @@
-package com.campus.campus.domain.userpost.application.service;
+package com.campus.campus.domain.councilpost.application.service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.application.exception.CollegeNotSetException;
+import com.campus.campus.domain.councilpost.application.exception.MajorNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
 import com.campus.campus.domain.councilpost.application.mapper.StudentCouncilPostMapper;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
@@ -21,12 +23,10 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.councilpost.policy.PostAccessPolicy;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
-import com.campus.campus.domain.userpost.application.exception.CollegeNotSetException;
-import com.campus.campus.domain.userpost.application.exception.MajorNotSetException;
-import com.campus.campus.domain.userpost.policy.PostAccessPolicy;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ public class UserPostService {
 	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
 			.findBySchoolId(user.getSchool().getSchoolId(), category, CouncilType.SCHOOL_COUNCIL, pageable);
@@ -64,7 +64,7 @@ public class UserPostService {
 			throw new CollegeNotSetException();
 		}
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
 			.findByCollegeId(user.getCollege().getCollegeId(), category, CouncilType.COLLEGE_COUNCIL, pageable);
@@ -76,7 +76,7 @@ public class UserPostService {
 	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
 			.findByMajorId(user.getMajor().getMajorId(), category, CouncilType.MAJOR_COUNCIL, pageable);

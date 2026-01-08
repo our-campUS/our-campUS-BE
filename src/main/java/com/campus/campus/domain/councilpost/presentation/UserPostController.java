@@ -1,4 +1,4 @@
-package com.campus.campus.domain.userpost.presentation;
+package com.campus.campus.domain.councilpost.presentation;
 
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,9 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.application.service.UserPostService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
-import com.campus.campus.domain.councilpost.presentation.StudentCouncilPostResponseCode;
-import com.campus.campus.domain.userpost.application.service.UserPostService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
@@ -88,7 +87,6 @@ public class UserPostController {
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
 
-
 	@GetMapping("/school/events/upcoming")
 	@Operation(
 		summary = "학교 범위 72시간 이내 행사 조회",
@@ -100,7 +98,7 @@ public class UserPostController {
 		@CurrentUserId Long userId
 	) {
 		Page<PostListItemResponse> responseDto = postService.findUpcomingSchoolEvents72h(page, size, userId);
-		return CommonResponse.success(UserPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping("/college/events/upcoming")
@@ -114,7 +112,7 @@ public class UserPostController {
 		@CurrentUserId Long userId
 	) {
 		Page<PostListItemResponse> responseDto = postService.findUpcomingCollegeEvents72h(page, size, userId);
-		return CommonResponse.success(UserPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping("/major/events/upcoming")
@@ -128,6 +126,6 @@ public class UserPostController {
 		@CurrentUserId Long userId
 	) {
 		Page<PostListItemResponse> responseDto = postService.findUpcomingMajorEvents72h(page, size, userId);
-		return CommonResponse.success(UserPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 }
