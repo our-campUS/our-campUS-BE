@@ -3,6 +3,7 @@ package com.campus.campus.domain.councilpost.application.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
@@ -24,11 +26,16 @@ import com.campus.campus.domain.councilpost.application.exception.PostNotFoundEx
 import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.application.exception.ThumbnailRequiredException;
 import com.campus.campus.domain.councilpost.application.mapper.StudentCouncilPostMapper;
+import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.repository.LikePostRepository;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
+import com.campus.campus.domain.user.domain.entity.User;
+import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +49,8 @@ public class StudentCouncilPostService {
 	private final StudentCouncilPostRepository postRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
+	private final LikePostRepository likePostRepository;
+	private final UserRepository userRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 
@@ -128,6 +137,28 @@ public class StudentCouncilPostService {
 		return posts.map(post ->
 			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
 		);
+	}
+
+	@Transactional
+	public LikePostResponse toggleLikePost(Long userId, Long postId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		StudentCouncilPost post = postRepository.findById(postId)
+			.orElseThrow(PostNotFoundException::new);
+
+		Optional<LikePost> likePost = likePostRepository.findByUserIdAndPost_Id(userId, postId);
+		boolean isLike;
+		if (likePost.isPresent()) {
+			likePostRepository.delete(likePost.get());
+			isLike = false;
+		} else {
+			LikePost newLikePost = studentCouncilPostMapper.createLikePost(user, post);
+			likePostRepository.save(newLikePost);
+			isLike = true;
+		}
+
+		return studentCouncilPostMapper.toLikePostResponse(user, post, isLike);
 	}
 
 	@Transactional

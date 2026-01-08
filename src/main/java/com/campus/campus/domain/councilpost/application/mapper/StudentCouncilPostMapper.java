@@ -7,11 +7,14 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.user.domain.entity.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -59,8 +62,16 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto, LocalDateTime startDateTime,
-		LocalDateTime endDateTime) {
+	public LikePostResponse toLikePostResponse(User user, StudentCouncilPost post, boolean liked) {
+		return new LikePostResponse(
+			user.getId(),
+			post.getId(),
+			liked
+		);
+	}
+
+	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto,
+		LocalDateTime startDateTime, LocalDateTime endDateTime) {
 		return StudentCouncilPost.builder()
 			.writer(writer)
 			.category(dto.category())
@@ -78,6 +89,13 @@ public class StudentCouncilPostMapper {
 		return PostImage.builder()
 			.post(post)
 			.imageUrl(imageUrl)
+			.build();
+	}
+
+	public LikePost createLikePost(User user, StudentCouncilPost post) {
+		return LikePost.builder()
+			.post(post)
+			.user(user)
 			.build();
 	}
 }
