@@ -46,7 +46,7 @@ public class User extends BaseEntity {
 	@Column(name = "profile_image")
 	private String profileImage;
 
-	@Column(name = "campus-nickname")
+	@Column(name = "campus_nickname")
 	private String campusNickname;
 
 	@Column(name = "deleted_at")
