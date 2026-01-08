@@ -72,7 +72,7 @@ public class UserService {
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {
-		User user = userRepository.findById(userId)
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
 		return userMapper.toUserInfoResponse(user);
