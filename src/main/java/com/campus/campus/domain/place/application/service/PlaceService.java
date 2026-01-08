@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
@@ -106,11 +107,9 @@ public class PlaceService {
 	}
 
 	@Transactional
-	public Place findOrCreatePlace(String placeName) {
-		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(placeName, 1);
-		NaverSearchResponse.Item item = naverSearchResponse.items().getFirst();
-		//placeKey 생성
-		String placeKey = PlaceKeyGenerator.generate(item.title(), item.roadAddress());
+	public Place findOrCreatePlace(PostRequest request) {
+		SavedPlaceInfo place = request.place();
+		String placeKey = place.placeKey();
 
 		//이미 Place 존재하는지 확인
 		Optional<Place> existing = placeRepository.findByPlaceKey(placeKey);
@@ -118,12 +117,8 @@ public class PlaceService {
 			return existing.get();
 		}
 
-		//Place 생성
-		String name = stripHtml(item.title());
-		String naverPlaceUrl = buildNaverPlaceUrl(item);
-
-		SavedPlaceInfo info = placeMapper.toSavedPlaceInfo(item, name, placeKey, naverPlaceUrl, null);
-		return placeMapper.createPlace(info);
+		//저장되어 있지 않는 Place의 경우, 객체 생성 후 저장
+		return placeRepository.save(placeMapper.createPlace(place));
 	}
 
 	//장소 저장

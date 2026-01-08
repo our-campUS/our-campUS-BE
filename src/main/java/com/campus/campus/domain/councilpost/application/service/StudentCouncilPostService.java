@@ -54,8 +54,8 @@ public class StudentCouncilPostService {
 
 	@Transactional
 	public PostResponse createPartnershipPost(Long councilId, PostRequest dto) {
-		//장소 조회or생성
-		Place place = placeService.findOrCreatePlace(dto.placeName());
+		//선택한 제휴 장소(Place entity)를 저장
+		Place place = placeService.findOrCreatePlace(dto);
 		//기존 게시글 생성 로직 호출
 		return create(councilId, dto, place);
 	}
@@ -67,13 +67,16 @@ public class StudentCouncilPostService {
 
 		Place place = post.getPlace();
 		if (isPlaceChanged(post, dto)) {
-			place = placeService.findOrCreatePlace(dto.placeName());
+			//Place entity
+			place = placeService.findOrCreatePlace(dto);
+
+			//제휴 장소 객체 관련 처리 필요(기존 제휴 장소 객체 삭제해야함)
 		}
 		return update(councilId, postId, dto, place);
 	}
 
 	private boolean isPlaceChanged(StudentCouncilPost post, PostRequest dto) {
-		return !post.getPlace().getPlaceName().equals(dto.placeName());
+		return !post.getPlace().getPlaceName().equals(dto.place().placeName());
 	}
 
 	@Transactional
@@ -109,6 +112,8 @@ public class StudentCouncilPostService {
 			.stream()
 			.map(PostImage::getImageUrl)
 			.toList();
+
+		//제휴 엔티티 생성 후 저장 추가해야 함
 
 		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
 	}
