@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
@@ -159,6 +160,20 @@ public class StudentCouncilPostService {
 		}
 
 		return studentCouncilPostMapper.toLikePostResponse(user, post, isLike);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetLikedPostResponse> findLikedPosts(PostCategory category, int page, int size, Long userId) {
+		userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
+
+		Page<LikePost> likedPosts = likePostRepository.findLikedPosts(userId, category, pageable);
+
+		return likedPosts.map(likePost ->
+			studentCouncilPostMapper.toGetLikedPostResponse(likePost.getPost())
+		);
 	}
 
 	@Transactional

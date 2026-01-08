@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
@@ -143,14 +144,6 @@ public class StudentCouncilPostController {
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
 
-	@PostMapping("/{postId}/like")
-	@Operation(summary = "학생회 게시글 좋아요 토글")
-	public CommonResponse<LikePostResponse> togglePostLike(@PathVariable Long postId, @CurrentUserId Long userId) {
-		LikePostResponse response = postService.toggleLikePost(userId, postId);
-
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIKE_SUCCESS, response);
-	}
-
 	@GetMapping
 	@Operation(
 		summary = "학생회 게시글 목록 조회 (필터링 포함)",
@@ -182,5 +175,28 @@ public class StudentCouncilPostController {
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS,
 			postService.findUpcomingEvents(page, size, councilId)
 		);
+	}
+
+	@PostMapping("/{postId}/like")
+	@PreAuthorize("hasRole('USER')")
+	@Operation(summary = "학생회 게시글 좋아요 토글")
+	public CommonResponse<LikePostResponse> togglePostLike(@PathVariable Long postId, @CurrentUserId Long userId) {
+		LikePostResponse response = postService.toggleLikePost(userId, postId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIKE_SUCCESS, response);
+	}
+
+	@GetMapping("/likes")
+	@PreAuthorize("hasRole('USER')")
+	@Operation(summary = "관심 학생회 게시글 목록 조회")
+	public CommonResponse<Page<GetLikedPostResponse>> getLikedPosts(
+		@RequestParam(required = false) PostCategory category,
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "3") int size,
+		@CurrentUserId Long userId
+	) {
+		Page<GetLikedPostResponse> responses = postService.findLikedPosts(category, page, size, userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
 	}
 }

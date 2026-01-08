@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
@@ -67,6 +68,16 @@ public class StudentCouncilPostMapper {
 			user.getId(),
 			post.getId(),
 			liked
+		);
+	}
+
+	public GetLikedPostResponse toGetLikedPostResponse(StudentCouncilPost post) {
+		return new GetLikedPostResponse(
+			post.getId(),
+			post.getTitle(),
+			post.getPlace(),
+			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
+			post.getThumbnailImageUrl()
 		);
 	}
 
