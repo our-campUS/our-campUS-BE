@@ -22,8 +22,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "like_posts", uniqueConstraints =
-	{@UniqueConstraint(columnNames = {"user_id", "post_id"})})
+@Table(name = "like_posts", uniqueConstraints = {
+	@UniqueConstraint(columnNames = {"user_id", "post_id"})
+})
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
