@@ -21,7 +21,7 @@ public record GetUpcomingEventListForCouncilResponse(
 	String place,
 
 	@Schema(description = "시간(끝나는 시간 or 행사날짜", example = "2026-01-10T18:00:00")
-	LocalDateTime DateTime,
+	LocalDateTime dateTime,
 
 	@Schema(description = "썸네일 아이콘", example = "FOOD")
 	ThumbnailIcon thumbnailIcon
