@@ -63,7 +63,7 @@ public class UserService {
 		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
-		if (userRepository.existsByNicknameAndIdNot(nicknameUpdateRequest.campusNickname(), userId)) {
+		if (userRepository.existsByCampusNicknameAndIdNot(nicknameUpdateRequest.campusNickname(), userId)) {
 			throw new NicknameAlreadyExistsException();
 		}
 

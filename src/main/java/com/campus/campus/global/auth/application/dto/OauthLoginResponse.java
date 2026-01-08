@@ -12,6 +12,9 @@ public record OauthLoginResponse(
 	@Schema(description = "사용자 이름(닉네임)", example = "김잇타")
 	String nickname,
 
+	@Schema(description = "사용자 서비스 내 닉네임", example = "망포동 피바라기")
+	String campusNickname,
+
 	@Schema(description = "사용자 id", example = "1")
 	Long userId,
 
