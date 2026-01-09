@@ -3,6 +3,7 @@ package com.campus.campus.domain.councilpost.application.service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,15 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.CollegeNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.MajorNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
 import com.campus.campus.domain.councilpost.application.mapper.StudentCouncilPostMapper;
+import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.repository.LikePostRepository;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.councilpost.policy.PostAccessPolicy;
@@ -42,9 +47,45 @@ public class StudentCouncilPostForUserService {
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PostImageRepository postImageRepository;
+	private final LikePostRepository likePostRepository;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final UserRepository userRepository;
 	private final PostAccessPolicy postAccessPolicy;
+
+	@Transactional
+	public LikePostResponse toggleLikePost(Long userId, Long postId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
+			.orElseThrow(PostNotFoundException::new);
+
+		Optional<LikePost> likePost = likePostRepository.findByUserIdAndPost_Id(userId, postId);
+		boolean isLike;
+		if (likePost.isPresent()) {
+			likePostRepository.delete(likePost.get());
+			isLike = false;
+		} else {
+			LikePost newLikePost = studentCouncilPostMapper.createLikePost(user, post);
+			likePostRepository.save(newLikePost);
+			isLike = true;
+		}
+
+		return studentCouncilPostMapper.toLikePostResponse(user, post, isLike);
+	}
+
+	public Page<GetLikedPostResponse> findLikedPosts(PostCategory category, int page, int size, Long userId) {
+		userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
+
+		Page<LikePost> likedPosts = likePostRepository.findLikedPosts(userId, category, pageable);
+
+		return likedPosts.map(likePost ->
+			studentCouncilPostMapper.toGetLikedPostResponse(likePost.getPost())
+		);
+	}
 
 	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
