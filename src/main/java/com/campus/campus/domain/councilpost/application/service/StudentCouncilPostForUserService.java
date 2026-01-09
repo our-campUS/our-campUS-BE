@@ -178,7 +178,7 @@ public class StudentCouncilPostForUserService {
 
 	public List<GetActivePartnershipListForUserResponse> findActivePartnershipForUser(CouncilType councilType,
 		Long userId) {
-		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+		User user = userRepository.findByIdWithAcademicInfo(userId)
 			.orElseThrow(UserNotFoundException::new);
 
 		if (user.getSchool() == null) {
