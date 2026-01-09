@@ -15,9 +15,13 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
@@ -55,31 +59,7 @@ public class StudentCouncilPostService {
 	private final PartnershipService partnershipService;
 
 	@Transactional
-	public PostResponse createPartnershipPost(Long councilId, PostRequest dto) {
-		//선택한 제휴 장소(Place entity)를 저장
-		Place place = placeService.findOrCreatePlace(dto);
-		//기존 게시글 생성 로직 호출
-		return create(councilId, dto, place);
-	}
-
-	@Transactional
-	public PostResponse updatePartnershipPost(Long councilId, Long postId, PostRequest dto) {
-		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
-			.orElseThrow(PostNotFoundException::new);
-
-		Place place = post.getPlace();
-		if (isPlaceChanged(post, dto)) {
-			place = placeService.findOrCreatePlace(dto);
-		}
-		return update(councilId, postId, dto, place);
-	}
-
-	private boolean isPlaceChanged(StudentCouncilPost post, PostRequest dto) {
-		return !post.getPlace().getPlaceName().equals(dto.place().placeName());
-	}
-
-	@Transactional
-	public PostResponse create(Long councilId, PostRequest dto, Place place) {
+	public GetPostResponse create(Long councilId, PostRequest dto) {
 		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new PostImageLimitExceededException();
 		}
@@ -115,11 +95,11 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
-	public PostResponse findById(Long postId, Long currentUserId) {
+	public GetPostResponse findById(Long postId, Long currentUserId) {
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -129,38 +109,48 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, currentUserId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, currentUserId);
 	}
 
 	@Transactional(readOnly = true)
-	public Page<PostListItemResponse> findAll(PostCategory category, int page, int size, Long currentUserId) {
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
+	public Page<GetPostListForCouncilResponse> findPostListForCouncil(Long councilId, PostCategory category,
+		int page, int size) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
 
-		Page<StudentCouncilPost> posts = (category == null)
-			? postRepository.findAll(pageable)
-			: postRepository.findAllByCategory(category, pageable);
+		Sort sort;
+		if (category == PostCategory.EVENT) {
+			sort = Sort.by(Sort.Direction.ASC, "startDateTime");
+		} else {
+			sort = Sort.by(Sort.Direction.ASC, "endDateTime");
+		}
 
-		return posts.map(post ->
-			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
-		);
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, sort);
+
+		LocalDateTime now = LocalDateTime.now();
+
+		Page<StudentCouncilPost> posts = postRepository.findPostsByCouncilAndFilters(councilId, category, now,
+			pageable);
+
+		return posts.map(studentCouncilPostMapper::toGetPostListForCouncilResponse);
 	}
 
 	@Transactional(readOnly = true)
-	public Page<PostListItemResponse> findUpcomingEvents(int page, int size, Long currentUserId) {
-		Pageable pageable = PageRequest.of(
-			Math.max(page - 1, 0),
-			size,
-			Sort.by(Sort.Direction.ASC, "startDateTime")
-		);
+	public Page<GetUpcomingEventListForCouncilResponse> findUpcomingEventsForCouncil(Long councilId,
+		int page, int size) {
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size,
+			Sort.by(Sort.Direction.ASC, "startDateTime"));
+
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime limit = now.plusHours(UPCOMING_EVENT_WINDOW_HOURS);
 
-		Page<StudentCouncilPost> posts = postRepository.findUpcomingEvents(PostCategory.EVENT, now, limit, pageable);
+		Page<StudentCouncilPost> posts = postRepository.findUpcomingEventsByCouncil(councilId, PostCategory.EVENT,
+			now, limit, pageable);
 
-		return posts.map(post ->
-			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
-		);
+		return posts.map(studentCouncilPostMapper::toGetUpcomingEventListForCouncilResponse);
 	}
 
 	@Transactional
@@ -200,7 +190,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponse update(Long councilId, Long postId, PostRequest dto, Place place) {
+	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
 		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
@@ -252,7 +242,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
 	}
 
 	//이미지 삭제

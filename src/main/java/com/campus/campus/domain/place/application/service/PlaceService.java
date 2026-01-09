@@ -14,16 +14,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapSummary;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
@@ -62,7 +58,6 @@ public class PlaceService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
-	private final PostImageRepository postImageRepository;
 	private final GeoCoderClient geoCoderClient;
 
 	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
@@ -168,136 +163,14 @@ public class PlaceService {
 		return placeMapper.toLikeResponse(place);
 	}
 
-	// @Transactional(readOnly = true)
-	// public PartnershipScrollResponse getPartnershipPlaces(Long userId, Long cursor, int size) {
-	// 	Pageable pageable = PageRequest.of(0, size + 1);
-	//
-	// 	User user = userRepository.findById(userId)
-	// 		.orElseThrow(UserNotFoundException::new);
-	//
-	// 	Long majorId = user.getMajor().getMajorId();
-	// 	log.info("majorId={}", majorId);
-	//
-	// 	Long collegeId = user.getCollege().getCollegeId();
-	// 	log.info("collegeId={}", collegeId);
-	//
-	// 	Long schoolId = user.getSchool().getSchoolId();
-	// 	log.info("schoolID={}", schoolId);
-	//
-	// 	//유저가 속한 과/단과대/학교 학생회에서 올린 제휴 전부 조회
-	// 	List<PartnershipPlaceSummary> response = placeRepository.findPartnershipPlaces(PostCategory.PARTNERSHIP,
-	// 		majorId, collegeId, schoolId, cursor, pageable);
-	//
-	// 	//placeId 목록 추출
-	// 	List<Long> placeIds = response.stream()
-	// 		.map(PartnershipPlaceSummary::placeId)
-	// 		.distinct().toList();
-	//
-	// 	//유저가 좋아요 한 placeId 조회
-	// 	Set<Long> likedPlaceIds =
-	// 		likedPlacesRepository.findLikedPlaceIds(userId, placeIds);
-	//
-	// 	//이미지 조회
-	// 	List<PostImageSummary> images = postImageRepository.findPartnershipImagesByPlaceIds(placeIds);
-	//
-	// 	//placeId 기준으로 이미지 묶기
-	// 	Map<Long, List<String>> imageMap =
-	// 		images.stream()
-	// 			.collect(Collectors.groupingBy(
-	// 				PostImageSummary::placeId,
-	// 				Collectors.mapping(PostImageSummary::imageUrl, Collectors.toList())
-	// 			));
-	//
-	// 	//placeId 기준으로 묶기
-	// 	Map<Long, List<PartnershipPlaceSummary>> grouped = response.stream()
-	// 		.collect(Collectors.groupingBy(PartnershipPlaceSummary::placeId));
-	//
-	// 	//다음 페이지 판단
-	// 	boolean hasNext = grouped.size() > size;
-	//
-	// 	//그룹 단위 Response 생성
-	// 	List<PartnershipResponse> items = grouped.values().stream()
-	// 		.limit(size)
-	// 		.map(group -> {
-	// 			PartnershipPlaceSummary first = group.get(0);
-	//
-	// 			List<String> tags = group.stream()
-	// 				.map(r -> resolveTag(r.councilType(), user))
-	// 				.distinct()
-	// 				.toList();
-	//
-	// 			//이미지
-	// 			List<String> imageUrls =
-	// 				imageMap.getOrDefault(first.placeId(), List.of())
-	// 					.stream()
-	// 					.toList();
-	//
-	// 			boolean isLiked = likedPlaceIds.contains(first.placeId());
-	//
-	// 			return placeMapper.toPartnershipResponse(first, tags, isLiked, imageUrls);
-	// 		})
-	// 		.toList();
-	//
-	// 	Long nextCursor = hasNext ? items.get(items.size() - 1).placeId() : null;
-	// 	return placeMapper.toPartnershipScrollResponse(items, hasNext, nextCursor);
-	//
-	// }
-
-	private String resolveTag(CouncilType councilType, User user) {
-		return switch (councilType) {
-			case SCHOOL_COUNCIL -> "총학생회";
-			case COLLEGE_COUNCIL -> user.getCollege().getCollegeName();
-			case MAJOR_COUNCIL -> user.getMajor().getMajorName();
-		};
-	}
-
-	public List<PartnershipMapResponse> getPartnershipPlacesForMap(
-		Long userId,
-		double minLat,
-		double maxLat,
-		double minLng,
-		double maxLng
-	) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(UserNotFoundException::new);
-		List<PartnershipMapSummary> rows =
-			placeRepository.findPartnershipPlacesForMap(
-				minLat,
-				maxLat,
-				minLng,
-				maxLng,
-				user.getMajor().getMajorId(),
-				user.getCollege().getCollegeId(),
-				user.getSchool().getSchoolId()
-			);
-
-		Map<Long, List<PartnershipMapSummary>> grouped =
-			rows.stream()
-				.collect(Collectors.groupingBy(PartnershipMapSummary::placeId));
-
-		return grouped.values().stream()
-			.map(group -> {
-				PartnershipMapSummary first = group.get(0);
-
-				List<String> tags = group.stream()
-					.map(r -> resolveTag(r.councilType(), user))
-					.distinct()
-					.toList();
-
-				return new PartnershipMapResponse(
-					first.placeId(),
-					first.latitude(),
-					first.longitude(),
-					tags
-				);
-			})
-			.toList();
-	}
-
 	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images) {
 		List<String> cached = images.getOrDefault(response.placeKey(), List.of());
 		List<String> placeImages = !cached.isEmpty()
 			? cached : googleClient.fetchImages(response.name(), response.address(), 3);
+
+		//좋아요 있는지 확인
+
+		//제휴 장소인지 확인
 
 		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
 			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages

@@ -13,15 +13,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,7 +30,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/student-council/posts")
+@RequestMapping("/student-councils/posts")
+@PreAuthorize("hasRole('COUNCIL')")
 @Tag(name = "Student Council Post", description = "학생회(COUNCIL) 권한 전용 제휴/행사 게시글 관리 API")
 @RequiredArgsConstructor
 public class StudentCouncilPostController {
@@ -38,7 +39,6 @@ public class StudentCouncilPostController {
 	private final StudentCouncilPostService postService;
 
 	@PostMapping
-	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(
 		summary = "학생회 제휴/행사 게시글 생성",
 		description =
@@ -118,34 +118,31 @@ public class StudentCouncilPostController {
 							}
 							"""
 					)
-
 				}
 			)
 		)
 	)
-	public CommonResponse<PostResponse> createPost(
+	public CommonResponse<GetPostResponse> createPost(
 		@CurrentCouncilId Long councilId,
 		@RequestBody @Valid PostRequest requestDto
 	) {
-		PostResponse responseDto = postService.createPartnershipPost(councilId, requestDto);
+		GetPostResponse responseDto = postService.create(councilId, requestDto);
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_CREATE_SUCCESS, responseDto);
 	}
 
 	@PatchMapping("/{postId}")
-	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 수정")
-	public CommonResponse<PostResponse> updatePost(
+	public CommonResponse<GetPostResponse> updatePost(
 		@CurrentCouncilId Long councilId,
 		@PathVariable Long postId,
 		@RequestBody @Valid PostRequest requestDto
 	) {
-		PostResponse responseDto = postService.updatePartnershipPost(councilId, postId, requestDto);
+		GetPostResponse responseDto = postService.update(councilId, postId, requestDto);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_UPDATE_SUCCESS, responseDto);
 	}
 
 	@DeleteMapping("/{postId}")
-	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 삭제")
 	public CommonResponse<Void> deletePost(@CurrentCouncilId Long councilId, @PathVariable Long postId) {
 		postService.delete(councilId, postId);
@@ -154,44 +151,37 @@ public class StudentCouncilPostController {
 	}
 
 	@GetMapping("/{postId}")
-	@Operation(summary = "학생회 게시글 단건 조회")
-	public CommonResponse<PostResponse> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
-		PostResponse responseDto =
-			postService.findById(postId, councilId);
+	@Operation(summary = "학생회 게시글 상세 조회")
+	public CommonResponse<GetPostResponse> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
+		GetPostResponse responseDto = postService.findById(postId, councilId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping
-	@Operation(
-		summary = "학생회 게시글 목록 조회 (필터링 포함)",
-		description = "전체 게시글 혹은 제휴(PARTNERSHIP), 행사(EVENT) 카테고리별로 필터링하여 목록을 조회합니다."
-	)
-	public CommonResponse<Page<PostListItemResponse>> getPostList(
-		@Parameter(
-			description = "필터링할 카테고리 (미선택 시 전체 조회)",
-			example = "PARTNERSHIP",
-			schema = @Schema(implementation = PostCategory.class)
-		)
+	@Operation(summary = "학생회 제휴/행사 목록 조회 (학생회 홈화면, 로그인한 학생회 작성한 글만)")
+	public CommonResponse<Page<GetPostListForCouncilResponse>> getPostListForCouncil(
 		@RequestParam(required = false) PostCategory category,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
-		@CurrentCouncilId(required = false) Long councilId
+		@CurrentCouncilId Long councilId
 	) {
-		Page<PostListItemResponse> responseDto = postService.findAll(category, page, size, councilId);
+		Page<GetPostListForCouncilResponse> response = postService.findPostListForCouncil(councilId,
+			category, page, size);
 
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
 
 	@GetMapping("/events/upcoming")
-	@Operation(summary = "72시간 이내 행사 게시글 조회")
-	public CommonResponse<Page<PostListItemResponse>> getUpcomingEvents(
+	@Operation(summary = "학생회 72시간 이내 행사 조회 (학생회 홈화면, 로그인한 학생회 작성한 글만)")
+	public CommonResponse<Page<GetUpcomingEventListForCouncilResponse>> getUpcomingEventsForCouncil(
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
-		@CurrentCouncilId(required = false) Long councilId
+		@CurrentCouncilId Long councilId
 	) {
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS,
-			postService.findUpcomingEvents(page, size, councilId)
-		);
+		Page<GetUpcomingEventListForCouncilResponse> response = postService.findUpcomingEventsForCouncil(councilId,
+			page, size);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
 }

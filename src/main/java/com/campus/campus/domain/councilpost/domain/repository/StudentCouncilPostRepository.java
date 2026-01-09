@@ -17,8 +17,6 @@ import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
-	Page<StudentCouncilPost> findAllByCategory(PostCategory category, Pageable pageable);
-
 	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN FETCH p.writer w
@@ -30,16 +28,66 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		""")
 	Optional<StudentCouncilPost> findByIdWithFullInfo(@Param("postId") Long postId);
 
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
 	@Query("""
-		SELECT p
-		FROM StudentCouncilPost p
-		WHERE p.category = :category
-		AND p.startDateTime BETWEEN :now AND :limit
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		WHERE w.id = :councilId
+		  AND p.category = :category
+		  AND p.startDateTime BETWEEN :now AND :limit
+		  AND w.deletedAt IS NULL
+		ORDER BY p.startDateTime ASC
 		""")
-	Page<StudentCouncilPost> findUpcomingEvents(
+	Page<StudentCouncilPost> findUpcomingEventsByCouncil(
+		@Param("councilId") Long councilId,
 		@Param("category") PostCategory category,
 		@Param("now") LocalDateTime now,
 		@Param("limit") LocalDateTime limit,
+		Pageable pageable
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		WHERE w.id = :councilId
+		  AND (:category IS NULL OR p.category = :category)
+		  AND (
+		    (p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.EVENT
+		      AND p.startDateTime >= :now)
+		    OR (p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.PARTNERSHIP
+		      AND p.endDateTime >= :now)
+		  )
+		  AND w.deletedAt IS NULL
+		""")
+	Page<StudentCouncilPost> findPostsByCouncilAndFilters(@Param("councilId") Long councilId,
+		@Param("category") PostCategory category,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
+		WHERE w.school.schoolId = :schoolId
+		  AND w.councilType = :councilType
+		  AND (:collegeId IS NULL OR c.collegeId = :collegeId)
+		  AND (:majorId IS NULL OR m.majorId = :majorId)
+		  AND p.category = :category
+		  AND :now BETWEEN p.startDateTime AND p.endDateTime
+		  AND w.deletedAt IS NULL
+		ORDER BY function('RAND')
+		""")
+	List<StudentCouncilPost> findRandomActivePartnerships(
+		@Param("schoolId") Long schoolId,
+		@Param("councilType") CouncilType councilType,
+		@Param("category") PostCategory category,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
+		@Param("now") LocalDateTime now,
 		Pageable pageable
 	);
 

@@ -1,15 +1,23 @@
 package com.campus.campus.domain.councilpost.presentation;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
-import com.campus.campus.domain.councilpost.application.service.UserPostService;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
+import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostForUserService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -20,13 +28,35 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/users/posts")
-@Tag(name = "Student Post", description = "사용자가 속한 대학/단과대/전공의 제휴/행사 게시글 목록 조회 API")
+@PreAuthorize("hasRole('USER')")
+@RequestMapping("/users/student-council/posts")
+@Tag(name = "Student Council Post For User", description = "사용자(USER) 권한 전용 사용자가 속한 대학/단과대/전공의 제휴/행사 게시글 목록 조회 API")
 @RequiredArgsConstructor
 @Slf4j
-public class UserPostController {
+public class StudentCouncilPostForUserController {
 
-	private final UserPostService postService;
+	@PostMapping("/{postId}/like")
+	@Operation(summary = "학생회 게시글 좋아요 토글")
+	public CommonResponse<LikePostResponse> togglePostLike(@PathVariable Long postId, @CurrentUserId Long userId) {
+		LikePostResponse response = postService.toggleLikePost(userId, postId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIKE_SUCCESS, response);
+	}
+
+	@GetMapping("/likes")
+	@Operation(summary = "관심 학생회 게시글 목록 조회")
+	public CommonResponse<Page<GetLikedPostResponse>> getLikedPosts(
+		@RequestParam(required = false) PostCategory category,
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "3") int size,
+		@CurrentUserId Long userId
+	) {
+		Page<GetLikedPostResponse> responses = postService.findLikedPosts(category, page, size, userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
+	}
+
+	private final StudentCouncilPostForUserService postService;
 
 	@GetMapping("/school")
 	@Operation(
@@ -78,11 +108,11 @@ public class UserPostController {
 
 	@GetMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 상세 조회")
-	public CommonResponse<PostResponse> getPost(
+	public CommonResponse<GetPostForUserResponse> getPost(
 		@PathVariable Long postId,
 		@CurrentUserId Long userId
 	) {
-		PostResponse responseDto = postService.findById(postId, userId);
+		GetPostForUserResponse responseDto = postService.findById(postId, userId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
@@ -127,5 +157,17 @@ public class UserPostController {
 	) {
 		Page<PostListItemResponse> responseDto = postService.findUpcomingMajorEvents72h(page, size, userId);
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
+	}
+
+	@GetMapping("/partnerships/active")
+	@Operation(summary = "학생회 타입별 현재 이용 가능한 제휴 (일반 유저 전용 로직, 홈 화면)")
+	public CommonResponse<List<GetActivePartnershipListForUserResponse>> getActivePartnershipListForUser(
+		@RequestParam CouncilType councilType,
+		@CurrentUserId Long userId
+	) {
+		List<GetActivePartnershipListForUserResponse> responses = postService.findActivePartnershipForUser(councilType,
+			userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
 	}
 }

@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campus.campus.domain.partnership.application.service.PartnershipService;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
@@ -31,7 +30,6 @@ public class PlaceController {
 
 	private final PlaceService placeService;
 	private final GeoCoderClient geoCoderClient;
-	private final PartnershipService partnershipService;
 
 	@GetMapping("/search")
 	@Operation(summary = "현위치 기반 가까운 순으로 장소 키워드 검색", description = "검색 결과 5개 검색되도록 함")
