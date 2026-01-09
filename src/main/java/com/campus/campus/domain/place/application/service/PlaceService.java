@@ -118,9 +118,8 @@ public class PlaceService {
 		String placeKey = place.placeKey();
 
 		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
-		Optional<Place> existing = placeRepository.findByPlaceKey(placeKey);
-
-		return existing.orElseGet(() -> existing.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place))));
+		return placeRepository.findByPlaceKey(placeKey)
+			.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place)));
 	}
 
 	//장소 저장
