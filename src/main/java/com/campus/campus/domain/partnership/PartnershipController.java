@@ -31,6 +31,16 @@ public class PartnershipController {
 	public CommonResponse<List<PartnershipResponse>> getPartnershipPlaces(
 		@CurrentUserId Long userId,
 		@Parameter(
+			description = "현재 위치의 위도",
+			example = "37.50415"
+		)
+		@RequestParam double lat,
+		@Parameter(
+			description = "현재 위치의 경도",
+			example = "126.9570"
+		)
+		@RequestParam double lng,
+		@Parameter(
 			description = """
 				무한 스크롤 커서 값.
 				- 첫 요청 시 null
@@ -53,7 +63,7 @@ public class PartnershipController {
 			example = "5"
 		)
 		@RequestParam(defaultValue = "5") int size) {
-		List<PartnershipResponse> response = partnershipService.getPartnershipPlaces(userId, cursor, size);
+		List<PartnershipResponse> response = partnershipService.getPartnershipPlaces(userId, cursor, size, lat, lng);
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACE_SUCCESS, response);
 	}
 

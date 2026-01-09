@@ -1,5 +1,6 @@
 package com.campus.campus.domain.place.application.dto.response.partnership;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public record PartnershipResponse(
@@ -14,7 +15,8 @@ public record PartnershipResponse(
 	boolean isLiked,
 	double star, //리뷰 평점
 	String partnerTitle, //제휴 제목
-	String direction, //거리
+	double distance, //거리
+	LocalDate endDate, //제휴 끝나는 시점
 
 	//StudentCouncilPost 이미지 받아오기
 	List<String> imgUrls

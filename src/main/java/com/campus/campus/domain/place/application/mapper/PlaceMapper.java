@@ -12,7 +12,6 @@ import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipScrollResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
@@ -51,29 +50,8 @@ public class PlaceMapper {
 		);
 	}
 
-	public PartnershipScrollResponse toPartnershipScrollResponse(List<PartnershipResponse> items, boolean hasNext,
-		Long nextCursor) {
-		return new PartnershipScrollResponse(items, hasNext, nextCursor);
-	}
-
-	// public PartnershipResponse toPartnershipResponse(PartnershipPlaceSummary summary, List<String> tags,
-	// 	boolean isLiked, List<String> imgUrls) {
-	// 	return new PartnershipResponse(
-	// 		summary.placeId(),
-	// 		summary.placeKey(),
-	// 		summary.name(),
-	// 		summary.category(),
-	// 		summary.address(),
-	// 		summary.latitude(),
-	// 		summary.longitude(),
-	// 		tags,
-	// 		isLiked,
-	// 		imgUrls
-	// 	);
-	// }
-
 	public PartnershipResponse toPartnershipResponse(User user, StudentCouncilPost post, Place place, boolean isLiked,
-		List<String> imgUrls) {
+		List<String> imgUrls, double distance) {
 		return new PartnershipResponse(
 			place.getPlaceId(),
 			place.getPlaceKey(),
@@ -86,7 +64,8 @@ public class PlaceMapper {
 			isLiked,
 			5.0, //리뷰 구현 이후 수정 예정
 			post.getTitle(),
-			"걸어서 4분",
+			distance,
+			post.getEndDateTime().toLocalDate(),
 			imgUrls
 		);
 	}

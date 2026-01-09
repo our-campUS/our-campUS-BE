@@ -1,7 +1,9 @@
 package com.campus.campus.domain.partnership.application.service;
 
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +26,7 @@ import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.util.jwt.GeoUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +44,8 @@ public class PartnershipService {
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 
 	@Transactional
-	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size) {
+	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
+		double userLng) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
@@ -65,13 +69,35 @@ public class PartnershipService {
 			pageable
 		);
 
-		// 엔티티 → 응답 DTO 변환
-		List<PartnershipResponse> responses = posts.stream()
-			.map(post -> placeMapper.toPartnershipResponse(user, post, post.getPlace(), isLiked(post.getPlace(), user),
-				getImgUrls(post)))
-			.toList();
-		return responses;
+		return posts.stream()
+			.map(post -> {
+				Place place = post.getPlace();
 
+				double distanceMeter = GeoUtil.distanceMeter(
+					userLat, userLng,
+					place.getCoordinate().latitude(),
+					place.getCoordinate().longitude()
+				);
+
+				// post + distance를 함께 묶음
+				return new AbstractMap.SimpleEntry<>(post, distanceMeter);
+			})
+			.sorted(Map.Entry.comparingByValue()) // 거리순 정렬
+			.limit(size)
+			.map(entry -> {
+				StudentCouncilPost post = entry.getKey();
+				double distanceMeter = entry.getValue(); // ⭐ 여기서 꺼냄
+
+				return placeMapper.toPartnershipResponse(
+					user,
+					post,
+					post.getPlace(),
+					isLiked(post.getPlace(), user),
+					getImgUrls(post),
+					distanceMeter
+				);
+			})
+			.toList();
 	}
 
 	private boolean isLiked(Place place, User user) {
