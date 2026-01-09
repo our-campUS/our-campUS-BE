@@ -25,7 +25,7 @@ import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
-import com.campus.campus.global.util.jwt.GeoUtil;
+import com.campus.campus.global.util.geocoder.GeoUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

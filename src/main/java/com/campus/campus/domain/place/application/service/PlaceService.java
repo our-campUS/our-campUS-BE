@@ -61,14 +61,21 @@ public class PlaceService {
 	private final GeoCoderClient geoCoderClient;
 
 	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
-		//현위치 좌표 -> 주소로 변환
-		AddressResponse geocoderRes = geoCoderClient.getAddress(lat, lng);
-		String nowAddress = toStringAddress(geocoderRes);
+		String searchWord = keyword;
 
-		//주소 + 키워드 합쳐서 검색하도록 함
-		String searchWord = nowAddress + keyword;
-		log.info("nowAddress={}", nowAddress);
-		log.info("searchWord={}", searchWord);
+		try {
+			AddressResponse addressResponse = geoCoderClient.getAddress(lat, lng);
+			String nowAddress = toStringAddress(addressResponse);
+
+			if (nowAddress != null && !nowAddress.isBlank()) {
+				searchWord = nowAddress + " " + keyword;
+				log.info("nowAddress={}", nowAddress);
+			}
+		} catch (Exception e) {
+			log.warn("지오코딩 변환 실패 (좌표: {}, {}). 사유: {}", lat, lng, e.getMessage());
+		}
+
+		log.info("최종 검색어(searchWord)={}", searchWord);
 
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
