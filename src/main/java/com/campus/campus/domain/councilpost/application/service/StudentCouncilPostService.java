@@ -12,14 +12,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
-import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
@@ -51,7 +50,7 @@ public class StudentCouncilPostService {
 	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 
 	@Transactional
-	public PostResponse create(Long councilId, PostRequest dto) {
+	public GetPostResponse create(Long councilId, PostRequest dto) {
 		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new PostImageLimitExceededException();
 		}
@@ -84,11 +83,11 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
-	public PostResponse findById(Long postId, Long currentUserId) {
+	public GetPostResponse findById(Long postId, Long currentUserId) {
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -98,7 +97,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, currentUserId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, currentUserId);
 	}
 
 	@Transactional(readOnly = true)
@@ -179,7 +178,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
+	public GetPostResponse update(Long councilId, Long postId, PostRequest dto) {
 		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
@@ -231,7 +230,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
 	}
 
 	//이미지 삭제

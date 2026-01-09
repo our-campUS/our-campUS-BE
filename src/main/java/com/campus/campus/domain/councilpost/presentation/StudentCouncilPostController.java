@@ -12,11 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentCouncilId;
@@ -103,22 +102,22 @@ public class StudentCouncilPostController {
 			)
 		)
 	)
-	public CommonResponse<PostResponse> createPost(
+	public CommonResponse<GetPostResponse> createPost(
 		@CurrentCouncilId Long councilId,
 		@RequestBody @Valid PostRequest requestDto
 	) {
-		PostResponse responseDto = postService.create(councilId, requestDto);
+		GetPostResponse responseDto = postService.create(councilId, requestDto);
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_CREATE_SUCCESS, responseDto);
 	}
 
 	@PatchMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 수정")
-	public CommonResponse<PostResponse> updatePost(
+	public CommonResponse<GetPostResponse> updatePost(
 		@CurrentCouncilId Long councilId,
 		@PathVariable Long postId,
 		@RequestBody @Valid PostRequest requestDto
 	) {
-		PostResponse responseDto = postService.update(councilId, postId, requestDto);
+		GetPostResponse responseDto = postService.update(councilId, postId, requestDto);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_UPDATE_SUCCESS, responseDto);
 	}
@@ -133,8 +132,8 @@ public class StudentCouncilPostController {
 
 	@GetMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 상세 조회")
-	public CommonResponse<PostResponse> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
-		PostResponse responseDto = postService.findById(postId, councilId);
+	public CommonResponse<GetPostResponse> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
+		GetPostResponse responseDto = postService.findById(postId, councilId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
