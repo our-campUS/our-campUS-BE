@@ -32,23 +32,15 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN p.writer w
-		LEFT JOIN w.college c
-		LEFT JOIN w.major m
-		WHERE w.school.schoolId = :schoolId
-		  AND (:councilType IS NULL OR w.councilType = :councilType)
-		  AND (:collegeId IS NULL OR c.collegeId = :collegeId)
-		  AND (:majorId IS NULL OR m.majorId = :majorId)
+		WHERE w.id = :councilId
 		  AND p.category = :category
 		  AND p.startDateTime BETWEEN :now AND :limit
 		  AND w.deletedAt IS NULL
 		ORDER BY p.startDateTime ASC
 		""")
-	Page<StudentCouncilPost> findUpcomingEventsBySchoolAndFilters(
-		@Param("schoolId") Long schoolId,
-		@Param("councilType") CouncilType councilType,
+	Page<StudentCouncilPost> findUpcomingEventsByCouncil(
+		@Param("councilId") Long councilId,
 		@Param("category") PostCategory category,
-		@Param("collegeId") Long collegeId,
-		@Param("majorId") Long majorId,
 		@Param("now") LocalDateTime now,
 		@Param("limit") LocalDateTime limit,
 		Pageable pageable

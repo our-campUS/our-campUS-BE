@@ -125,30 +125,19 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<GetUpcomingEventListForCouncilResponse> findUpcomingEventsByCouncilTypeForCouncil(Long councilId,
-		CouncilType councilType, int page, int size) {
+	public Page<GetUpcomingEventListForCouncilResponse> findUpcomingEventsForCouncil(Long councilId,
+		int page, int size) {
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size,
 			Sort.by(Sort.Direction.ASC, "startDateTime"));
 
-		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
-
-		Long schoolId = studentCouncil.getSchool().getSchoolId();
-		Long collegeId = CouncilType.COLLEGE_COUNCIL.equals(councilType)
-			&& studentCouncil.getCollege() != null
-			? studentCouncil.getCollege().getCollegeId()
-			: null;
-		Long majorId = CouncilType.MAJOR_COUNCIL.equals(councilType)
-			&& studentCouncil.getMajor() != null
-			? studentCouncil.getMajor().getMajorId()
-			: null;
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime limit = now.plusHours(UPCOMING_EVENT_WINDOW_HOURS);
 
-		Page<StudentCouncilPost> posts = postRepository.findUpcomingEventsBySchoolAndFilters(schoolId, councilType,
-			PostCategory.EVENT, collegeId, majorId, now, limit, pageable);
+		Page<StudentCouncilPost> posts = postRepository.findUpcomingEventsByCouncil(councilId, PostCategory.EVENT,
+			now, limit, pageable);
 
 		return posts.map(studentCouncilPostMapper::toGetUpcomingEventListForCouncilResponse);
 	}

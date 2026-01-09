@@ -154,15 +154,14 @@ public class StudentCouncilPostController {
 	}
 
 	@GetMapping("/events/upcoming")
-	@Operation(summary = "학생회 타입별 72시간 이내 행사 게시글 조회 (학생회 유저 전용 로직)")
-	public CommonResponse<Page<GetUpcomingEventListForCouncilResponse>> getUpcomingEventsByCouncilTypeForCouncil(
-		@RequestParam(required = false) CouncilType councilType,
+	@Operation(summary = "학생회 72시간 이내 행사 조회 (학생회 홈화면, 로그인한 학생회 작성한 글만)")
+	public CommonResponse<Page<GetUpcomingEventListForCouncilResponse>> getUpcomingEventsForCouncil(
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
 		@CurrentCouncilId Long councilId
 	) {
-		Page<GetUpcomingEventListForCouncilResponse> response = postService.findUpcomingEventsByCouncilTypeForCouncil(
-			councilId, councilType, page, size);
+		Page<GetUpcomingEventListForCouncilResponse> response = postService.findUpcomingEventsForCouncil(councilId,
+			page, size);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
