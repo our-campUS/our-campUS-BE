@@ -102,22 +102,10 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<GetPostListForCouncilResponse> findPostListByCouncilTypeForCouncil(Long councilId,
-		PostCategory category,
-		CouncilType councilType, int page, int size) {
-		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+	public Page<GetPostListForCouncilResponse> findPostListForCouncil(Long councilId, PostCategory category,
+		int page, int size) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
-
-		Long schoolId = studentCouncil.getSchool().getSchoolId();
-		Long collegeId = CouncilType.COLLEGE_COUNCIL.equals(councilType)
-			&& studentCouncil.getCollege() != null
-			? studentCouncil.getCollege().getCollegeId()
-			: null;
-		Long majorId = CouncilType.MAJOR_COUNCIL.equals(councilType)
-			&& studentCouncil.getMajor() != null
-			? studentCouncil.getMajor().getMajorId()
-			: null;
 
 		Sort sort;
 		if (category == PostCategory.EVENT) {
@@ -130,8 +118,8 @@ public class StudentCouncilPostService {
 
 		LocalDateTime now = LocalDateTime.now();
 
-		Page<StudentCouncilPost> posts = postRepository.findPostsBySchoolAndFilters(schoolId, councilType, category,
-			collegeId, majorId, now, pageable);
+		Page<StudentCouncilPost> posts = postRepository.findPostsByCouncilAndFilters(councilId, category, now,
+			pageable);
 
 		return posts.map(studentCouncilPostMapper::toGetPostListForCouncilResponse);
 	}

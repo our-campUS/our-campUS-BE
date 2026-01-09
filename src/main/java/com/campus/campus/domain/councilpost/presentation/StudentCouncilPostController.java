@@ -140,16 +140,15 @@ public class StudentCouncilPostController {
 	}
 
 	@GetMapping
-	@Operation(summary = "학생회 타입별 제휴/행사 목록 조회 (학생회 유저 전용 로직)")
-	public CommonResponse<Page<GetPostListForCouncilResponse>> getPostListByCouncilTypeForCouncil(
+	@Operation(summary = "학생회 제휴/행사 목록 조회 (학생회 홈화면, 로그인한 학생회 작성한 글만)")
+	public CommonResponse<Page<GetPostListForCouncilResponse>> getPostListForCouncil(
 		@RequestParam(required = false) PostCategory category,
-		@RequestParam(required = false) CouncilType councilType,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "3") int size,
 		@CurrentCouncilId Long councilId
 	) {
-		Page<GetPostListForCouncilResponse> response = postService.findPostListByCouncilTypeForCouncil(councilId,
-			category, councilType, page, size);
+		Page<GetPostListForCouncilResponse> response = postService.findPostListForCouncil(councilId,
+			category, page, size);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
