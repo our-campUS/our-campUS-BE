@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostCreatedEvent;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
@@ -44,6 +46,7 @@ public class StudentCouncilPostService {
 	private final PostImageRepository postImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
+	private final ApplicationEventPublisher eventPublisher;
 
 	private static final int MAX_IMAGE_COUNT = 10;
 	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
@@ -68,13 +71,22 @@ public class StudentCouncilPostService {
 			writer, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
-		postRepository.save(post);
+		StudentCouncilPost saved = postRepository.save(post);
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
 				postImageRepository.save(studentCouncilPostMapper.createPostImage(post, imageUrl));
 			}
 		}
+
+		String topic = writer.getCouncilType().topic(writer);
+
+		eventPublisher.publishEvent(new CouncilPostCreatedEvent(
+			saved.getId(),
+			saved.getTitle(),
+			saved.getCategory().name(),
+			topic
+		));
 
 		List<String> imageUrls = postImageRepository
 			.findAllByPostOrderByIdAsc(post)
