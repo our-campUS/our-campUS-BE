@@ -13,6 +13,7 @@ public record PostListItemResponse(
 	LocalDateTime endDateTime,
 	String thumbnailImageUrl,
 	ThumbnailIcon thumbnailIcon,
-	Boolean isWriter
+	Boolean isWriter,
+	boolean liked
 ) {
 }

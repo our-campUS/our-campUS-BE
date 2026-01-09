@@ -2,8 +2,10 @@ package com.campus.campus.domain.councilpost.application.service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -87,6 +89,23 @@ public class StudentCouncilPostForUserService {
 		);
 	}
 
+	public PostResponse findById(Long postId, Long userId) {
+		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
+
+		StudentCouncilPost post = studentCouncilPostRepository.findByIdWithFullInfo(postId)
+			.orElseThrow(PostNotFoundException::new);
+
+		// 권한 검증
+		postAccessPolicy.validateAccess(user, post.getWriter());
+
+		List<String> imageUrls = postImageRepository.findAllByPostOrderByIdAsc(post)
+			.stream()
+			.map(PostImage::getImageUrl)
+			.toList();
+
+		return studentCouncilPostMapper.toPostResponse(post, imageUrls, userId);
+	}
+
 	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -95,7 +114,7 @@ public class StudentCouncilPostForUserService {
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
 			.findBySchoolId(user.getSchool().getSchoolId(), category, CouncilType.SCHOOL_COUNCIL, pageable);
 
-		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+		return mapPostsWithLikes(posts, userId);
 	}
 
 	public Page<PostListItemResponse> findCollegePosts(PostCategory category, int page, int size, Long userId) {
@@ -110,7 +129,7 @@ public class StudentCouncilPostForUserService {
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
 			.findByCollegeId(user.getCollege().getCollegeId(), category, CouncilType.COLLEGE_COUNCIL, pageable);
 
-		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+		return mapPostsWithLikes(posts, userId);
 	}
 
 	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId) {
@@ -121,7 +140,7 @@ public class StudentCouncilPostForUserService {
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
 			.findByMajorId(user.getMajor().getMajorId(), category, CouncilType.MAJOR_COUNCIL, pageable);
 
-		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+		return mapPostsWithLikes(posts, userId);
 	}
 
 	public Page<PostListItemResponse> findUpcomingSchoolEvents72h(int page, int size, Long userId) {
@@ -141,7 +160,7 @@ public class StudentCouncilPostForUserService {
 			pageable
 		);
 
-		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+		return mapPostsWithLikes(posts, userId);
 	}
 
 	public Page<PostListItemResponse> findUpcomingCollegeEvents72h(int page, int size, Long userId) {
@@ -169,7 +188,7 @@ public class StudentCouncilPostForUserService {
 			pageable
 		);
 
-		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
+		return mapPostsWithLikes(posts, userId);
 	}
 
 	public Page<PostListItemResponse> findUpcomingMajorEvents72h(int page, int size, Long userId) {
@@ -197,24 +216,7 @@ public class StudentCouncilPostForUserService {
 			pageable
 		);
 
-		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
-	}
-
-	public PostResponse findById(Long postId, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
-
-		StudentCouncilPost post = studentCouncilPostRepository.findByIdWithFullInfo(postId)
-			.orElseThrow(PostNotFoundException::new);
-
-		// 권한 검증
-		postAccessPolicy.validateAccess(user, post.getWriter());
-
-		List<String> imageUrls = postImageRepository.findAllByPostOrderByIdAsc(post)
-			.stream()
-			.map(PostImage::getImageUrl)
-			.toList();
-
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, userId);
+		return mapPostsWithLikes(posts, userId);
 	}
 
 	public List<GetActivePartnershipListForUserResponse> findActivePartnershipForUser(CouncilType councilType,
@@ -253,5 +255,21 @@ public class StudentCouncilPostForUserService {
 		return partnerships.stream()
 			.map(studentCouncilPostMapper::toGetActivePartnershipListForUserResponse)
 			.toList();
+	}
+
+	private Page<PostListItemResponse> mapPostsWithLikes(Page<StudentCouncilPost> posts, Long userId) {
+		List<Long> postIds = posts.getContent().stream()
+			.map(StudentCouncilPost::getId)
+			.toList();
+
+		if (postIds.isEmpty()) {
+			return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId, false));
+		}
+
+		Set<Long> likedPostIds = new HashSet<>(likePostRepository.findLikedPostIds(userId, postIds));
+
+		return posts.map(post ->
+			studentCouncilPostMapper.toPostListItemResponse(post, userId, likedPostIds.contains(post.getId()))
+		);
 	}
 }

@@ -1,5 +1,6 @@
 package com.campus.campus.domain.councilpost.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -25,4 +26,11 @@ public interface LikePostRepository extends JpaRepository<LikePost, Long> {
 		""")
 	Page<LikePost> findLikedPosts(@Param("userId") Long userId, @Param("category") PostCategory category,
 		Pageable pageable);
+
+	@Query("""
+		SELECT lp.post.id FROM LikePost lp
+		WHERE lp.user.id = :userId
+		  AND lp.post.id IN :postIds
+		""")
+	List<Long> findLikedPostIds(@Param("userId") Long userId, @Param("postIds") List<Long> postIds);
 }
