@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -62,18 +63,17 @@ public class StudentCouncilPostForUserService {
 		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
 			.orElseThrow(PostNotFoundException::new);
 
-		Optional<LikePost> likePost = likePostRepository.findByUserIdAndPost_Id(userId, postId);
-		boolean isLike;
-		if (likePost.isPresent()) {
-			likePostRepository.delete(likePost.get());
-			isLike = false;
-		} else {
-			LikePost newLikePost = studentCouncilPostMapper.createLikePost(user, post);
-			likePostRepository.save(newLikePost);
-			isLike = true;
+		int deleted = likePostRepository.deleteByUserIdAndPostId(userId, postId);
+		if (deleted > 0) {
+			return studentCouncilPostMapper.toLikePostResponse(user, post, false);
 		}
 
-		return studentCouncilPostMapper.toLikePostResponse(user, post, isLike);
+		try {
+			likePostRepository.saveAndFlush(studentCouncilPostMapper.createLikePost(user, post));
+			return studentCouncilPostMapper.toLikePostResponse(user, post, true);
+		} catch (DataIntegrityViolationException e) {
+			return studentCouncilPostMapper.toLikePostResponse(user, post, true);
+		}
 	}
 
 	public Page<GetLikedPostResponse> findLikedPosts(PostCategory category, int page, int size, Long userId) {
