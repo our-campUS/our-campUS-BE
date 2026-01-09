@@ -1,7 +1,5 @@
 package com.campus.campus.domain.councilpost.presentation;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,15 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentCouncilId;
-import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +31,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/student-council/posts")
+@RequestMapping("/student-councils/posts")
+@PreAuthorize("hasRole('COUNCIL')")
 @Tag(name = "Student Council Post", description = "학생회(COUNCIL) 권한 전용 제휴/행사 게시글 관리 API")
 @RequiredArgsConstructor
 public class StudentCouncilPostController {
@@ -44,7 +40,6 @@ public class StudentCouncilPostController {
 	private final StudentCouncilPostService postService;
 
 	@PostMapping
-	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(
 		summary = "학생회 제휴/행사 게시글 생성",
 		description =
@@ -117,7 +112,6 @@ public class StudentCouncilPostController {
 	}
 
 	@PatchMapping("/{postId}")
-	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 수정")
 	public CommonResponse<PostResponse> updatePost(
 		@CurrentCouncilId Long councilId,
@@ -130,7 +124,6 @@ public class StudentCouncilPostController {
 	}
 
 	@DeleteMapping("/{postId}")
-	@PreAuthorize("hasRole('COUNCIL')")
 	@Operation(summary = "학생회 게시글 삭제")
 	public CommonResponse<Void> deletePost(@CurrentCouncilId Long councilId, @PathVariable Long postId) {
 		postService.delete(councilId, postId);
@@ -139,17 +132,15 @@ public class StudentCouncilPostController {
 	}
 
 	@GetMapping("/{postId}")
-	@Operation(summary = "학생회 게시글 단건 조회")
+	@Operation(summary = "학생회 게시글 상세 조회")
 	public CommonResponse<PostResponse> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
-		PostResponse responseDto =
-			postService.findById(postId, councilId);
+		PostResponse responseDto = postService.findById(postId, councilId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
 
 	@GetMapping
 	@Operation(summary = "학생회 타입별 제휴/행사 목록 조회 (학생회 유저 전용 로직)")
-	@PreAuthorize("hasRole('COUNCIL')")
 	public CommonResponse<Page<GetPostListForCouncilResponse>> getPostListByCouncilTypeForCouncil(
 		@RequestParam(required = false) PostCategory category,
 		@RequestParam(required = false) CouncilType councilType,
@@ -165,7 +156,6 @@ public class StudentCouncilPostController {
 
 	@GetMapping("/events/upcoming")
 	@Operation(summary = "학생회 타입별 72시간 이내 행사 게시글 조회 (학생회 유저 전용 로직)")
-	@PreAuthorize("hasRole('COUNCIL')")
 	public CommonResponse<Page<GetUpcomingEventListForCouncilResponse>> getUpcomingEventsByCouncilTypeForCouncil(
 		@RequestParam(required = false) CouncilType councilType,
 		@RequestParam(defaultValue = "1") int page,
@@ -176,15 +166,5 @@ public class StudentCouncilPostController {
 			councilId, councilType, page, size);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
-	}
-
-	@GetMapping("/partnerships/active")
-	@Operation(summary = "학생회 타입별 현재 이용 가능한 제휴 (일반 유저 전용 로직, 홈 화면)")
-	public CommonResponse<List<GetActivePartnershipListForUserResponse>> getActivePartnershipListForUser(
-		@RequestParam CouncilType councilType, @CurrentUserId Long userId) {
-		List<GetActivePartnershipListForUserResponse> responses = postService.findActivePartnershipForUser(councilType,
-			userId);
-
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
 	}
 }

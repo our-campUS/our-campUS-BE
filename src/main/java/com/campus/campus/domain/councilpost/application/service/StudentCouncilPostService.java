@@ -19,7 +19,6 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetActivePa
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
@@ -169,45 +168,6 @@ public class StudentCouncilPostService {
 			PostCategory.EVENT, collegeId, majorId, now, limit, pageable);
 
 		return posts.map(studentCouncilPostMapper::toGetUpcomingEventListForCouncilResponse);
-	}
-
-	@Transactional(readOnly = true)
-	public List<GetActivePartnershipListForUserResponse> findActivePartnershipForUser(CouncilType councilType,
-		Long userId) {
-		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-			.orElseThrow(UserNotFoundException::new);
-
-		if (user.getSchool() == null) {
-			return List.of();
-		}
-
-		Long schoolId = user.getSchool().getSchoolId();
-		Long collegeId = null;
-		Long majorId = null;
-
-		if (CouncilType.COLLEGE_COUNCIL.equals(councilType)) {
-			if (user.getCollege() == null) {
-				return List.of();
-			}
-			collegeId = user.getCollege().getCollegeId();
-		}
-
-		if (CouncilType.MAJOR_COUNCIL.equals(councilType)) {
-			if (user.getMajor() == null) {
-				return List.of();
-			}
-			majorId = user.getMajor().getMajorId();
-		}
-
-		LocalDateTime now = LocalDateTime.now();
-		Pageable partnershipCount = PageRequest.of(0, 3);
-
-		List<StudentCouncilPost> partnerships = postRepository.findRandomActivePartnerships(schoolId, councilType,
-			PostCategory.PARTNERSHIP, collegeId, majorId, now, partnershipCount);
-
-		return partnerships.stream()
-			.map(studentCouncilPostMapper::toGetActivePartnershipListForUserResponse)
-			.toList();
 	}
 
 	@Transactional

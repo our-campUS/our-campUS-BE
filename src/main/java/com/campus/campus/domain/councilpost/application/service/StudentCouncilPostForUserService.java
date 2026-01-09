@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.CollegeNotSetException;
@@ -34,7 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserPostService {
+@Transactional(readOnly = true)
+public class StudentCouncilPostForUserService {
 
 	private static final int UPCOMING_HOURS = 72;
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
@@ -44,7 +46,6 @@ public class UserPostService {
 	private final UserRepository userRepository;
 	private final PostAccessPolicy postAccessPolicy;
 
-	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -56,7 +57,6 @@ public class UserPostService {
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
 
-	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findCollegePosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -72,7 +72,6 @@ public class UserPostService {
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
 
-	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -84,7 +83,6 @@ public class UserPostService {
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
 
-	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findUpcomingSchoolEvents72h(int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -105,7 +103,6 @@ public class UserPostService {
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
 
-	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findUpcomingCollegeEvents72h(int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -134,7 +131,6 @@ public class UserPostService {
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
 
-	@Transactional(readOnly = true)
 	public Page<PostListItemResponse> findUpcomingMajorEvents72h(int page, int size, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -163,7 +159,6 @@ public class UserPostService {
 		return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId));
 	}
 
-	@Transactional(readOnly = true)
 	public PostResponse findById(Long postId, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
@@ -179,5 +174,43 @@ public class UserPostService {
 			.toList();
 
 		return studentCouncilPostMapper.toPostResponse(post, imageUrls, userId);
+	}
+
+	public List<GetActivePartnershipListForUserResponse> findActivePartnershipForUser(CouncilType councilType,
+		Long userId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (user.getSchool() == null) {
+			return List.of();
+		}
+
+		Long schoolId = user.getSchool().getSchoolId();
+		Long collegeId = null;
+		Long majorId = null;
+
+		if (CouncilType.COLLEGE_COUNCIL.equals(councilType)) {
+			if (user.getCollege() == null) {
+				return List.of();
+			}
+			collegeId = user.getCollege().getCollegeId();
+		}
+
+		if (CouncilType.MAJOR_COUNCIL.equals(councilType)) {
+			if (user.getMajor() == null) {
+				return List.of();
+			}
+			majorId = user.getMajor().getMajorId();
+		}
+
+		LocalDateTime now = LocalDateTime.now();
+		Pageable partnershipCount = PageRequest.of(0, 3);
+
+		List<StudentCouncilPost> partnerships = studentCouncilPostRepository.findRandomActivePartnerships(schoolId,
+			councilType, PostCategory.PARTNERSHIP, collegeId, majorId, now, partnershipCount);
+
+		return partnerships.stream()
+			.map(studentCouncilPostMapper::toGetActivePartnershipListForUserResponse)
+			.toList();
 	}
 }

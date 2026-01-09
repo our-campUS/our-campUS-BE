@@ -17,8 +17,6 @@ import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
-	Page<StudentCouncilPost> findAllByCategory(PostCategory category, Pageable pageable);
-
 	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN FETCH p.writer w
@@ -108,6 +106,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("now") LocalDateTime now,
 		Pageable pageable
 	);
+
 	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
 	@Query("""
 		
