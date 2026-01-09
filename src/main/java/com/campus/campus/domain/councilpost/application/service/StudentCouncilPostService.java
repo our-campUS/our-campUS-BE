@@ -80,10 +80,11 @@ public class StudentCouncilPostService {
 		}
 
 		String topic = writer.getCouncilType().topic(writer);
+		String writerName = writer.getCouncilName();
 
 		eventPublisher.publishEvent(new CouncilPostCreatedEvent(
 			saved.getId(),
-			saved.getTitle(),
+			writerName,
 			saved.getCategory().name(),
 			topic
 		));
