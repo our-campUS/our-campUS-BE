@@ -3,6 +3,7 @@ package com.campus.campus.domain.user.application.mapper;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
+import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.domain.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -25,5 +26,15 @@ public class UserMapper {
 			.collegeName(user.getCollege().getCollegeName())
 			.majorName(user.getMajor().getMajorName())
 			.build();
+	}
+
+	public UserInfoResponse toUserInfoResponse(User user) {
+		return new UserInfoResponse(
+			user.getId(),
+			user.getCampusNickname() == null ? user.getNickname() : user.getCampusNickname(),
+			user.getSchool().getSchoolName(),
+			user.getCollege().getCollegeName(),
+			user.getMajor().getMajorName()
+		);
 	}
 }
