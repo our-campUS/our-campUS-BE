@@ -206,7 +206,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		Pageable pageable
 	);
 
-	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "placeName"})
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
 	@Query("""
 			SELECT p
 			FROM StudentCouncilPost p
