@@ -20,7 +20,12 @@ public enum ErrorCode implements ErrorCodeInterface {
     EVENT_END_DATETIME_NOT_ALLOWED(2407, HttpStatus.BAD_REQUEST, "행사는 종료 일시를 가질 수 없습니다."),
 
     // PARTNERSHIP 관련
-    PARTNERSHIP_DATE_REQUIRED(2408, HttpStatus.BAD_REQUEST, "제휴는 시작일과 종료일이 필요합니다.");
+    PARTNERSHIP_DATE_REQUIRED(2408, HttpStatus.BAD_REQUEST, "제휴는 시작일과 종료일이 필요합니다."),
+
+    // 학생의 학생회 게시글 조회 관련
+    POST_ACCESS_DENIED(2409, HttpStatus.FORBIDDEN, "해당 게시글에 접근할 권한이 없습니다."),
+    COLLEGE_NOT_SET(2410, HttpStatus.BAD_REQUEST, "단과대 정보가 설정되지 않았습니다."),
+    MAJOR_NOT_SET(2411, HttpStatus.BAD_REQUEST, "학과 정보가 설정되지 않았습니다.");
 
 
     private final int code;

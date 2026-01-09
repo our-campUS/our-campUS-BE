@@ -12,6 +12,8 @@ import com.campus.campus.domain.council.application.dto.request.StudentCouncilLo
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilWithdrawRequest;
+import com.campus.campus.domain.council.application.dto.request.ValidateEmailToFindPasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.ValidateIdToFindPasswordRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.exception.CouncilIdAndVerifiedEmailInvalidException;
@@ -158,6 +160,23 @@ public class CouncilLoginService {
 		emailVerification.use();
 
 		studentCouncilRepository.save(studentCouncil);
+	}
+
+	public void validateIdToFindPassword(ValidateIdToFindPasswordRequest validateIdToFindPasswordRequest) {
+		if (!studentCouncilRepository.existsByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(
+			validateIdToFindPasswordRequest.loginId())) {
+			throw new StudentCouncilNotFoundException();
+		}
+	}
+
+	public void validateEmailToFindPassword(ValidateEmailToFindPasswordRequest validateEmailToFindPasswordRequest) {
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(validateEmailToFindPasswordRequest.loginId())
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		if (!studentCouncil.getEmail().equals(validateEmailToFindPasswordRequest.email())) {
+			throw new CouncilIdAndVerifiedEmailInvalidException();
+		}
 	}
 
 	@Transactional

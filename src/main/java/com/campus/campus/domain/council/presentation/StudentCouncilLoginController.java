@@ -14,6 +14,8 @@ import com.campus.campus.domain.council.application.dto.request.StudentCouncilLo
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilLoginRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilWithdrawRequest;
+import com.campus.campus.domain.council.application.dto.request.ValidateEmailToFindPasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.ValidateIdToFindPasswordRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.service.CouncilLoginService;
@@ -71,6 +73,24 @@ public class StudentCouncilLoginController {
 		councilLoginService.findPassword(studentCouncilFindPasswordRequest);
 
 		return CommonResponse.success(StudentCouncilResponseCode.FIND_PASSWORD_SUCCESS);
+	}
+
+	@PostMapping("/find/password/validate/id")
+	@Operation(summary = "비밀번호 찾기 아이디 검증")
+	public CommonResponse<Void> validateLoginIdToFindPassword(
+		@Valid @RequestBody ValidateIdToFindPasswordRequest validateIdToFindPasswordRequest) {
+		councilLoginService.validateIdToFindPassword(validateIdToFindPasswordRequest);
+
+		return CommonResponse.success(StudentCouncilResponseCode.VALIDATE_LOGIN_ID_SUCCESS);
+	}
+
+	@PostMapping("/find/password/validate/email")
+	@Operation(summary = "비밀번호 찾기 이메일 검증")
+	public CommonResponse<Void> validateEmailToFindPassword(
+		@Valid @RequestBody ValidateEmailToFindPasswordRequest validateEmailToFindPasswordRequest) {
+		councilLoginService.validateEmailToFindPassword(validateEmailToFindPasswordRequest);
+
+		return CommonResponse.success(StudentCouncilResponseCode.VALIDATE_EMAIL_SUCCESS);
 	}
 
 	@PatchMapping("/withdraw")

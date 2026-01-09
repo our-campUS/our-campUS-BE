@@ -184,8 +184,13 @@ public class PlaceService {
 			.orElseThrow(UserNotFoundException::new);
 
 		Long majorId = user.getMajor().getMajorId();
+		log.info("majorId={}", majorId);
+
 		Long collegeId = user.getCollege().getCollegeId();
+		log.info("collegeId={}", collegeId);
+
 		Long schoolId = user.getSchool().getSchoolId();
+		log.info("schoolID={}", schoolId);
 
 		//유저가 속한 과/단과대/학교 학생회에서 올린 제휴 전부 조회
 		List<PartnershipPlaceSummary> response = placeRepository.findPartnershipPlaces(PostCategory.PARTNERSHIP,

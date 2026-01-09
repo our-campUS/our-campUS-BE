@@ -105,9 +105,9 @@ public class PlaceController {
 		@RequestParam(required = false) Long cursor,
 		@Parameter(
 			description = "한 번에 조회할 개수",
-			example = "20"
+			example = "5"
 		)
-		@RequestParam(defaultValue = "20") int size) {
+		@RequestParam(defaultValue = "5") int size) {
 		PartnershipScrollResponse response = placeService.getPartnershipPlaces(userId, cursor, size);
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACE_SUCCESS, response);
 	}
