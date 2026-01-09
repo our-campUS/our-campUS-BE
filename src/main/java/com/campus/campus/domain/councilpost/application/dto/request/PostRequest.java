@@ -40,6 +40,7 @@ public record PostRequest(
 			      ]
 			""",
 		description = "/search API에서 반환된 결과 중 하나를 선택")
+	@NotNull
 	SavedPlaceInfo place,
 
 	@Schema(example = "2025-04-10T18:00")
