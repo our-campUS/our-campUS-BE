@@ -17,8 +17,9 @@ import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
@@ -110,34 +111,44 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<PostListItemResponse> findAll(PostCategory category, int page, int size, Long currentUserId) {
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "createdAt"));
+	public Page<GetPostListForCouncilResponse> findPostListForCouncil(Long councilId, PostCategory category,
+		int page, int size) {
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
 
-		Page<StudentCouncilPost> posts = (category == null)
-			? postRepository.findAll(pageable)
-			: postRepository.findAllByCategory(category, pageable);
+		Sort sort;
+		if (category == PostCategory.EVENT) {
+			sort = Sort.by(Sort.Direction.ASC, "startDateTime");
+		} else {
+			sort = Sort.by(Sort.Direction.ASC, "endDateTime");
+		}
 
-		return posts.map(post ->
-			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
-		);
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, sort);
+
+		LocalDateTime now = LocalDateTime.now();
+
+		Page<StudentCouncilPost> posts = postRepository.findPostsByCouncilAndFilters(councilId, category, now,
+			pageable);
+
+		return posts.map(studentCouncilPostMapper::toGetPostListForCouncilResponse);
 	}
 
 	@Transactional(readOnly = true)
-	public Page<PostListItemResponse> findUpcomingEvents(int page, int size, Long currentUserId) {
-		Pageable pageable = PageRequest.of(
-			Math.max(page - 1, 0),
-			size,
-			Sort.by(Sort.Direction.ASC, "startDateTime")
-		);
+	public Page<GetUpcomingEventListForCouncilResponse> findUpcomingEventsForCouncil(Long councilId,
+		int page, int size) {
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size,
+			Sort.by(Sort.Direction.ASC, "startDateTime"));
+
+		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime limit = now.plusHours(UPCOMING_EVENT_WINDOW_HOURS);
 
-		Page<StudentCouncilPost> posts = postRepository.findUpcomingEvents(PostCategory.EVENT, now, limit, pageable);
+		Page<StudentCouncilPost> posts = postRepository.findUpcomingEventsByCouncil(councilId, PostCategory.EVENT,
+			now, limit, pageable);
 
-		return posts.map(post ->
-			studentCouncilPostMapper.toPostListItemResponse(post, currentUserId)
-		);
+		return posts.map(studentCouncilPostMapper::toGetUpcomingEventListForCouncilResponse);
 	}
 
 	@Transactional

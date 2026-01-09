@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
@@ -23,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StudentCouncilPostMapper {
 
-	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long currentUserId) {
+	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long councilId) {
 		return new PostListItemResponse(
 			post.getId(),
 			post.getCategory(),
@@ -34,7 +37,39 @@ public class StudentCouncilPostMapper {
 				: post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
-			post.isWrittenByCouncil(currentUserId)
+			post.isWrittenByCouncil(councilId)
+		);
+	}
+
+	public GetPostListForCouncilResponse toGetPostListForCouncilResponse(StudentCouncilPost post) {
+		return new GetPostListForCouncilResponse(
+			post.getId(),
+			post.getCategory(),
+			post.getTitle(),
+			post.getPlace(),
+			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
+			post.getThumbnailImageUrl(),
+			post.getThumbnailIcon()
+		);
+	}
+
+	public GetUpcomingEventListForCouncilResponse toGetUpcomingEventListForCouncilResponse(StudentCouncilPost post) {
+		return new GetUpcomingEventListForCouncilResponse(
+			post.getId(),
+			post.getCategory(),
+			post.getTitle(),
+			post.getPlace(),
+			post.getStartDateTime(),
+			post.getThumbnailIcon()
+		);
+	}
+
+	public GetActivePartnershipListForUserResponse toGetActivePartnershipListForUserResponse(StudentCouncilPost post) {
+		return new GetActivePartnershipListForUserResponse(
+			post.getId(),
+			post.getTitle(),
+			post.getPlace(),
+			post.getThumbnailImageUrl()
 		);
 	}
 

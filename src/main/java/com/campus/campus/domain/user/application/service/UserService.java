@@ -11,8 +11,11 @@ import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
+import com.campus.campus.domain.user.application.dto.request.CampusNicknameUpdateRequest;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
+import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
+import com.campus.campus.domain.user.application.exception.NicknameAlreadyExistsException;
 import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
@@ -53,5 +56,25 @@ public class UserService {
 		user.updateProfile(school, college, major);
 
 		return userMapper.toUserFirstProfileResponse(user);
+	}
+
+	@Transactional
+	public void updateCampusNickname(Long userId, CampusNicknameUpdateRequest nicknameUpdateRequest) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (userRepository.existsByCampusNicknameAndIdNot(nicknameUpdateRequest.campusNickname(), userId)) {
+			throw new NicknameAlreadyExistsException();
+		}
+
+		user.updateCampusNickname(nicknameUpdateRequest.campusNickname());
+		userRepository.save(user);
+	}
+
+	public UserInfoResponse getUserInfo(Long userId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		return userMapper.toUserInfoResponse(user);
 	}
 }
