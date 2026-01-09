@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.partnership.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
@@ -37,6 +38,16 @@ public class PlaceMapper {
 			item.telephone(),
 			toCoordinate(item),
 			images
+		);
+	}
+
+	public PartnershipPinResponse toPartnershipPinResponse(StudentCouncilPost post, Place place) {
+		return new PartnershipPinResponse(
+			post.getId(),
+			place.getPlaceId(),
+			place.getPlaceName(),
+			place.getCoordinate().latitude(),
+			place.getCoordinate().longitude()
 		);
 	}
 
@@ -73,6 +84,9 @@ public class PlaceMapper {
 			place.getCoordinate().longitude(),
 			resolveTag(post, user),
 			isLiked,
+			5.0, //리뷰 구현 이후 수정 예정
+			post.getTitle(),
+			"걸어서 4분",
 			imgUrls
 		);
 	}

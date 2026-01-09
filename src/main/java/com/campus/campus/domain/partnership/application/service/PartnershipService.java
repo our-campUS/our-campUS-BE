@@ -13,6 +13,7 @@ import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.partnership.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.partnership.domain.entity.Partnership;
 import com.campus.campus.domain.partnership.domain.entity.PartnershipStatus;
 import com.campus.campus.domain.partnership.domain.repository.PartnershipRepository;
@@ -86,12 +87,10 @@ public class PartnershipService {
 	public Partnership create(StudentCouncilPost post, Place place) {
 
 		// 1. 제휴 기간 결정
-		// 👉 정책에 따라 post의 기간을 그대로 사용
 		LocalDateTime startDate = post.getStartDateTime();
 		LocalDateTime endDate = post.getEndDateTime();
 
 		// 2. 초기 상태 결정
-		// 👉 생성 시점 기준으로 ACTIVE / EXPIRED 판단
 		PartnershipStatus status =
 			LocalDateTime.now().isAfter(endDate)
 				? PartnershipStatus.EXPIRED
@@ -108,6 +107,37 @@ public class PartnershipService {
 
 		// 4. 저장
 		return partnershipRepository.save(partnership);
+	}
+
+	@Transactional
+	public List<PartnershipPinResponse> findPartnerInBounds(Long userId, Double minLat, Double maxLat, Double minLng,
+		Double maxLng) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Long majorId = user.getMajor().getMajorId();
+		Long collegeId = user.getCollege().getCollegeId();
+		Long schoolId = user.getSchool().getSchoolId();
+		List<StudentCouncilPost> posts = studentCouncilPostRepository.findPinsInBounds(
+			majorId,
+			collegeId,
+			schoolId,
+			PostCategory.PARTNERSHIP,
+			CouncilType.MAJOR_COUNCIL,
+			CouncilType.COLLEGE_COUNCIL,
+			CouncilType.SCHOOL_COUNCIL,
+			minLat,
+			maxLat,
+			minLng,
+			maxLng,
+			LocalDateTime.now()
+		);
+
+		// 엔티티 → 응답 DTO 변환
+		List<PartnershipPinResponse> responses = posts.stream()
+			.map(post -> placeMapper.toPartnershipPinResponse(post, post.getPlace()))
+			.toList();
+		return responses;
 	}
 
 }

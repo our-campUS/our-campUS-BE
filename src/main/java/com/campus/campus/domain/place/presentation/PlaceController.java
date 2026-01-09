@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.partnership.application.service.PartnershipService;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapResponse;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -31,6 +31,7 @@ public class PlaceController {
 
 	private final PlaceService placeService;
 	private final GeoCoderClient geoCoderClient;
+	private final PartnershipService partnershipService;
 
 	@GetMapping("/search")
 	@Operation(summary = "현위치 기반 가까운 순으로 장소 키워드 검색", description = "검색 결과 5개 검색되도록 함")
@@ -79,43 +80,6 @@ public class PlaceController {
 		return CommonResponse.success(PlaceResponseCode.PLACE_SAVE_SUCCESS, response);
 	}
 
-	@GetMapping("/partnership/map")
-	@Operation(
-		summary = "지도에서 제휴 장소 조회",
-		description = """
-				현재 지도 화면(bounds) 안에 있는 제휴 장소들을 조회합니다.
-				- bounds는 지도 화면의 남서/북동 좌표입니다.
-				- 지도 이동 또는 확대/축소 시 재호출됩니다.
-			""")
-	public CommonResponse<List<PartnershipMapResponse>> getPartnershipMap(
-		@CurrentUserId Long userId,
-		@Parameter(
-			description = "지도 화면의 남쪽(최소) 위도",
-			example = "37.497"
-		)
-		@RequestParam double minLat,
-		@Parameter(
-			description = "지도 화면의 북쪽(최대) 위도",
-			example = "37.512"
-		)
-		@RequestParam double maxLat,
-		@Parameter(
-			description = "지도 화면의 서쪽(최소) 경도",
-			example = "126.953"
-		)
-		@RequestParam double minLng,
-		@Parameter(
-			description = "지도 화면의 동쪽(최대) 경도",
-			example = "126.982"
-		)
-		@RequestParam double maxLng
-	) {
-		return CommonResponse.success(
-			PlaceResponseCode.CHECK_PARTNERSHIP_PLACE_SUCCESS,
-			placeService.getPartnershipPlacesForMap(userId, minLat, maxLat, minLng, maxLng)
-		);
-	}
-
-	//가게 상세 조회 (리뷰 기능 구현 완료 후
+	//가게 상세 조회 (리뷰 기능 구현 완료 후)
 
 }

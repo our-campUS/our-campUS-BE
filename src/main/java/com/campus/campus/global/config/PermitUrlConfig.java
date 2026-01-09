@@ -32,7 +32,8 @@ public class PermitUrlConfig {
 			"/places/search",
 			"/storage/presigned",
 			"/places",
-			"/api/partnership/list"
+			"/api/partnership/list",
+			"/api/partnership/map"
 		};
 	}
 }

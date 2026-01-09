@@ -204,4 +204,40 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		Pageable pageable
 	);
 
+	@Query("""
+			SELECT p
+			FROM StudentCouncilPost p
+			JOIN p.writer w
+			JOIN p.place pl
+			LEFT JOIN w.school s
+			LEFT JOIN w.college c
+			LEFT JOIN w.major m
+			WHERE w.deletedAt IS NULL
+			  AND p.category = :category
+			  AND p.startDateTime <= :now
+			  AND p.endDateTime >= :now
+			  AND pl.coordinate.latitude BETWEEN :minLat AND :maxLat
+			  AND pl.coordinate.longitude BETWEEN :minLng AND :maxLng
+			  AND (
+				   (w.councilType = :majorType AND m.majorId = :majorId)
+				OR (w.councilType = :collegeType AND c.collegeId = :collegeId)
+				OR (w.councilType = :schoolType AND s.schoolId = :schoolId)
+			  )
+			ORDER BY p.id DESC
+		""")
+	List<StudentCouncilPost> findPinsInBounds(
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId,
+		@Param("category") PostCategory category,
+		@Param("majorType") CouncilType majorType,
+		@Param("collegeType") CouncilType collegeType,
+		@Param("schoolType") CouncilType schoolType,
+		@Param("minLat") Double minLat,
+		@Param("maxLat") Double maxLat,
+		@Param("minLng") Double minLng,
+		@Param("maxLng") Double maxLng,
+		@Param("now") LocalDateTime now
+	);
+
 }

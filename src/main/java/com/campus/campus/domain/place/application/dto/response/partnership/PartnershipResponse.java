@@ -12,6 +12,9 @@ public record PartnershipResponse(
 	Double longitude,
 	String tag, //(ex.) 총학생회, 사회과학대학, IT공학과
 	boolean isLiked,
+	double star, //리뷰 평점
+	String partnerTitle, //제휴 제목
+	String direction, //거리
 
 	//StudentCouncilPost 이미지 받아오기
 	List<String> imgUrls
