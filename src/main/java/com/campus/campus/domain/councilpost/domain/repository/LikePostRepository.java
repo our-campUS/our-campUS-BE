@@ -16,6 +16,8 @@ import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 public interface LikePostRepository extends JpaRepository<LikePost, Long> {
 	Optional<LikePost> findByUserIdAndPost_Id(Long userId, Long postId);
 
+	boolean existsByUserIdAndPost_Id(Long userId, Long postId);
+
 	@EntityGraph(attributePaths = {"post", "post.writer"})
 	@Query("""
 		SELECT lp FROM LikePost lp

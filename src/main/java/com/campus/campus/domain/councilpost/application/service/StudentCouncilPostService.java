@@ -15,10 +15,10 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
@@ -28,10 +28,8 @@ import com.campus.campus.domain.councilpost.application.mapper.StudentCouncilPos
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
-import com.campus.campus.domain.councilpost.domain.repository.LikePostRepository;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
-import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -45,8 +43,6 @@ public class StudentCouncilPostService {
 	private final StudentCouncilPostRepository postRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
-	private final LikePostRepository likePostRepository;
-	private final UserRepository userRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 
@@ -54,7 +50,7 @@ public class StudentCouncilPostService {
 	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 
 	@Transactional
-	public PostResponse create(Long councilId, PostRequest dto) {
+	public GetPostResponse create(Long councilId, PostRequest dto) {
 		if (dto.imageUrls() != null && dto.imageUrls().size() > MAX_IMAGE_COUNT) {
 			throw new PostImageLimitExceededException();
 		}
@@ -87,11 +83,11 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
 	}
 
 	@Transactional(readOnly = true)
-	public PostResponse findById(Long postId, Long currentUserId) {
+	public GetPostResponse findById(Long postId, Long currentUserId) {
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -101,7 +97,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, currentUserId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, currentUserId);
 	}
 
 	@Transactional(readOnly = true)
@@ -182,7 +178,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
+	public GetPostResponse update(Long councilId, Long postId, PostRequest dto) {
 		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
@@ -234,7 +230,7 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toPostResponse(post, imageUrls, councilId);
+		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
 	}
 
 	//이미지 삭제

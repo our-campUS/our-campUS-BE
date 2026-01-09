@@ -16,7 +16,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetActivePa
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponseForUser;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostForUserService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -110,11 +110,11 @@ public class StudentCouncilPostForUserController {
 
 	@GetMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 상세 조회")
-	public CommonResponse<PostResponse> getPost(
+	public CommonResponse<GetPostResponseForUser> getPost(
 		@PathVariable Long postId,
 		@CurrentUserId Long userId
 	) {
-		PostResponse responseDto = postService.findById(postId, userId);
+		GetPostResponseForUser responseDto = postService.findById(postId, userId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}

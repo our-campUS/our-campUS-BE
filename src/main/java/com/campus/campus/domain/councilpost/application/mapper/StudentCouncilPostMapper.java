@@ -8,13 +8,14 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponseForUser;
 import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
@@ -71,19 +72,45 @@ public class StudentCouncilPostMapper {
 		);
 	}
 
-	public PostResponse toPostResponse(StudentCouncilPost post, List<String> images, Long currentUserId) {
+	public GetPostResponse toGetPostResponse(StudentCouncilPost post, List<String> images, Long currentCouncilId) {
 		var writer = post.getWriter();
-		var builder = PostResponse.builder()
+		var builder = GetPostResponse.builder()
 			.id(post.getId())
 			.writerId(writer.getId())
 			.writerName(writer.getCouncilName())
-			.isWriter(post.isWrittenByCouncil(currentUserId))
+			.isWriter(post.isWrittenByCouncil(currentCouncilId))
 			.category(post.getCategory())
 			.title(post.getTitle())
 			.content(post.getContent())
 			.place(post.getPlace())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
+			.images(images != null ? images : Collections.emptyList());
+
+		if (post.isEvent()) {
+			builder.startDateTime(post.getStartDateTime());
+		} else {
+			builder.startDate(post.getDisplayStartDate());
+			builder.endDate(post.getDisplayEndDate());
+		}
+
+		return builder.build();
+	}
+
+	public GetPostResponseForUser toGetPostResponseForUser(StudentCouncilPost post, List<String> images,
+		Long currentUserId, boolean isLiked) {
+		var writer = post.getWriter();
+		var builder = GetPostResponseForUser.builder()
+			.id(post.getId())
+			.writerId(writer.getId())
+			.writerName(writer.getCouncilName())
+			.category(post.getCategory())
+			.title(post.getTitle())
+			.content(post.getContent())
+			.place(post.getPlace())
+			.thumbnailImageUrl(post.getThumbnailImageUrl())
+			.thumbnailIcon(post.getThumbnailIcon())
+			.isLiked(isLiked)
 			.images(images != null ? images : Collections.emptyList());
 
 		if (post.isEvent()) {
