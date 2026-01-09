@@ -213,7 +213,7 @@ public class StudentCouncilPostService {
 		List<PostImage> oldImages = postImageRepository.findAllByPost(post);
 
 		Place place = post.getPlace();
-		if (!dto.place().placeName().equals(place.getPlaceName())) {
+		if (dto.place() != null && (place == null || !dto.place().placeName().equals(place.getPlaceName()))) {
 			place = placeService.findOrCreatePlace(dto);
 		}
 
