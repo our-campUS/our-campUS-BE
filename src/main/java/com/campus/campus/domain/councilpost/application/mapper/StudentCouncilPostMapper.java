@@ -15,7 +15,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetUpcoming
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponseForUser;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
@@ -97,10 +97,10 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public GetPostResponseForUser toGetPostResponseForUser(StudentCouncilPost post, List<String> images,
+	public GetPostForUserResponse toGetPostForUserResponse(StudentCouncilPost post, List<String> images,
 		Long currentUserId, boolean isLiked) {
 		var writer = post.getWriter();
-		var builder = GetPostResponseForUser.builder()
+		var builder = GetPostForUserResponse.builder()
 			.id(post.getId())
 			.writerId(writer.getId())
 			.writerName(writer.getCouncilName())

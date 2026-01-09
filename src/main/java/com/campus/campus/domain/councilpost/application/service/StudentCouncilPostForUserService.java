@@ -19,7 +19,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetActivePa
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponseForUser;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.application.exception.CollegeNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.MajorNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
@@ -89,7 +89,7 @@ public class StudentCouncilPostForUserService {
 		);
 	}
 
-	public GetPostResponseForUser findById(Long postId, Long userId) {
+	public GetPostForUserResponse findById(Long postId, Long userId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		StudentCouncilPost post = studentCouncilPostRepository.findByIdWithFullInfo(postId)
@@ -105,7 +105,7 @@ public class StudentCouncilPostForUserService {
 
 		boolean isLiked = likePostRepository.existsByUserIdAndPost_Id(userId, postId);
 
-		return studentCouncilPostMapper.toGetPostResponseForUser(post, imageUrls, userId, isLiked);
+		return studentCouncilPostMapper.toGetPostForUserResponse(post, imageUrls, userId, isLiked);
 	}
 
 	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
