@@ -1,4 +1,4 @@
-package com.campus.campus.global.util.jwt;
+package com.campus.campus.global.util.geocoder;
 
 public class GeoUtil {
 
