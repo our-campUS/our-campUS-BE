@@ -46,6 +46,9 @@ public class User extends BaseEntity {
 	@Column(name = "profile_image")
 	private String profileImage;
 
+	@Column(name = "campus_nickname")
+	private String campusNickname;
+
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
@@ -65,6 +68,10 @@ public class User extends BaseEntity {
 		this.school = school;
 		this.college = college;
 		this.major = major;
+	}
+
+	public void updateCampusNickname(String campusNickname) {
+		this.campusNickname = campusNickname;
 	}
 
 	public void delete(LocalDateTime now) {

@@ -17,6 +17,7 @@ public class LoginMapper {
 			accessToken,
 			refreshToken,
 			user.getNickname(),
+			user.getCampusNickname(),
 			user.getId(),
 			user.getKakaoId(),
 			user.getEmail(),
