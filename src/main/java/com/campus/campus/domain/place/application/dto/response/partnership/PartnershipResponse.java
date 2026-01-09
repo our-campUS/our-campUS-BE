@@ -15,7 +15,7 @@ public record PartnershipResponse(
 	boolean isLiked,
 	double star, //리뷰 평점
 	String partnerTitle, //제휴 제목
-	double distance, //거리
+	double distance, //거리(m)
 	LocalDate endDate, //제휴 끝나는 시점
 
 	//StudentCouncilPost 이미지 받아오기

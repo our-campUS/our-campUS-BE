@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
@@ -23,6 +24,7 @@ import com.campus.campus.domain.place.application.dto.response.partnership.Partn
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -42,6 +44,7 @@ public class PartnershipService {
 	private final PostImageRepository postImageRepository;
 	private final PlaceMapper placeMapper;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final PlaceRepository placeRepository;
 
 	@Transactional
 	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
@@ -86,7 +89,8 @@ public class PartnershipService {
 			.limit(size)
 			.map(entry -> {
 				StudentCouncilPost post = entry.getKey();
-				double distanceMeter = entry.getValue(); // ⭐ 여기서 꺼냄
+				double distanceMeter = entry.getValue();
+				double rounded = Math.round(distanceMeter * 100.0) / 100.0;
 
 				return placeMapper.toPartnershipResponse(
 					user,
@@ -94,7 +98,7 @@ public class PartnershipService {
 					post.getPlace(),
 					isLiked(post.getPlace(), user),
 					getImgUrls(post),
-					distanceMeter
+					rounded
 				);
 			})
 			.toList();
@@ -164,6 +168,26 @@ public class PartnershipService {
 			.map(post -> placeMapper.toPartnershipPinResponse(post, post.getPlace()))
 			.toList();
 		return responses;
+	}
+
+	@Transactional
+	public PartnershipResponse getPartnershipDetail(Long postId, Long userId, double userLat,
+		double userLng) {
+		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
+			.orElseThrow(PostNotFoundException::new);
+		Place place = post.getPlace();
+
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		double distanceMeter = GeoUtil.distanceMeter(
+			userLat, userLng,
+			place.getCoordinate().latitude(),
+			place.getCoordinate().longitude()
+		);
+		double rounded = Math.round(distanceMeter * 100.0) / 100.0;
+
+		return placeMapper.toPartnershipResponse(user, post, place, isLiked(place, user), getImgUrls(post), rounded);
 	}
 
 }
