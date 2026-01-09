@@ -168,10 +168,6 @@ public class PlaceService {
 		List<String> placeImages = !cached.isEmpty()
 			? cached : googleClient.fetchImages(response.name(), response.address(), 3);
 
-		//좋아요 있는지 확인
-
-		//제휴 장소인지 확인
-
 		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
 			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages
 		);
