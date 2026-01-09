@@ -7,17 +7,15 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
-import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
@@ -38,8 +36,6 @@ public class StudentCouncilPostMapper {
 			post.isEvent()
 				? post.getStartDateTime()
 				: post.getEndDateTime(),
-			post.getPlace(),
-			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
 			isLiked
@@ -51,7 +47,7 @@ public class StudentCouncilPostMapper {
 			post.getId(),
 			post.getCategory(),
 			post.getTitle(),
-			post.getPlace(),
+			post.getPlace().getPlaceName(),
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon()
@@ -63,7 +59,7 @@ public class StudentCouncilPostMapper {
 			post.getId(),
 			post.getCategory(),
 			post.getTitle(),
-			post.getPlace(),
+			post.getPlace().getPlaceName(),
 			post.getStartDateTime(),
 			post.getThumbnailIcon()
 		);
@@ -73,7 +69,7 @@ public class StudentCouncilPostMapper {
 		return new GetActivePartnershipListForUserResponse(
 			post.getId(),
 			post.getTitle(),
-			post.getPlace(),
+			post.getPlace().getPlaceName(),
 			post.getThumbnailImageUrl()
 		);
 	}
@@ -103,8 +99,9 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto,
-		LocalDateTime startDateTime, LocalDateTime endDateTime, Place place) {
+	//
+	// public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto,
+	// 	LocalDateTime startDateTime, LocalDateTime endDateTime, Place place) {
 	public GetPostForUserResponse toGetPostForUserResponse(StudentCouncilPost post, List<String> images,
 		Long currentUserId, boolean isLiked) {
 		var writer = post.getWriter();
@@ -115,7 +112,7 @@ public class StudentCouncilPostMapper {
 			.category(post.getCategory())
 			.title(post.getTitle())
 			.content(post.getContent())
-			.place(post.getPlace())
+			.place(post.getPlace().getPlaceName())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
 			.isLiked(isLiked)
@@ -143,13 +140,13 @@ public class StudentCouncilPostMapper {
 		return new GetLikedPostResponse(
 			post.getId(),
 			post.getTitle(),
-			post.getPlace(),
+			post.getPlace().getPlaceName(),
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl()
 		);
 	}
 
-	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto,
+	public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, Place place, PostRequest dto,
 		LocalDateTime startDateTime, LocalDateTime endDateTime) {
 		return StudentCouncilPost.builder()
 			.writer(writer)

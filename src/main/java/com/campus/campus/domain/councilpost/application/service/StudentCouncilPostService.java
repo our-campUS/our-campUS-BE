@@ -19,9 +19,6 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetPostList
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.NormalizedDateTime;
-import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.PostResponse;
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
@@ -74,8 +71,11 @@ public class StudentCouncilPostService {
 
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
+		//Place 객체 생성
+		Place place = placeService.findOrCreatePlace(dto);
+
 		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
-			writer, dto, normalized.startDateTime(), normalized.endDateTime(), place
+			writer, place, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
 		postRepository.save(post);
@@ -190,7 +190,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional
-	public PostResponse update(Long councilId, Long postId, PostRequest dto) {
+	public GetPostResponse update(Long councilId, Long postId, PostRequest dto) {
 		studentCouncilRepository.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
@@ -214,6 +214,11 @@ public class StudentCouncilPostService {
 
 		String oldThumbnailUrl = post.getThumbnailImageUrl();
 		List<PostImage> oldImages = postImageRepository.findAllByPost(post);
+
+		Place place = post.getPlace();
+		if (!dto.place().placeName().equals(place.getPlaceName())) {
+			place = placeService.findOrCreatePlace(dto);
+		}
 
 		post.update(
 			dto.title(),
