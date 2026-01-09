@@ -62,7 +62,5 @@ map:
   google:
     places:
       api-key: ${GOOGLE_PLACES_API_KEY}
-  geocoder:
-    api-key: ${GEOCODER_API_KEY}
 
 server-uri: http://localhost:8080

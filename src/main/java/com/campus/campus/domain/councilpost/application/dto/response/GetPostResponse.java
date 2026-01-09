@@ -22,7 +22,7 @@ public record GetPostResponse(
 	PostCategory category,
 	String title,
 	String content,
-	String placeName,
+	String place,
 	LocalDate startDate,
 	LocalDate endDate,
 	LocalDateTime startDateTime,
