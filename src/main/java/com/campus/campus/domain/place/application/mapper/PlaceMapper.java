@@ -73,7 +73,7 @@ public class PlaceMapper {
 	private String resolveTag(StudentCouncilPost post, User user) {
 		CouncilType councilType = post.getWriter().getCouncilType();
 		return switch (councilType) {
-			case SCHOOL_COUNCIL -> "총학생회";
+			case SCHOOL_COUNCIL -> user.getSchool().getSchoolName();
 			case COLLEGE_COUNCIL -> user.getCollege().getCollegeName();
 			case MAJOR_COUNCIL -> user.getMajor().getMajorName();
 		};
@@ -89,14 +89,6 @@ public class PlaceMapper {
 			.naverPlaceUrl(savedPlaceInfo.link())
 			.coordinate(savedPlaceInfo.coordinate())
 			.build();
-	}
-
-	public String toStringAddress(AddressResponse nowAddress) {
-		return nowAddress.getResponse().getResult().stream()
-			.filter(r -> "road".equalsIgnoreCase(r.getType()) || "parcel".equalsIgnoreCase(r.getType()))
-			.findFirst()
-			.map(AddressResponse.Result::getText)
-			.orElse(null);
 	}
 
 	public PlaceImages createPlaceImages(String placeKey, String googleImageUrl) {

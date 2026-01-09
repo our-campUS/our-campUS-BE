@@ -63,7 +63,7 @@ public class PlaceService {
 	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
 		//현위치 좌표 -> 주소로 변환
 		AddressResponse geocoderRes = geoCoderClient.getAddress(lat, lng);
-		String nowAddress = placeMapper.toStringAddress(geocoderRes);
+		String nowAddress = toStringAddress(geocoderRes);
 
 		//주소 + 키워드 합쳐서 검색하도록 함
 		String searchWord = nowAddress + keyword;
@@ -110,14 +110,14 @@ public class PlaceService {
 		SavedPlaceInfo place = request.place();
 		String placeKey = place.placeKey();
 
-		//이미 Place 존재하는지 확인
+		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
 		Optional<Place> existing = placeRepository.findByPlaceKey(placeKey);
 		if (existing.isPresent()) {
 			return existing.get();
 		}
 
 		//저장되어 있지 않는 Place의 경우, 객체 생성 후 저장
-		return placeRepository.save(placeMapper.createPlace(place));
+		return existing.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place)));
 	}
 
 	//장소 저장
@@ -243,6 +243,14 @@ public class PlaceService {
 			}
 
 		}
+	}
+
+	private String toStringAddress(AddressResponse nowAddress) {
+		return nowAddress.getResponse().getResult().stream()
+			.filter(r -> "road".equalsIgnoreCase(r.getType()) || "parcel".equalsIgnoreCase(r.getType()))
+			.findFirst()
+			.map(AddressResponse.Result::getText)
+			.orElse(null);
 	}
 
 }

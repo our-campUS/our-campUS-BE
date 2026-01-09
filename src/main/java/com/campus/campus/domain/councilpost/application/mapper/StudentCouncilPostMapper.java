@@ -99,9 +99,6 @@ public class StudentCouncilPostMapper {
 		return builder.build();
 	}
 
-	//
-	// public StudentCouncilPost createStudentCouncilPost(StudentCouncil writer, PostRequest dto,
-	// 	LocalDateTime startDateTime, LocalDateTime endDateTime, Place placeName) {
 	public GetPostForUserResponse toGetPostForUserResponse(StudentCouncilPost post, List<String> images,
 		Long currentUserId, boolean isLiked) {
 		var writer = post.getWriter();

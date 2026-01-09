@@ -80,9 +80,6 @@ public class StudentCouncilPostService {
 
 		postRepository.save(post);
 
-		//제휴 엔티티 생성
-		partnershipService.create(post, place);
-
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
 				postImageRepository.save(studentCouncilPostMapper.createPostImage(post, imageUrl));

@@ -1,6 +1,7 @@
 package com.campus.campus.domain.place.infrastructure.geocoder;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -28,7 +29,7 @@ public class GeoCoderClient {
 	 * 현재 위치 위/경도 -> 주소
 	 */
 	public AddressResponse getAddress(double lat, double lng) {
-		AddressResponse response = webClient.get()
+		return webClient.get()
 			.uri(uriBuilder -> uriBuilder
 				.path("/req/address")
 				.queryParam("service", "address")
@@ -41,11 +42,9 @@ public class GeoCoderClient {
 				.build())
 			.retrieve()
 			.onStatus(
-				status -> status.isError(),
+				HttpStatusCode::isError,
 				res -> Mono.error(new GeoCoderException())
 			)
 			.bodyToMono(AddressResponse.class).block();
-
-		return response;
 	}
 }

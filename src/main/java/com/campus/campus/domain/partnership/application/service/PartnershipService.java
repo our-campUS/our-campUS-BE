@@ -17,9 +17,6 @@ import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.partnership.application.dto.response.PartnershipPinResponse;
-import com.campus.campus.domain.partnership.domain.entity.Partnership;
-import com.campus.campus.domain.partnership.domain.entity.PartnershipStatus;
-import com.campus.campus.domain.partnership.domain.repository.PartnershipRepository;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
@@ -38,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class PartnershipService {
 
-	private final PartnershipRepository partnershipRepository;
 	private final UserRepository userRepository;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final PostImageRepository postImageRepository;
@@ -104,41 +100,6 @@ public class PartnershipService {
 			.toList();
 	}
 
-	private boolean isLiked(Place place, User user) {
-		return likedPlacesRepository.existsByUserAndPlace(user, place);
-	}
-
-	private List<String> getImgUrls(StudentCouncilPost post) {
-		return postImageRepository.findImageUrlsByPost(post);
-	}
-
-	// 제휴 엔티티 생성
-	@Transactional
-	public Partnership create(StudentCouncilPost post, Place place) {
-
-		// 1. 제휴 기간 결정
-		LocalDateTime startDate = post.getStartDateTime();
-		LocalDateTime endDate = post.getEndDateTime();
-
-		// 2. 초기 상태 결정
-		PartnershipStatus status =
-			LocalDateTime.now().isAfter(endDate)
-				? PartnershipStatus.EXPIRED
-				: PartnershipStatus.ACTIVE;
-
-		// 3. Partnership 생성
-		Partnership partnership = Partnership.builder()
-			.post(post)
-			.place(place)
-			.startDate(startDate)
-			.endDate(endDate)
-			.status(status)
-			.build();
-
-		// 4. 저장
-		return partnershipRepository.save(partnership);
-	}
-
 	@Transactional
 	public List<PartnershipPinResponse> findPartnerInBounds(Long userId, Double minLat, Double maxLat, Double minLng,
 		Double maxLng) {
@@ -164,10 +125,9 @@ public class PartnershipService {
 		);
 
 		// 엔티티 → 응답 DTO 변환
-		List<PartnershipPinResponse> responses = posts.stream()
+		return posts.stream()
 			.map(post -> placeMapper.toPartnershipPinResponse(post, post.getPlace()))
 			.toList();
-		return responses;
 	}
 
 	@Transactional
@@ -188,6 +148,14 @@ public class PartnershipService {
 		double rounded = Math.round(distanceMeter * 100.0) / 100.0;
 
 		return placeMapper.toPartnershipResponse(user, post, place, isLiked(place, user), getImgUrls(post), rounded);
+	}
+
+	private boolean isLiked(Place place, User user) {
+		return likedPlacesRepository.existsByUserAndPlace(user, place);
+	}
+
+	private List<String> getImgUrls(StudentCouncilPost post) {
+		return postImageRepository.findImageUrlsByPost(post);
 	}
 
 }
