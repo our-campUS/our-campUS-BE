@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 public class StudentCouncilPostForUserController {
 
 	@PostMapping("/{postId}/like")
-	@PreAuthorize("hasRole('USER')")
 	@Operation(summary = "학생회 게시글 좋아요 토글")
 	public CommonResponse<LikePostResponse> togglePostLike(@PathVariable Long postId, @CurrentUserId Long userId) {
 		LikePostResponse response = postService.toggleLikePost(userId, postId);
@@ -45,7 +44,6 @@ public class StudentCouncilPostForUserController {
 	}
 
 	@GetMapping("/likes")
-	@PreAuthorize("hasRole('USER')")
 	@Operation(summary = "관심 학생회 게시글 목록 조회")
 	public CommonResponse<Page<GetLikedPostResponse>> getLikedPosts(
 		@RequestParam(required = false) PostCategory category,
