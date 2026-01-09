@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class StudentCouncilPostMapper {
-	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, Long councilId, boolean isLiked) {
+	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, boolean isLiked) {
 		return new PostListItemResponse(
 			post.getId(),
 			post.getCategory(),
@@ -35,7 +35,6 @@ public class StudentCouncilPostMapper {
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
-			post.isWrittenByCouncil(councilId),
 			isLiked
 		);
 	}

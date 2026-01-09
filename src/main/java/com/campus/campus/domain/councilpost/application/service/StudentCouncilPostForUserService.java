@@ -265,13 +265,13 @@ public class StudentCouncilPostForUserService {
 			.toList();
 
 		if (postIds.isEmpty()) {
-			return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, userId, false));
+			return posts.map(post -> studentCouncilPostMapper.toPostListItemResponse(post, false));
 		}
 
 		Set<Long> likedPostIds = new HashSet<>(likePostRepository.findLikedPostIds(userId, postIds));
 
 		return posts.map(post ->
-			studentCouncilPostMapper.toPostListItemResponse(post, userId, likedPostIds.contains(post.getId()))
+			studentCouncilPostMapper.toPostListItemResponse(post, likedPostIds.contains(post.getId()))
 		);
 	}
 }
