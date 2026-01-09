@@ -40,6 +40,8 @@ map:
   google:
     places:
       api-key: dummy
+  geocoder:
+    api-key: dummy
 
 jwt:
   access:
