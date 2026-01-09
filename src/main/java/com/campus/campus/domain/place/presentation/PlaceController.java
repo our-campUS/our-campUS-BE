@@ -14,7 +14,6 @@ import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipScrollResponse;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -22,7 +21,6 @@ import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -79,37 +77,6 @@ public class PlaceController {
 		@CurrentUserId Long userId) {
 		LikeResponse response = placeService.likePlace(request, userId);
 		return CommonResponse.success(PlaceResponseCode.PLACE_SAVE_SUCCESS, response);
-	}
-
-	@GetMapping("/partnership/list")
-	@Operation(summary = "리스트로 제휴 전체 조회", description = "무한 스크롤 방식으로 제휴 장소 목록을 조회합니다.")
-	public CommonResponse<PartnershipScrollResponse> getPartnershipPlaces(
-		@CurrentUserId Long userId,
-		@Parameter(
-			description = """
-				무한 스크롤 커서 값.
-				- 첫 요청 시 null
-				- 다음 요청부터는 이전 응답의 nextCursor 값
-				""",
-			examples = {
-				@ExampleObject(
-					name = "첫 요청",
-					value = "null"
-				),
-				@ExampleObject(
-					name = "다음 요청",
-					value = "120"
-				)
-			}
-		)
-		@RequestParam(required = false) Long cursor,
-		@Parameter(
-			description = "한 번에 조회할 개수",
-			example = "5"
-		)
-		@RequestParam(defaultValue = "5") int size) {
-		PartnershipScrollResponse response = placeService.getPartnershipPlaces(userId, cursor, size);
-		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACE_SUCCESS, response);
 	}
 
 	@GetMapping("/partnership/map")

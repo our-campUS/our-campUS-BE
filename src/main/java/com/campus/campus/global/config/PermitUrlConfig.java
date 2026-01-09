@@ -31,7 +31,8 @@ public class PermitUrlConfig {
 			"/managers/login",
 			"/places/search",
 			"/storage/presigned",
-			"/places"
+			"/places",
+			"/api/partnership/list"
 		};
 	}
 }

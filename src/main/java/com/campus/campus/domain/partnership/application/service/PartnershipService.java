@@ -1,0 +1,182 @@
+package com.campus.campus.domain.partnership.application.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
+import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
+import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.partnership.domain.entity.Partnership;
+import com.campus.campus.domain.partnership.domain.entity.PartnershipStatus;
+import com.campus.campus.domain.partnership.domain.repository.PartnershipRepository;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.mapper.PlaceMapper;
+import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
+import com.campus.campus.domain.user.domain.entity.User;
+import com.campus.campus.domain.user.domain.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+@Service
+public class PartnershipService {
+
+	private final PartnershipRepository partnershipRepository;
+	private final UserRepository userRepository;
+	private final LikedPlacesRepository likedPlacesRepository;
+	private final PostImageRepository postImageRepository;
+	private final PlaceMapper placeMapper;
+	private final StudentCouncilRepository studentCouncilRepository;
+	private final StudentCouncilPostRepository studentCouncilPostRepository;
+
+	@Transactional
+	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Long majorId = user.getMajor().getMajorId();
+		Long collegeId = user.getCollege().getCollegeId();
+		Long schoolId = user.getSchool().getSchoolId();
+
+		Pageable pageable = PageRequest.of(0, size);
+
+		//유저가 속한 학생회들의 제휴글(major/college/school) 전부 조회
+		List<StudentCouncilPost> posts = studentCouncilPostRepository.findByUserScopeWithCursor(
+			majorId,
+			collegeId,
+			schoolId,
+			PostCategory.PARTNERSHIP,
+			CouncilType.MAJOR_COUNCIL,
+			CouncilType.COLLEGE_COUNCIL,
+			CouncilType.SCHOOL_COUNCIL,
+			cursor,
+			pageable
+		);
+
+		// 엔티티 → 응답 DTO 변환
+		List<PartnershipResponse> responses = posts.stream()
+			.map(post -> placeMapper.toPartnershipResponse(user, post, post.getPlace(), isLiked(post.getPlace(), user),
+				getImgUrls(post)))
+			.toList();
+		return responses;
+
+	}
+
+	private boolean isLiked(Place place, User user) {
+		return likedPlacesRepository.existsByUserAndPlace(user, place);
+	}
+
+	private List<String> getImgUrls(StudentCouncilPost post) {
+		return postImageRepository.findImageUrlsByPost(post);
+	}
+
+	// @Transactional(readOnly = true)
+	// public PartnershipScrollResponse getPartnershipPlaces_(Long userId, Long cursor, int size) {
+	//
+	// 	User user = userRepository.findById(userId)
+	// 		.orElseThrow(UserNotFoundException::new);
+	//
+	// 	List<PartnershipPlaceSummary> results =
+	// 		partnershipRepository.findActivePartnershipPlaces(
+	// 			LocalDateTime.now(),
+	// 			user.getMajor().getMajorId(),
+	// 			user.getCollege().getCollegeId(),
+	// 			user.getSchool().getSchoolId(),
+	// 			cursor,
+	// 			PartnershipStatus.ACTIVE,
+	// 			CouncilType.MAJOR_COUNCIL,
+	// 			CouncilType.COLLEGE_COUNCIL,
+	// 			CouncilType.SCHOOL_COUNCIL,
+	// 			PageRequest.of(0, size + 1)
+	// 		);
+	//
+	// 	boolean hasNext = results.size() > size;
+	// 	if (hasNext) {
+	// 		results = results.subList(0, size);
+	// 	}
+	//
+	// 	// placeId 목록
+	// 	List<Long> placeIds = results.stream()
+	// 		.map(PartnershipPlaceSummary::placeId)
+	// 		.toList();
+	//
+	// 	//좋아요 여부 찾기
+	// 	Set<Long> likedPlaceIds =
+	// 		likedPlacesRepository.findLikedPlaceIds(userId, placeIds);
+	//
+	// 	//제휴 이미지 찾기
+	// 	Map<Long, List<String>> imageMap =
+	// 		postImageRepository.findPartnershipImagesByPlaceIds(placeIds)
+	// 			.stream()
+	// 			.collect(groupingBy(
+	// 				PostImageSummary::placeId,
+	// 				mapping(PostImageSummary::imageUrl, toList())
+	// 			));
+	//
+	// 	List<PartnershipResponse> items =
+	// 		results.stream()
+	// 			.map(r -> placeMapper.toPartnershipResponse(
+	// 				r,
+	// 				List.of(resolveTag(r.councilType(), user)),
+	// 				likedPlaceIds.contains(r.placeId()),
+	// 				imageMap.getOrDefault(r.placeId(), List.of())
+	// 			))
+	// 			.toList();
+	//
+	// 	Long nextCursor = hasNext
+	// 		? results.get(results.size() - 1).partnershipId()
+	// 		: null;
+	//
+	// 	return placeMapper.toPartnershipScrollResponse(items, hasNext, nextCursor);
+	// }
+
+	private String resolveTag(CouncilType councilType, User user) {
+		return switch (councilType) {
+			case SCHOOL_COUNCIL -> "총학생회";
+			case COLLEGE_COUNCIL -> user.getCollege().getCollegeName();
+			case MAJOR_COUNCIL -> user.getMajor().getMajorName();
+		};
+	}
+
+	// 제휴 엔티티 생성
+	@Transactional
+	public Partnership create(StudentCouncilPost post, Place place) {
+
+		// 1. 제휴 기간 결정
+		// 👉 정책에 따라 post의 기간을 그대로 사용
+		LocalDateTime startDate = post.getStartDateTime();
+		LocalDateTime endDate = post.getEndDateTime();
+
+		// 2. 초기 상태 결정
+		// 👉 생성 시점 기준으로 ACTIVE / EXPIRED 판단
+		PartnershipStatus status =
+			LocalDateTime.now().isAfter(endDate)
+				? PartnershipStatus.EXPIRED
+				: PartnershipStatus.ACTIVE;
+
+		// 3. Partnership 생성
+		Partnership partnership = Partnership.builder()
+			.post(post)
+			.place(place)
+			.startDate(startDate)
+			.endDate(endDate)
+			.status(status)
+			.build();
+
+		// 4. 저장
+		return partnershipRepository.save(partnership);
+	}
+
+}

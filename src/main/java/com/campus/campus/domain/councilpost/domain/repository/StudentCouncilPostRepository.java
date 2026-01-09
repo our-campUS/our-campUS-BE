@@ -1,6 +1,7 @@
 package com.campus.campus.domain.councilpost.domain.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -156,6 +157,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("limit") LocalDateTime limit,
 		Pageable pageable
 	);
+
 	@Query("""
 		SELECT p
 		FROM StudentCouncilPost p
@@ -167,6 +169,36 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	Optional<StudentCouncilPost> findByCouncilIdAndPlaceId(
 		@Param("placeId") Long placeId,
 		@Param("councilId") Long councilId
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
+	@Query("""
+			SELECT p
+			FROM StudentCouncilPost p
+			JOIN p.writer w
+			LEFT JOIN w.school s
+			LEFT JOIN w.college c
+			LEFT JOIN w.major m
+			WHERE w.deletedAt IS NULL
+			  AND p.category = :category
+			  AND (
+				   (w.councilType = :majorType AND m.majorId = :majorId)
+				OR (w.councilType = :collegeType AND c.collegeId = :collegeId)
+				OR (w.councilType = :schoolType AND s.schoolId = :schoolId)
+			  )
+			  AND (:cursor IS NULL OR p.id < :cursor)
+			ORDER BY p.id DESC
+		""")
+	List<StudentCouncilPost> findByUserScopeWithCursor(
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId,
+		@Param("category") PostCategory category,
+		@Param("majorType") CouncilType majorType,
+		@Param("collegeType") CouncilType collegeType,
+		@Param("schoolType") CouncilType schoolType,
+		@Param("cursor") Long cursor,
+		Pageable pageable
 	);
 
 }

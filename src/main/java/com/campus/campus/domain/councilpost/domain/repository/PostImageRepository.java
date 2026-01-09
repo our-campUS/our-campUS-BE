@@ -31,4 +31,12 @@ public interface PostImageRepository extends JpaRepository<PostImage, Long> {
 	List<PostImageSummary> findPartnershipImagesByPlaceIds(
 		@Param("placeIds") List<Long> placeIds
 	);
+
+	@Query("""
+			select pi.imageUrl
+			from PostImage pi
+			where pi.post = :post
+			order by pi.id asc
+		""")
+	List<String> findImageUrlsByPost(@Param("post") StudentCouncilPost post);
 }

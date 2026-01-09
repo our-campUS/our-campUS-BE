@@ -7,10 +7,10 @@ public record PartnershipResponse(
 	String placeKey,
 	String name,
 	String category,
-	String addrIess,
+	String address,
 	Double latitude,
 	Double longitude,
-	List<String> tags, //(ex.) 총학생회, 사회과학대학, IT공학과
+	String tag, //(ex.) 총학생회, 사회과학대학, IT공학과
 	boolean isLiked,
 
 	//StudentCouncilPost 이미지 받아오기

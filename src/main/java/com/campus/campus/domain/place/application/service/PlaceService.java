@@ -5,21 +5,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
-import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
@@ -28,10 +24,6 @@ import com.campus.campus.domain.place.application.dto.response.geocoder.AddressR
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipMapSummary;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipPlaceSummary;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipScrollResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PostImageSummary;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
@@ -176,80 +168,80 @@ public class PlaceService {
 		return placeMapper.toLikeResponse(place);
 	}
 
-	@Transactional(readOnly = true)
-	public PartnershipScrollResponse getPartnershipPlaces(Long userId, Long cursor, int size) {
-		Pageable pageable = PageRequest.of(0, size + 1);
-
-		User user = userRepository.findById(userId)
-			.orElseThrow(UserNotFoundException::new);
-
-		Long majorId = user.getMajor().getMajorId();
-		log.info("majorId={}", majorId);
-
-		Long collegeId = user.getCollege().getCollegeId();
-		log.info("collegeId={}", collegeId);
-
-		Long schoolId = user.getSchool().getSchoolId();
-		log.info("schoolID={}", schoolId);
-
-		//유저가 속한 과/단과대/학교 학생회에서 올린 제휴 전부 조회
-		List<PartnershipPlaceSummary> response = placeRepository.findPartnershipPlaces(PostCategory.PARTNERSHIP,
-			majorId, collegeId, schoolId, cursor, pageable);
-
-		//placeId 목록 추출
-		List<Long> placeIds = response.stream()
-			.map(PartnershipPlaceSummary::placeId)
-			.distinct().toList();
-
-		//유저가 좋아요 한 placeId 조회
-		Set<Long> likedPlaceIds =
-			likedPlacesRepository.findLikedPlaceIds(userId, placeIds);
-
-		//이미지 조회
-		List<PostImageSummary> images = postImageRepository.findPartnershipImagesByPlaceIds(placeIds);
-
-		//placeId 기준으로 이미지 묶기
-		Map<Long, List<String>> imageMap =
-			images.stream()
-				.collect(Collectors.groupingBy(
-					PostImageSummary::placeId,
-					Collectors.mapping(PostImageSummary::imageUrl, Collectors.toList())
-				));
-
-		//placeId 기준으로 묶기
-		Map<Long, List<PartnershipPlaceSummary>> grouped = response.stream()
-			.collect(Collectors.groupingBy(PartnershipPlaceSummary::placeId));
-
-		//다음 페이지 판단
-		boolean hasNext = grouped.size() > size;
-
-		//그룹 단위 Response 생성
-		List<PartnershipResponse> items = grouped.values().stream()
-			.limit(size)
-			.map(group -> {
-				PartnershipPlaceSummary first = group.get(0);
-
-				List<String> tags = group.stream()
-					.map(r -> resolveTag(r.councilType(), user))
-					.distinct()
-					.toList();
-
-				//이미지
-				List<String> imageUrls =
-					imageMap.getOrDefault(first.placeId(), List.of())
-						.stream()
-						.toList();
-
-				boolean isLiked = likedPlaceIds.contains(first.placeId());
-
-				return placeMapper.toPartnershipResponse(first, tags, isLiked, imageUrls);
-			})
-			.toList();
-
-		Long nextCursor = hasNext ? items.get(items.size() - 1).placeId() : null;
-		return placeMapper.toPartnershipScrollResponse(items, hasNext, nextCursor);
-
-	}
+	// @Transactional(readOnly = true)
+	// public PartnershipScrollResponse getPartnershipPlaces(Long userId, Long cursor, int size) {
+	// 	Pageable pageable = PageRequest.of(0, size + 1);
+	//
+	// 	User user = userRepository.findById(userId)
+	// 		.orElseThrow(UserNotFoundException::new);
+	//
+	// 	Long majorId = user.getMajor().getMajorId();
+	// 	log.info("majorId={}", majorId);
+	//
+	// 	Long collegeId = user.getCollege().getCollegeId();
+	// 	log.info("collegeId={}", collegeId);
+	//
+	// 	Long schoolId = user.getSchool().getSchoolId();
+	// 	log.info("schoolID={}", schoolId);
+	//
+	// 	//유저가 속한 과/단과대/학교 학생회에서 올린 제휴 전부 조회
+	// 	List<PartnershipPlaceSummary> response = placeRepository.findPartnershipPlaces(PostCategory.PARTNERSHIP,
+	// 		majorId, collegeId, schoolId, cursor, pageable);
+	//
+	// 	//placeId 목록 추출
+	// 	List<Long> placeIds = response.stream()
+	// 		.map(PartnershipPlaceSummary::placeId)
+	// 		.distinct().toList();
+	//
+	// 	//유저가 좋아요 한 placeId 조회
+	// 	Set<Long> likedPlaceIds =
+	// 		likedPlacesRepository.findLikedPlaceIds(userId, placeIds);
+	//
+	// 	//이미지 조회
+	// 	List<PostImageSummary> images = postImageRepository.findPartnershipImagesByPlaceIds(placeIds);
+	//
+	// 	//placeId 기준으로 이미지 묶기
+	// 	Map<Long, List<String>> imageMap =
+	// 		images.stream()
+	// 			.collect(Collectors.groupingBy(
+	// 				PostImageSummary::placeId,
+	// 				Collectors.mapping(PostImageSummary::imageUrl, Collectors.toList())
+	// 			));
+	//
+	// 	//placeId 기준으로 묶기
+	// 	Map<Long, List<PartnershipPlaceSummary>> grouped = response.stream()
+	// 		.collect(Collectors.groupingBy(PartnershipPlaceSummary::placeId));
+	//
+	// 	//다음 페이지 판단
+	// 	boolean hasNext = grouped.size() > size;
+	//
+	// 	//그룹 단위 Response 생성
+	// 	List<PartnershipResponse> items = grouped.values().stream()
+	// 		.limit(size)
+	// 		.map(group -> {
+	// 			PartnershipPlaceSummary first = group.get(0);
+	//
+	// 			List<String> tags = group.stream()
+	// 				.map(r -> resolveTag(r.councilType(), user))
+	// 				.distinct()
+	// 				.toList();
+	//
+	// 			//이미지
+	// 			List<String> imageUrls =
+	// 				imageMap.getOrDefault(first.placeId(), List.of())
+	// 					.stream()
+	// 					.toList();
+	//
+	// 			boolean isLiked = likedPlaceIds.contains(first.placeId());
+	//
+	// 			return placeMapper.toPartnershipResponse(first, tags, isLiked, imageUrls);
+	// 		})
+	// 		.toList();
+	//
+	// 	Long nextCursor = hasNext ? items.get(items.size() - 1).placeId() : null;
+	// 	return placeMapper.toPartnershipScrollResponse(items, hasNext, nextCursor);
+	//
+	// }
 
 	private String resolveTag(CouncilType councilType, User user) {
 		return switch (councilType) {

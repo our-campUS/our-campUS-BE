@@ -29,6 +29,7 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.partnership.application.service.PartnershipService;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
@@ -51,6 +52,7 @@ public class StudentCouncilPostService {
 	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 	private final PlaceService placeService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final PartnershipService partnershipService;
 
 	@Transactional
 	public PostResponse createPartnershipPost(Long councilId, PostRequest dto) {
@@ -97,6 +99,9 @@ public class StudentCouncilPostService {
 		);
 
 		postRepository.save(post);
+
+		//제휴 엔티티 생성
+		partnershipService.create(post, place);
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {

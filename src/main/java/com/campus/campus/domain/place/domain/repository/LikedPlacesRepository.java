@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
+import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.user.domain.entity.User;
 
 public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 
@@ -24,4 +26,6 @@ public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 		@Param("userId") Long userId,
 		@Param("placeIds") List<Long> placeIds
 	);
+
+	boolean existsByUserAndPlace(User user, Place place);
 }
