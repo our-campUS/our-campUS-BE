@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.global.entity.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -45,7 +46,9 @@ public class StudentCouncilPost extends BaseEntity {
 	@Column(columnDefinition = "TEXT")
 	private String content;
 
-	private String place;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "place_id")
+	private Place place;
 
 	private LocalDateTime startDateTime;
 	private LocalDateTime endDateTime;
@@ -58,7 +61,7 @@ public class StudentCouncilPost extends BaseEntity {
 	public void update(
 		String title,
 		String content,
-		String place,
+		Place place,
 		LocalDateTime startDateTime,
 		LocalDateTime endDateTime,
 		String thumbnailImageUrl,
