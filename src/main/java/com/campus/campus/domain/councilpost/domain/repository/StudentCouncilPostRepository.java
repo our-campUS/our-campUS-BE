@@ -181,6 +181,8 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 			LEFT JOIN w.major m
 			WHERE w.deletedAt IS NULL
 			  AND p.category = :category
+			  AND p.startDateTime <= :now
+			  AND p.endDateTime >= :now
 			  AND (
 				   (w.councilType = :majorType AND m.majorId = :majorId)
 				OR (w.councilType = :collegeType AND c.collegeId = :collegeId)
@@ -198,6 +200,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("collegeType") CouncilType collegeType,
 		@Param("schoolType") CouncilType schoolType,
 		@Param("cursor") Long cursor,
+		@Param("now") LocalDateTime now,
 		Pageable pageable
 	);
 

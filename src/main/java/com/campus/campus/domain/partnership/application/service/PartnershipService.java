@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
-import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
@@ -38,7 +37,6 @@ public class PartnershipService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final PostImageRepository postImageRepository;
 	private final PlaceMapper placeMapper;
-	private final StudentCouncilRepository studentCouncilRepository;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 
 	@Transactional
@@ -62,6 +60,7 @@ public class PartnershipService {
 			CouncilType.COLLEGE_COUNCIL,
 			CouncilType.SCHOOL_COUNCIL,
 			cursor,
+			LocalDateTime.now(),
 			pageable
 		);
 
@@ -80,74 +79,6 @@ public class PartnershipService {
 
 	private List<String> getImgUrls(StudentCouncilPost post) {
 		return postImageRepository.findImageUrlsByPost(post);
-	}
-
-	// @Transactional(readOnly = true)
-	// public PartnershipScrollResponse getPartnershipPlaces_(Long userId, Long cursor, int size) {
-	//
-	// 	User user = userRepository.findById(userId)
-	// 		.orElseThrow(UserNotFoundException::new);
-	//
-	// 	List<PartnershipPlaceSummary> results =
-	// 		partnershipRepository.findActivePartnershipPlaces(
-	// 			LocalDateTime.now(),
-	// 			user.getMajor().getMajorId(),
-	// 			user.getCollege().getCollegeId(),
-	// 			user.getSchool().getSchoolId(),
-	// 			cursor,
-	// 			PartnershipStatus.ACTIVE,
-	// 			CouncilType.MAJOR_COUNCIL,
-	// 			CouncilType.COLLEGE_COUNCIL,
-	// 			CouncilType.SCHOOL_COUNCIL,
-	// 			PageRequest.of(0, size + 1)
-	// 		);
-	//
-	// 	boolean hasNext = results.size() > size;
-	// 	if (hasNext) {
-	// 		results = results.subList(0, size);
-	// 	}
-	//
-	// 	// placeId 목록
-	// 	List<Long> placeIds = results.stream()
-	// 		.map(PartnershipPlaceSummary::placeId)
-	// 		.toList();
-	//
-	// 	//좋아요 여부 찾기
-	// 	Set<Long> likedPlaceIds =
-	// 		likedPlacesRepository.findLikedPlaceIds(userId, placeIds);
-	//
-	// 	//제휴 이미지 찾기
-	// 	Map<Long, List<String>> imageMap =
-	// 		postImageRepository.findPartnershipImagesByPlaceIds(placeIds)
-	// 			.stream()
-	// 			.collect(groupingBy(
-	// 				PostImageSummary::placeId,
-	// 				mapping(PostImageSummary::imageUrl, toList())
-	// 			));
-	//
-	// 	List<PartnershipResponse> items =
-	// 		results.stream()
-	// 			.map(r -> placeMapper.toPartnershipResponse(
-	// 				r,
-	// 				List.of(resolveTag(r.councilType(), user)),
-	// 				likedPlaceIds.contains(r.placeId()),
-	// 				imageMap.getOrDefault(r.placeId(), List.of())
-	// 			))
-	// 			.toList();
-	//
-	// 	Long nextCursor = hasNext
-	// 		? results.get(results.size() - 1).partnershipId()
-	// 		: null;
-	//
-	// 	return placeMapper.toPartnershipScrollResponse(items, hasNext, nextCursor);
-	// }
-
-	private String resolveTag(CouncilType councilType, User user) {
-		return switch (councilType) {
-			case SCHOOL_COUNCIL -> "총학생회";
-			case COLLEGE_COUNCIL -> user.getCollege().getCollegeName();
-			case MAJOR_COUNCIL -> user.getMajor().getMajorName();
-		};
 	}
 
 	// 제휴 엔티티 생성
