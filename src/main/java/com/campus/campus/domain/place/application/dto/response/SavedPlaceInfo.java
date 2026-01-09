@@ -32,5 +32,10 @@ public record SavedPlaceInfo(
 	@Schema(description = "이미지 url")
 	List<String> imgUrls
 
+	// @Schema(description = "좋아요 여부")
+	// boolean isLiked,
+	//
+	// @Schema(description = "제휴 있을 시, 태그도 함께 반환")
+	// List<String> tags
 ) {
 }

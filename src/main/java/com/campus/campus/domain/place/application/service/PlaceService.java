@@ -14,9 +14,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
+import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
@@ -29,6 +31,7 @@ import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
+import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -55,10 +58,20 @@ public class PlaceService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
+	private final GeoCoderClient geoCoderClient;
 
-	public List<SavedPlaceInfo> search(String keyword) {
+	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
+		//현위치 좌표 -> 주소로 변환
+		AddressResponse geocoderRes = geoCoderClient.getAddress(lat, lng);
+		String nowAddress = placeMapper.toStringAddress(geocoderRes);
+
+		//주소 + 키워드 합쳐서 검색하도록 함
+		String searchWord = nowAddress + keyword;
+		log.info("nowAddress={}", nowAddress);
+		log.info("searchWord={}", searchWord);
+
 		//네이버에서 특정 장소 기본정보 받아오기
-		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
+		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
 
 		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
 			.map(item -> {
@@ -92,6 +105,21 @@ public class PlaceService {
 		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
+	@Transactional
+	public Place findOrCreatePlace(PostRequest request) {
+		SavedPlaceInfo place = request.place();
+		String placeKey = place.placeKey();
+
+		//이미 Place 존재하는지 확인
+		Optional<Place> existing = placeRepository.findByPlaceKey(placeKey);
+		if (existing.isPresent()) {
+			return existing.get();
+		}
+
+		//저장되어 있지 않는 Place의 경우, 객체 생성 후 저장
+		return placeRepository.save(placeMapper.createPlace(place));
+	}
+
 	//장소 저장
 	@Transactional
 	public LikeResponse likePlace(SavedPlaceInfo placeInfo, Long userId) {
@@ -117,7 +145,7 @@ public class PlaceService {
 				.orElseGet(() -> {
 					//없으면 생성
 					String placeName = stripHtml(placeInfo.placeName());
-					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo, placeName));
+					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo));
 					//신규 생성된 경우에만 이미지 저장
 					migrateImagesToOci(newPlace.getPlaceKey(), placeInfo.imgUrls());
 
@@ -139,6 +167,10 @@ public class PlaceService {
 		List<String> cached = images.getOrDefault(response.placeKey(), List.of());
 		List<String> placeImages = !cached.isEmpty()
 			? cached : googleClient.fetchImages(response.name(), response.address(), 3);
+
+		//좋아요 있는지 확인
+
+		//제휴 장소인지 확인
 
 		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
 			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages
@@ -212,4 +244,5 @@ public class PlaceService {
 
 		}
 	}
+
 }
