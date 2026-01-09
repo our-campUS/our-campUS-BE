@@ -203,7 +203,7 @@ public class StudentCouncilPostForUserService {
 			majorId = user.getMajor().getMajorId();
 		}
 
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(KST);
 		Pageable partnershipCount = PageRequest.of(0, 3);
 
 		List<StudentCouncilPost> partnerships = studentCouncilPostRepository.findRandomActivePartnerships(schoolId,
