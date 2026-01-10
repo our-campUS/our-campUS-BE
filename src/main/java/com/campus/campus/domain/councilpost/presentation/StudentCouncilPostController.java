@@ -91,13 +91,33 @@ public class StudentCouncilPostController {
 						value = """
 							{
 							  "category": "PARTNERSHIP",
-							  "title": "카페 할인",
-							  "content": "10% 할인",
-							  "place": "OO카페",
+							  "title": "봉구스밥버거 제휴 할인",
+							  "content": "중앙대 학생증 제시 시 전 메뉴 10% 할인",
+							  "place": {
+							    "placeName": "봉구스밥버거 중앙대후문점",
+							    "placeKey": "cf5691fce0965a6a20d76601e88a019b9ed22733c21c52fe77ac6f6a20db9b88",
+							    "address": "서울특별시 동작구 상도1동 645-2",
+							    "category": "음식점>분식",
+							    "link": "https://map.naver.com/v5/search/%EB%B4%89%EA%B5%AC%EC%8A%A4%EB%B0%A5%EB%B2%84%EA%B1%B0+%EC%A4%91%EC%95%99%EB%8C%80%ED%9B%84%EB%AC%B8%EC%A0%90?c=37.504750,126.951452,15,0,0,0,dh",
+							    "telephone": "",
+							    "coordinate": {
+							      "latitude": 37.5047501,
+							      "longitude": 126.9514519
+							    },
+							    "imgUrls": [
+							      "https://maps.googleapis.com/maps/api/place/photo?maxWidth=800&photo_reference=example1",
+							      "https://maps.googleapis.com/maps/api/place/photo?maxWidth=800&photo_reference=example2",
+							      "https://maps.googleapis.com/maps/api/place/photo?maxWidth=800&photo_reference=example3"
+							    ]
+							  },
 							  "startDateTime": "2025-04-01T00:00",
 							  "endDateTime": "2025-04-30T23:59",
-							  "thumbnailIcon": "CAFE",
-							  "imageUrls": []
+							  "thumbnailIcon": "FOOD",
+							  "thumbnailImageUrl": null,
+							  "imageUrls": [
+							    "https://cdn.campus.com/post/image1.jpg",
+							    "https://cdn.campus.com/post/image2.jpg"
+							  ]
 							}
 							"""
 					)

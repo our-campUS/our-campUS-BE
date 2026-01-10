@@ -14,9 +14,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
+import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
@@ -29,6 +31,7 @@ import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
+import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -55,10 +58,27 @@ public class PlaceService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
+	private final GeoCoderClient geoCoderClient;
 
-	public List<SavedPlaceInfo> search(String keyword) {
+	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
+		String searchWord = keyword;
+
+		try {
+			AddressResponse addressResponse = geoCoderClient.getAddress(lat, lng);
+			String nowAddress = toStringAddress(addressResponse);
+
+			if (nowAddress != null && !nowAddress.isBlank()) {
+				searchWord = nowAddress + " " + keyword;
+				log.info("nowAddress={}", nowAddress);
+			}
+		} catch (Exception e) {
+			log.warn("지오코딩 변환 실패 (좌표: {}, {}). 사유: {}", lat, lng, e.getMessage());
+		}
+
+		log.info("최종 검색어(searchWord)={}", searchWord);
+
 		//네이버에서 특정 장소 기본정보 받아오기
-		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
+		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
 
 		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
 			.map(item -> {
@@ -92,6 +112,16 @@ public class PlaceService {
 		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
+	@Transactional
+	public Place findOrCreatePlace(PostRequest request) {
+		SavedPlaceInfo place = request.place();
+		String placeKey = place.placeKey();
+
+		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
+		return placeRepository.findByPlaceKey(placeKey)
+			.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place)));
+	}
+
 	//장소 저장
 	@Transactional
 	public LikeResponse likePlace(SavedPlaceInfo placeInfo, Long userId) {
@@ -117,7 +147,7 @@ public class PlaceService {
 				.orElseGet(() -> {
 					//없으면 생성
 					String placeName = stripHtml(placeInfo.placeName());
-					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo, placeName));
+					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo));
 					//신규 생성된 경우에만 이미지 저장
 					migrateImagesToOci(newPlace.getPlaceKey(), placeInfo.imgUrls());
 
@@ -150,7 +180,7 @@ public class PlaceService {
 			response.naverPlaceUrl(), List.of());
 	}
 
-	/**
+	/*
 	 * 태그 제거용
 	 */
 	private String stripHtml(String text) {
@@ -212,4 +242,13 @@ public class PlaceService {
 
 		}
 	}
+
+	private String toStringAddress(AddressResponse nowAddress) {
+		return nowAddress.getResponse().getResult().stream()
+			.filter(r -> "road".equalsIgnoreCase(r.getType()) || "parcel".equalsIgnoreCase(r.getType()))
+			.findFirst()
+			.map(AddressResponse.Result::getText)
+			.orElse(null);
+	}
+
 }

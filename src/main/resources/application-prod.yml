@@ -62,5 +62,7 @@ map:
   google:
     places:
       api-key: ENC(RbxPchNxZbeIglHQcB4o6vB6QtMv8QJrC+yNT80jr1vneoa3pSMB4Cw09dADjzxQ)
+  geocoder:
+    api-key: ENC(xgLHhhUSoE7yyS+SzF/KNmjs9swnSwQ2M1xKqWeJoXxrmhH/1rVOal2l5mZ9MP5E)
 
 server-uri: ENC(pitqB0FTjbgREG33LepbDH3Pobg/8eTTzP882D0V14EEt9fTr1cv+w==)

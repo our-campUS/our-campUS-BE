@@ -17,6 +17,7 @@ import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostCreatedEvent;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
@@ -32,6 +33,9 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.partnership.application.service.PartnershipService;
+import com.campus.campus.domain.place.application.service.PlaceService;
+import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -51,6 +55,9 @@ public class StudentCouncilPostService {
 
 	private static final int MAX_IMAGE_COUNT = 10;
 	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
+	private final PlaceService placeService;
+	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final PartnershipService partnershipService;
 
 	@Transactional
 	public GetPostResponse create(Long councilId, PostRequest dto) {
@@ -68,8 +75,11 @@ public class StudentCouncilPostService {
 
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
+		//Place 객체 생성
+		Place place = placeService.findOrCreatePlace(dto);
+
 		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
-			writer, dto, normalized.startDateTime(), normalized.endDateTime()
+			writer, place, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
 		StudentCouncilPost saved = postRepository.save(post);
@@ -216,10 +226,15 @@ public class StudentCouncilPostService {
 		String oldThumbnailUrl = post.getThumbnailImageUrl();
 		List<PostImage> oldImages = postImageRepository.findAllByPost(post);
 
+		Place place = post.getPlace();
+		if (dto.place() != null && (place == null || !dto.place().placeName().equals(place.getPlaceName()))) {
+			place = placeService.findOrCreatePlace(dto);
+		}
+
 		post.update(
 			dto.title(),
 			dto.content(),
-			dto.place(),
+			place,
 			normalized.startDateTime(),
 			normalized.endDateTime(),
 			dto.thumbnailImageUrl(),
