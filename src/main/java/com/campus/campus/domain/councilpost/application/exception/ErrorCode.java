@@ -30,7 +30,7 @@ public enum ErrorCode implements ErrorCodeInterface {
 	MAJOR_NOT_SET(2411, HttpStatus.BAD_REQUEST, "학과 정보가 설정되지 않았습니다."),
 	ACADEMIC_INFO_NOT_SET(2412, HttpStatus.BAD_REQUEST, "학적 정보가 설정되지 않았습니다."),
 
-	PLACE_INFO_NOT_FOUND(2413, HttpStatus.BAD_REQUEST, "해당 게시글의 장소 정보를 찾을 수 없습니다.");
+	PLACE_INFO_NOT_FOUND(2413, HttpStatus.NOT_FOUND, "해당 게시글의 장소 정보를 찾을 수 없습니다.");
 
 	private final int code;
 	private final HttpStatus status;
