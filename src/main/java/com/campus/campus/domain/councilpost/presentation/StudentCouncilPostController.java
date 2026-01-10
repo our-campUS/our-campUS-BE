@@ -187,15 +187,4 @@ public class StudentCouncilPostController {
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, response);
 	}
-
-
-	@PostMapping("/topic/{topic}")
-	public void sendToTopic(@PathVariable String topic) {
-		firebaseCloudMessageService.sendToTopic(
-			topic,
-			"푸시 테스트",
-			"서버에서 보낸 테스트 알림입니다.",
-			Map.of("type", "TEST")
-		);
-	}
 }
