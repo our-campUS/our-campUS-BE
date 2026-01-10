@@ -9,7 +9,7 @@ public record PostListItemResponse(
 	Long id,
 	PostCategory category,
 	String title,
-	String place,
+	String placeName,
 	LocalDateTime endDateTime,
 	String thumbnailImageUrl,
 	ThumbnailIcon thumbnailIcon,

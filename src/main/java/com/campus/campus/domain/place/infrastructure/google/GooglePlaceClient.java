@@ -51,7 +51,7 @@ public class GooglePlaceClient {
 				return List.of();
 			}
 
-			//place details -> photo reference
+			//placeName details -> photo reference
 			List<String> photoRefs = getPhotoReferences(placeId);
 			if (photoRefs.isEmpty()) {
 				return List.of();
