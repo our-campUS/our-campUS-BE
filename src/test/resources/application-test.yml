@@ -69,6 +69,7 @@ management:
       enabled: false
     redis:
       enabled: false
-    firebase:
-      enabled: false
+
+firebase:
+  enabled: false
 
