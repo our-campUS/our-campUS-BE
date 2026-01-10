@@ -5,15 +5,17 @@ import java.io.InputStream;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.campus.campus.global.firebase.exception.FirebaseInitializationFailedException;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 
-@Service
+@Component
+@ConditionalOnProperty(prefix="firebase", name="enabled", havingValue="true", matchIfMissing=true)
 public class FirebaseInitializer {
 
 	@PostConstruct
