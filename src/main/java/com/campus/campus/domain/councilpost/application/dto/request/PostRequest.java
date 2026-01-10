@@ -9,6 +9,7 @@ import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -41,6 +42,7 @@ public record PostRequest(
 			""",
 		description = "/search API에서 반환된 결과 중 하나를 선택")
 	@NotNull
+	@Valid
 	SavedPlaceInfo place,
 
 	@Schema(example = "2025-04-10T18:00")

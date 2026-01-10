@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.councilpost.application.exception.AcademicInfoNotSetException;
+import com.campus.campus.domain.councilpost.application.exception.PlaceInfoNotFoundException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
@@ -21,7 +23,6 @@ import com.campus.campus.domain.place.application.dto.response.partnership.Partn
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
-import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -40,13 +41,14 @@ public class PartnershipService {
 	private final PostImageRepository postImageRepository;
 	private final PlaceMapper placeMapper;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
-	private final PlaceRepository placeRepository;
 
 	@Transactional
 	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
 		double userLng) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
+
+		validateAcademicInfo(user);
 
 		Long majorId = user.getMajor().getMajorId();
 		Long collegeId = user.getCollege().getCollegeId();
@@ -69,6 +71,7 @@ public class PartnershipService {
 		);
 
 		return posts.stream()
+			.filter(post -> post.getPlace() != null && post.getPlace().getCoordinate() != null)
 			.map(post -> {
 				Place place = post.getPlace();
 
@@ -106,26 +109,22 @@ public class PartnershipService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
+		validateAcademicInfo(user);
+
 		Long majorId = user.getMajor().getMajorId();
 		Long collegeId = user.getCollege().getCollegeId();
 		Long schoolId = user.getSchool().getSchoolId();
 		List<StudentCouncilPost> posts = studentCouncilPostRepository.findPinsInBounds(
-			majorId,
-			collegeId,
-			schoolId,
+			majorId, collegeId, schoolId,
 			PostCategory.PARTNERSHIP,
-			CouncilType.MAJOR_COUNCIL,
-			CouncilType.COLLEGE_COUNCIL,
-			CouncilType.SCHOOL_COUNCIL,
-			minLat,
-			maxLat,
-			minLng,
-			maxLng,
+			CouncilType.MAJOR_COUNCIL, CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL,
+			minLat, maxLat, minLng, maxLng,
 			LocalDateTime.now()
 		);
 
 		// 엔티티 → 응답 DTO 변환
 		return posts.stream()
+			.filter(post -> post.getPlace() != null)
 			.map(post -> placeMapper.toPartnershipPinResponse(post, post.getPlace()))
 			.toList();
 	}
@@ -136,6 +135,10 @@ public class PartnershipService {
 		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
 			.orElseThrow(PostNotFoundException::new);
 		Place place = post.getPlace();
+
+		if (place == null || place.getCoordinate() == null) {
+			throw new PlaceInfoNotFoundException();
+		}
 
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
@@ -156,6 +159,12 @@ public class PartnershipService {
 
 	private List<String> getImgUrls(StudentCouncilPost post) {
 		return postImageRepository.findImageUrlsByPost(post);
+	}
+
+	private void validateAcademicInfo(User user) {
+		if (user.getSchool() == null || user.getCollege() == null || user.getMajor() == null) {
+			throw new AcademicInfoNotSetException();
+		}
 	}
 
 }
