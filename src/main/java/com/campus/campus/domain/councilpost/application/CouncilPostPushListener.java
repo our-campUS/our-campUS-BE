@@ -8,6 +8,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostCreatedEvent;
+import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.firebase.application.service.FirebaseCloudMessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -42,16 +43,15 @@ public class CouncilPostPushListener {
 			Map.of(
 				DATA_KEY_TYPE, DATA_TYPE_COUNCIL_POST_CREATED,
 				DATA_KEY_POST_ID, String.valueOf(event.postId()),
-				DATA_KEY_CATEGORY, event.category()
+				DATA_KEY_CATEGORY, event.category().name()
 			)
 		);
 	}
 
-	private String resolveBody(String category) {
+	private String resolveBody(PostCategory category) {
 		return switch (category) {
-			case "PARTNERSHIP" -> "새 제휴 게시글이 등록되었습니다.";
-			case "EVENT" -> "새 행사글이 등록되었습니다.";
-			default -> "새 게시글이 등록되었습니다.";
+			case PARTNERSHIP -> "새 제휴 게시글이 등록되었습니다.";
+			case EVENT -> "새 행사글이 등록되었습니다.";
 		};
 	}
 }

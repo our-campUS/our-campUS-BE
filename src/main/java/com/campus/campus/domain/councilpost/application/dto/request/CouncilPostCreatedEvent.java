@@ -1,8 +1,10 @@
 package com.campus.campus.domain.councilpost.application.dto.request;
 
+import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
+
 public record CouncilPostCreatedEvent(
 	Long postId,
 	String councilName,
-	String category,
+	PostCategory category,
 	String topic
 ) {}

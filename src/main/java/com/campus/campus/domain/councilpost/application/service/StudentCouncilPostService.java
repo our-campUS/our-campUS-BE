@@ -96,7 +96,7 @@ public class StudentCouncilPostService {
 		eventPublisher.publishEvent(new CouncilPostCreatedEvent(
 			saved.getId(),
 			writerName,
-			saved.getCategory().name(),
+			saved.getCategory(),
 			topic
 		));
 
