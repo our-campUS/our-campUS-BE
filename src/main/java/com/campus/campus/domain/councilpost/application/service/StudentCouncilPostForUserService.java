@@ -107,18 +107,18 @@ public class StudentCouncilPostForUserService {
 		return studentCouncilPostMapper.toGetPostForUserResponse(post, imageUrls, userId, isLiked);
 	}
 
-	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId) {
+	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId, Long excludePostId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findBySchoolId(user.getSchool().getSchoolId(), category, CouncilType.SCHOOL_COUNCIL, pageable);
+			.findBySchoolId(user.getSchool().getSchoolId(), category, CouncilType.SCHOOL_COUNCIL, excludePostId, pageable);
 
 		return mapPostsWithLikes(posts, userId);
 	}
 
-	public Page<PostListItemResponse> findCollegePosts(PostCategory category, int page, int size, Long userId) {
+	public Page<PostListItemResponse> findCollegePosts(PostCategory category, int page, int size, Long userId, Long excludePostId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
 		if (user.isProfileNotCompleted() || user.getCollege() == null) {
@@ -128,18 +128,22 @@ public class StudentCouncilPostForUserService {
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByCollegeId(user.getCollege().getCollegeId(), category, CouncilType.COLLEGE_COUNCIL, pageable);
+			.findByCollegeId(user.getCollege().getCollegeId(), category, CouncilType.COLLEGE_COUNCIL, excludePostId, pageable);
 
 		return mapPostsWithLikes(posts, userId);
 	}
 
-	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId) {
+	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId, Long excludePostId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
+
+		if (user.isProfileNotCompleted() || user.getMajor() == null) {
+			throw new MajorNotSetException();
+		}
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByMajorId(user.getMajor().getMajorId(), category, CouncilType.MAJOR_COUNCIL, pageable);
+			.findByMajorId(user.getMajor().getMajorId(), category, CouncilType.MAJOR_COUNCIL, excludePostId, pageable);
 
 		return mapPostsWithLikes(posts, userId);
 	}

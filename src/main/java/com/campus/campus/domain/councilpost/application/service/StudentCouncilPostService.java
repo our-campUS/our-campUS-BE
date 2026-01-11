@@ -31,7 +31,6 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
-import com.campus.campus.domain.partnership.application.service.PartnershipService;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
@@ -53,8 +52,6 @@ public class StudentCouncilPostService {
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final ApplicationEventPublisher eventPublisher;
 	private final PlaceService placeService;
-	private final StudentCouncilPostRepository studentCouncilPostRepository;
-	private final PartnershipService partnershipService;
 
 	@Transactional
 	public GetPostResponse create(Long councilId, PostRequest dto) {
