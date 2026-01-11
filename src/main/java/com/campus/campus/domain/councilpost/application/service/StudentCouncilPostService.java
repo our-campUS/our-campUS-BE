@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,14 +44,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class StudentCouncilPostService {
 
+	private static final int MAX_IMAGE_COUNT = 10;
+	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 	private final StudentCouncilPostRepository postRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
-
-	private static final int MAX_IMAGE_COUNT = 10;
-	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
+	private final ApplicationEventPublisher eventPublisher;
 	private final PlaceService placeService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PartnershipService partnershipService;
@@ -78,13 +79,15 @@ public class StudentCouncilPostService {
 			writer, place, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
-		postRepository.save(post);
+		StudentCouncilPost saved = postRepository.save(post);
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
 				postImageRepository.save(studentCouncilPostMapper.createPostImage(post, imageUrl));
 			}
 		}
+
+		eventPublisher.publishEvent(studentCouncilPostMapper.createPostCreatedEvent(saved, writer));
 
 		List<String> imageUrls = postImageRepository
 			.findAllByPostOrderByIdAsc(post)

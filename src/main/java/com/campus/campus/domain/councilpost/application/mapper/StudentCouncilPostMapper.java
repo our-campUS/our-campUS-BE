@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostCreatedEvent;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
@@ -170,5 +171,16 @@ public class StudentCouncilPostMapper {
 			.post(post)
 			.user(user)
 			.build();
+	}
+
+	public CouncilPostCreatedEvent createPostCreatedEvent(StudentCouncilPost post, StudentCouncil writer) {
+		String topic = writer.getCouncilType().topic(writer);
+
+		return new CouncilPostCreatedEvent(
+			post.getId(),
+			writer.getCouncilName(),
+			post.getCategory(),
+			topic
+		);
 	}
 }

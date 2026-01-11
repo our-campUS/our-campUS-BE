@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,9 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.application.exception.CollegeNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.MajorNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
