@@ -4,6 +4,7 @@ import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.global.entity.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -35,6 +36,7 @@ public class Review extends BaseEntity {
 	private double star;
 
 	//영수증 제휴 인증 여부
+	@Column(name = "is_verified")
 	private boolean isVerified;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -44,4 +46,12 @@ public class Review extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "place_id", nullable = false)
 	private Place place;
+
+	public void update(
+		String content,
+		double star
+	) {
+		this.content = content;
+		this.star = star;
+	}
 }
