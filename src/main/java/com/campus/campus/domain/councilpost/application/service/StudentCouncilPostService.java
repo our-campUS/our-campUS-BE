@@ -15,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
-import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostCreatedEvent;
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
@@ -46,15 +44,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class StudentCouncilPostService {
 
+	private static final int MAX_IMAGE_COUNT = 10;
+	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 	private final StudentCouncilPostRepository postRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final ApplicationEventPublisher eventPublisher;
-
-	private static final int MAX_IMAGE_COUNT = 10;
-	private static final long UPCOMING_EVENT_WINDOW_HOURS = 72L;
 	private final PlaceService placeService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PartnershipService partnershipService;
@@ -90,15 +87,7 @@ public class StudentCouncilPostService {
 			}
 		}
 
-		String topic = writer.getCouncilType().topic(writer);
-		String writerName = writer.getCouncilName();
-
-		eventPublisher.publishEvent(new CouncilPostCreatedEvent(
-			saved.getId(),
-			writerName,
-			saved.getCategory(),
-			topic
-		));
+		eventPublisher.publishEvent(studentCouncilPostMapper.createPostCreatedEvent(saved, writer));
 
 		List<String> imageUrls = postImageRepository
 			.findAllByPostOrderByIdAsc(post)

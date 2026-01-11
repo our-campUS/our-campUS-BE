@@ -1,7 +1,5 @@
 package com.campus.campus.domain.councilpost.presentation;
 
-import java.util.Map;
-
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,7 +20,6 @@ import com.campus.campus.domain.councilpost.application.service.StudentCouncilPo
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
-import com.campus.campus.global.firebase.application.service.FirebaseCloudMessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class StudentCouncilPostController {
 
 	private final StudentCouncilPostService postService;
-	private final FirebaseCloudMessageService firebaseCloudMessageService;
+
 	@PostMapping
 	@Operation(
 		summary = "학생회 제휴/행사 게시글 생성",

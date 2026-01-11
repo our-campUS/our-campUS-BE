@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -15,8 +16,11 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 
 @Component
-@ConditionalOnProperty(prefix="firebase", name="enabled", havingValue="true", matchIfMissing=true)
+@ConditionalOnProperty(prefix = "firebase", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class FirebaseInitializer {
+
+	@Value("${firebase.credentials.path}")
+	private String firebaseCredentialsPath;
 
 	@PostConstruct
 	public void initialize() {
@@ -24,7 +28,7 @@ public class FirebaseInitializer {
 			return;
 		}
 
-		try (InputStream serviceAccount = new ClassPathResource("keys/campus-firebase.json").getInputStream()) {
+		try (InputStream serviceAccount = new ClassPathResource(firebaseCredentialsPath).getInputStream()) {
 
 			FirebaseOptions options = FirebaseOptions.builder()
 				.setCredentials(GoogleCredentials.fromStream(serviceAccount))

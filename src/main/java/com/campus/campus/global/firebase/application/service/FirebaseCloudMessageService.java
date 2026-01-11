@@ -37,12 +37,13 @@ public class FirebaseCloudMessageService {
 		try {
 			String messageId = FirebaseMessaging.getInstance().send(builder.build());
 
-			log.info("[FCM] sent. topic={}, messageId={}, title={}, body={}, dataKeys={}, exec={}",
+			log.info("[FCM] sent. topic={}, messageId={}, title={}, body={}, dataKeys={}, data={}, exec={}",
 				topic,
 				messageId,
 				title,
 				body,
-				(data == null ? "[]" : data.keySet().toString()),
+				(data == null ? "[]" : data.keySet()),
+				(data == null ? "{}" : data),
 				execSnapshot()
 			);
 

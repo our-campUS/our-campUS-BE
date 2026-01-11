@@ -32,7 +32,6 @@ public record SavedPlaceInfo(
 	String telephone,
 
 	@Schema(description = "위도/경도")
-	@NotBlank
 	Coordinate coordinate,
 
 	@Schema(description = "이미지 url")
