@@ -14,7 +14,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
@@ -113,8 +112,7 @@ public class PlaceService {
 	}
 
 	@Transactional
-	public Place findOrCreatePlace(PostRequest request) {
-		SavedPlaceInfo place = request.place();
+	public Place findOrCreatePlace(SavedPlaceInfo place) {
 		String placeKey = place.placeKey();
 
 		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
