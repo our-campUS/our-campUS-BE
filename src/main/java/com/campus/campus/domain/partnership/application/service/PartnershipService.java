@@ -69,7 +69,6 @@ public class PartnershipService {
 		);
 
 		List<AbstractMap.SimpleEntry<StudentCouncilPost, Double>> sortedEntries = posts.stream()
-			.filter(post -> post.getPlace() != null && post.getPlace().getCoordinate() != null)
 			.map(post -> {
 				Place place = post.getPlace();
 				double distanceMeter = GeoUtil.distanceMeter(
