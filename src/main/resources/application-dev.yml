@@ -66,3 +66,6 @@ map:
     api-key: ENC(xgLHhhUSoE7yyS+SzF/KNmjs9swnSwQ2M1xKqWeJoXxrmhH/1rVOal2l5mZ9MP5E)
 
 server-uri: ENC(ZrgPccnQ3mEqVQTFEvGn6hzhP4xcNn6ISnp3TbBcd1J3jpZPb3hlzQ==)
+firebase:
+  credentials:
+    path: ENC(ChMLHkElyTmc/x8gSGr6O6xmOpdU7QP49zwVdYWdd4M1DjrxQfumH/JB/HyQ2IjL)

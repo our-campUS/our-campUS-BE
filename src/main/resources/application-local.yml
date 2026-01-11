@@ -66,3 +66,7 @@ map:
     api-key: ${GEOCODER_API_KEY}
 
 server-uri: http://localhost:8080
+
+firebase:
+  credentials:
+    path: ${FIREBASE_CREDENTIALS_PATH}
