@@ -189,6 +189,10 @@ public class ReviewService {
 		boolean hasNext = fetched.size() > size;
 		List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
 
+		if (reviews.isEmpty()) {
+			return reviewMapper.toEmptyCursorReviewResponse();
+		}
+
 		//리뷰 ID를 뽑아서 이미지들을 한 번에 조회
 		List<Long> reviewIds = reviews.stream()
 			.map(Review::getId)

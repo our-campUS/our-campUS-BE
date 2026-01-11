@@ -34,6 +34,15 @@ public class ReviewMapper {
 			.build();
 	}
 
+	public CursorPageReviewResponse<ReviewResponse> toEmptyCursorReviewResponse() {
+		return CursorPageReviewResponse.<ReviewResponse>builder()
+			.items(List.of())
+			.nextCursorCreatedAt(null)
+			.nextCursorId(null)
+			.hasNext(false)
+			.build();
+	}
+
 	public ReviewImage createReviewImage(Review review, String imageUrl) {
 		return ReviewImage.builder()
 			.review(review)
