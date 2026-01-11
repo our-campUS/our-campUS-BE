@@ -72,7 +72,7 @@ public class StudentCouncilPostService {
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
 		//Place 객체 생성
-		Place place = placeService.findOrCreatePlace(dto);
+		Place place = placeService.findOrCreatePlace(dto.place());
 
 		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
 			writer, place, dto, normalized.startDateTime(), normalized.endDateTime()
@@ -214,7 +214,7 @@ public class StudentCouncilPostService {
 
 		Place place = post.getPlace();
 		if (dto.place() != null && (place == null || !dto.place().placeName().equals(place.getPlaceName()))) {
-			place = placeService.findOrCreatePlace(dto);
+			place = placeService.findOrCreatePlace(dto.place());
 		}
 
 		post.update(
