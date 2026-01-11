@@ -35,7 +35,44 @@ public class ReviewController {
 	private final ReviewService reviewService;
 
 	@PostMapping
-	@Operation(summary = "리뷰 작성")
+	@Operation(
+		summary = "리뷰 작성",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+			required = true,
+			content = @io.swagger.v3.oas.annotations.media.Content(
+				mediaType = "application/json",
+				examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+					name = "리뷰 작성 요청 예시",
+					summary = "리뷰 작성 Request Body",
+					value = """
+						{
+						  "content": "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.",
+						  "star": 3.5,
+						  "imageUrls": [
+						    "https://image1.jpg",
+						    "https://image2.jpg"
+						  ],
+						  "place": {
+						    "placeName": "숙명여자대학교",
+						    "placeKey": "string",
+						    "address": "서울특별시 용산구 청파로47길 99",
+						    "category": "교육,학문>대학교",
+						    "link": "https://map.naver.com/v5/search/%EC%88%99%EB%AA%85%EC%97%AC%EC%9E%90%EB%8C%80%ED%95%99%EA%B5%90",
+						    "telephone": "010-1234-1234",
+						    "coordinate": {
+						      "latitude": 37.545947,
+						      "longitude": 126.964578
+						    },
+						    "imgUrls": [
+						      "https://place-image1.jpg"
+						    ]
+						  }
+						}
+						"""
+				)
+			)
+		)
+	)
 	public CommonResponse<ReviewCreateResponse> writeReview(
 		@Valid @RequestBody ReviewRequest request,
 		@CurrentUserId Long userId
@@ -70,7 +107,7 @@ public class ReviewController {
 	}
 
 	@GetMapping("/list/{placeId}")
-	@Operation(summary = "리뷰 목록 조회 (더보기 이후)")
+	@Operation(summary = "리뷰 목록 조회 - 최신순 (더보기 이후)")
 	public CommonResponse<CursorPageReviewResponse<ReviewResponse>> readAllReviews(
 		@PathVariable Long placeId,
 		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursorCreatedAt,
@@ -80,7 +117,6 @@ public class ReviewController {
 		CursorPageReviewResponse<ReviewResponse> response = reviewService.getReviewList(placeId, cursorCreatedAt,
 			cursorId, size);
 		return CommonResponse.success(ReviewResponseCode.GET_REVIEW_LIST_SUCCESS, response);
-
 	}
 
 	@GetMapping("/partnership-list")

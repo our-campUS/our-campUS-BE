@@ -174,6 +174,7 @@ public class ReviewService {
 	@Transactional(readOnly = true)
 	public CursorPageReviewResponse<ReviewResponse> getReviewList(
 		Long placeId,
+		Double cursorStar,
 		LocalDateTime cursorCreatedAt,
 		Long cursorId,
 		int size
@@ -182,7 +183,7 @@ public class ReviewService {
 		//size+1로 조회 -> 다음 페이지 여부(hasNext) 판단
 		Pageable pageable = PageRequest.of(0, size + 1);
 		List<Review> fetched = reviewRepository.findByPlaceIdWithCursor(
-			placeId, cursorCreatedAt, cursorId, pageable
+			placeId, cursorStar, cursorCreatedAt, cursorId, pageable
 		);
 
 		//다음 페이지가 있는지 판단, 실제로 내려줄 items는 size개만 자름
