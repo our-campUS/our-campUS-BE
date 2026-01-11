@@ -24,4 +24,6 @@ public interface PostImageRepository extends JpaRepository<PostImage, Long> {
 			order by pi.id asc
 		""")
 	List<String> findImageUrlsByPost(@Param("post") StudentCouncilPost post);
+
+	List<PostImage> findAllByPostIn(List<StudentCouncilPost> posts);
 }

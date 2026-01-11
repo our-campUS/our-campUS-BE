@@ -2,8 +2,11 @@ package com.campus.campus.domain.partnership.application.service;
 
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +18,7 @@ import com.campus.campus.domain.councilpost.application.exception.AcademicInfoNo
 import com.campus.campus.domain.councilpost.application.exception.PlaceInfoNotFoundException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
+import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
@@ -42,7 +46,7 @@ public class PartnershipService {
 	private final PlaceMapper placeMapper;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 
-	@Transactional
+	@Transactional(readOnly = true)
 	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
 		double userLng) {
 		User user = userRepository.findById(userId)
@@ -58,45 +62,68 @@ public class PartnershipService {
 
 		//유저가 속한 학생회들의 제휴글(major/college/school) 전부 조회
 		List<StudentCouncilPost> posts = studentCouncilPostRepository.findByUserScopeWithCursor(
-			majorId,
-			collegeId,
-			schoolId,
+			majorId, collegeId, schoolId,
 			PostCategory.PARTNERSHIP,
-			CouncilType.MAJOR_COUNCIL,
-			CouncilType.COLLEGE_COUNCIL,
-			CouncilType.SCHOOL_COUNCIL,
-			cursor,
-			LocalDateTime.now(),
-			pageable
+			CouncilType.MAJOR_COUNCIL, CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL,
+			cursor, LocalDateTime.now(), pageable
 		);
 
-		return posts.stream()
+		List<AbstractMap.SimpleEntry<StudentCouncilPost, Double>> sortedEntries = posts.stream()
 			.filter(post -> post.getPlace() != null && post.getPlace().getCoordinate() != null)
 			.map(post -> {
 				Place place = post.getPlace();
-
 				double distanceMeter = GeoUtil.distanceMeter(
 					userLat, userLng,
 					place.getCoordinate().latitude(),
 					place.getCoordinate().longitude()
 				);
-
-				// post + distance를 함께 묶음
 				return new AbstractMap.SimpleEntry<>(post, distanceMeter);
 			})
-			.sorted(Map.Entry.comparingByValue()) // 거리순 정렬
+			.sorted(Map.Entry.comparingByValue())
 			.limit(size)
+			.toList();
+
+		if (sortedEntries.isEmpty()) {
+			return List.of();
+		}
+
+		List<StudentCouncilPost> targetPosts = sortedEntries.stream()
+			.map(AbstractMap.SimpleEntry::getKey)
+			.toList();
+
+		Set<Long> placeIds = targetPosts.stream()
+			.map(post -> post.getPlace().getPlaceId())
+			.collect(Collectors.toSet());
+
+		Map<Long, List<String>> postImageMap = postImageRepository.findAllByPostIn(targetPosts)
+			.stream()
+			.collect(Collectors.groupingBy(
+				img -> img.getPost().getId(),
+				Collectors.mapping(PostImage::getImageUrl, Collectors.toList())
+			));
+
+		Set<Long> likedPlaceIds;
+		if (placeIds.isEmpty()) {
+			likedPlaceIds = Collections.emptySet();
+		} else {
+			likedPlaceIds = likedPlacesRepository.findLikedPlaceIds(userId, placeIds);
+		}
+
+		return sortedEntries.stream()
 			.map(entry -> {
 				StudentCouncilPost post = entry.getKey();
 				double distanceMeter = entry.getValue();
 				double rounded = Math.round(distanceMeter * 100.0) / 100.0;
 
+				List<String> images = postImageMap.getOrDefault(post.getId(), List.of());
+				boolean isLiked = likedPlaceIds.contains(post.getPlace().getPlaceId());
+
 				return placeMapper.toPartnershipResponse(
 					user,
 					post,
 					post.getPlace(),
-					isLiked(post.getPlace(), user),
-					getImgUrls(post),
+					isLiked,
+					images,
 					rounded
 				);
 			})
