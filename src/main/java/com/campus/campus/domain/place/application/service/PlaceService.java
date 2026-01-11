@@ -117,9 +117,16 @@ public class PlaceService {
 		SavedPlaceInfo place = request.place();
 		String placeKey = place.placeKey();
 
-		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
 		return placeRepository.findByPlaceKey(placeKey)
-			.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place)));
+			.orElseGet(() -> {
+				Place newPlace = placeRepository.save(placeMapper.createPlace(place));
+
+				if (place.imgUrls() != null && !place.imgUrls().isEmpty()) {
+					migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
+				}
+
+				return newPlace;
+			});
 	}
 
 	//장소 저장
