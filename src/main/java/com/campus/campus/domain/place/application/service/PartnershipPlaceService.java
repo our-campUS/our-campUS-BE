@@ -1,4 +1,4 @@
-package com.campus.campus.domain.partnership.application.service;
+package com.campus.campus.domain.place.application.service;
 
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
@@ -22,7 +22,7 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
-import com.campus.campus.domain.partnership.application.dto.response.PartnershipPinResponse;
+import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class PartnershipService {
+public class PartnershipPlaceService {
 
 	private final UserRepository userRepository;
 	private final LikedPlacesRepository likedPlacesRepository;
