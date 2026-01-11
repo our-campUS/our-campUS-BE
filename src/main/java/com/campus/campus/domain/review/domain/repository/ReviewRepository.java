@@ -29,4 +29,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 		@Param("cursorId") Long cursorId,
 		Pageable pageable
 	);
+
+	long countByPlaceId(long placeId);
+
+	long countByPlaceIdAndUserId(long placeId, long userId);
+
+	long countByPlace_PlaceIdAndUser_Major_MajorId(long placeId, long majorId);
+
+	long countByPlace_PlaceIdAndUser_College_CollegeId(Long placeId, long collegeId);
+
+	long countByPlace_PlaceIdAndUser_School_SchoolId(Long placeId, long schoolId);
 }

@@ -8,6 +8,10 @@ import org.springframework.stereotype.Component;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.RankingScope;
+import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
+import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
+import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
@@ -55,6 +59,36 @@ public class ReviewMapper {
 			.nextCursorCreatedAt(last.getCreatedAt().toString())
 			.nextCursorId(last.getId())
 			.hasNext(hasNext)
+			.build();
+	}
+
+	public ReviewCreateResult toReviewCreateResult(boolean isFirstReviewOfPlace, long userReviewCountOfPlace) {
+		return ReviewCreateResult.builder()
+			.isFirstReviewOfPlace(isFirstReviewOfPlace)
+			.userReviewCountOfPlace((int)userReviewCountOfPlace)
+			//스탬프 추가 예정
+			.message(isFirstReviewOfPlace ? "첫번째 리뷰 작성 완료!" : null)
+			.build();
+	}
+
+	public ReviewRankingResponse toReviewRankingResponse(
+		String majorName, long majorRank,
+		String collegeName, long collegeRank,
+		String schoolName, long schoolRank
+	) {
+		return new ReviewRankingResponse(
+			new RankingScope(majorName, majorRank),
+			new RankingScope(collegeName, collegeRank),
+			new RankingScope(schoolName, schoolRank)
+		);
+	}
+
+	public ReviewCreateResponse toReviewCreateResponse(ReviewResponse response, ReviewCreateResult createResult,
+		ReviewRankingResponse rankingResponse) {
+		return ReviewCreateResponse.builder()
+			.review(response)
+			.result(createResult)
+			.ranking(rankingResponse)
 			.build();
 	}
 }

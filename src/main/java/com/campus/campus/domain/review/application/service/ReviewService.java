@@ -15,9 +15,11 @@ import com.campus.campus.domain.councilpost.application.exception.PostImageLimit
 import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
-import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
+import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
+import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
@@ -26,6 +28,9 @@ import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
 import com.campus.campus.domain.review.domain.repository.ReviewImageRepository;
 import com.campus.campus.domain.review.domain.repository.ReviewRepository;
+import com.campus.campus.domain.school.domain.entity.College;
+import com.campus.campus.domain.school.domain.entity.Major;
+import com.campus.campus.domain.school.domain.entity.School;
 import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -45,10 +50,9 @@ public class ReviewService {
 	private final PlaceService placeService;
 	private final ReviewImageRepository reviewImageRepository;
 	private final PresignedUrlService presignedUrlService;
-	private final PlaceRepository placeRepository;
 
 	@Transactional
-	public ReviewResponse writeReview(ReviewRequest request, Long userId) {
+	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFirstLoginException::new);
 
@@ -74,7 +78,11 @@ public class ReviewService {
 			.map(ReviewImage::getImageUrl)
 			.toList();
 
-		return reviewMapper.toReviewResponse(review, imageUrls);
+		ReviewResponse response = reviewMapper.toReviewResponse(review, imageUrls);
+		ReviewCreateResult createResult = getCreateResult(place, user);
+		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
+
+		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
 	}
 
 	@Transactional(readOnly = true)
@@ -228,6 +236,48 @@ public class ReviewService {
 				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}
+	}
+
+	private ReviewCreateResult getCreateResult(Place place, User user) {
+		//해당 장소 리뷰 개수
+		long totalReviewCountOfPlace = reviewRepository.countByPlaceId(place.getPlaceId());
+
+		//해당 장소에서 유저가 쓴 리뷰가 몇번째인지
+		long userReviewCountOfPlace = reviewRepository.countByPlaceIdAndUserId(place.getPlaceId(), user.getId());
+		boolean isFirstReviewOfPlace = totalReviewCountOfPlace == 1;
+
+		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, userReviewCountOfPlace);
+
+	}
+
+	private ReviewRankingResponse getRankingResult(Place place, User user) {
+		Long placeId = place.getPlaceId();
+		Major major = user.getMajor();
+		College college = user.getCollege();
+		School school = user.getSchool();
+
+		Long majorId = major.getMajorId();
+		Long collegeId = college.getCollegeId();
+		Long schoolId = school.getSchoolId();
+
+		long majorRank = reviewRepository.countByPlace_PlaceIdAndUser_Major_MajorId(
+			placeId,
+			majorId
+		);
+
+		long collegeRank = reviewRepository.countByPlace_PlaceIdAndUser_College_CollegeId(
+			placeId,
+			collegeId
+		);
+
+		long schoolRank = reviewRepository.countByPlace_PlaceIdAndUser_School_SchoolId(
+			placeId,
+			schoolId
+		);
+
+		return reviewMapper.toReviewRankingResponse(major.getMajorName(), majorRank, college.getCollegeName(),
+			collegeRank,
+			school.getSchoolName(), schoolRank);
 	}
 
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -33,11 +34,11 @@ public class ReviewController {
 
 	@PostMapping
 	@Operation(summary = "리뷰 작성")
-	public CommonResponse<ReviewResponse> writeReview(
+	public CommonResponse<ReviewCreateResponse> writeReview(
 		@Valid @RequestBody ReviewRequest request,
 		@CurrentUserId Long userId
 	) {
-		ReviewResponse response = reviewService.writeReview(request, userId);
+		ReviewCreateResponse response = reviewService.writeReview(request, userId);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
 	}
 
