@@ -275,4 +275,45 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("now") LocalDateTime now
 	);
 
+	@Query(value = """
+		SELECT scp.*
+		       FROM student_council_post scp
+		       JOIN student_councils sc
+		         ON scp.writer_id = sc.student_council_id
+		       JOIN places p
+		         ON scp.place_id = p.place_id
+		       LEFT JOIN reviews r
+		         ON r.place_id = p.place_id
+		         AND r.created_at >= :from
+		       WHERE scp.start_date_time <= :now
+		         AND scp.end_date_time >= :now
+		         AND (
+		               (sc.council_type = 'MAJOR_COUNCIL'   AND sc.major_id   = :majorId)
+		            OR (sc.council_type = 'COLLEGE_COUNCIL' AND sc.college_id = :collegeId)
+		            OR (sc.council_type = 'SCHOOL_COUNCIL'  AND sc.school_id  = :schoolId)
+		         )
+		       GROUP BY scp.id
+		       ORDER BY COUNT(r.id) DESC
+		       LIMIT 3;
+		
+		""", nativeQuery = true)
+	List<StudentCouncilPost> findTop3RecommendedPartnershipPlaces(
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId,
+		@Param("from") LocalDateTime from,
+		@Param("now") LocalDateTime now
+	);
+
+	@Query("""
+			SELECT scp
+			FROM StudentCouncilPost scp
+			WHERE scp.place.placeId IN :placeIds
+			AND scp.writer.id = :writerId
+			ORDER BY scp.createdAt DESC
+		""")
+	List<StudentCouncilPost> findRepresentativePosts(
+		@Param("placeIds") List<Long> placeIds
+	);
+
 }

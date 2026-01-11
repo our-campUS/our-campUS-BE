@@ -1,6 +1,7 @@
 package com.campus.campus.domain.review.presentation;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.service.ReviewService;
@@ -79,5 +81,14 @@ public class ReviewController {
 			cursorId, size);
 		return CommonResponse.success(ReviewResponseCode.GET_REVIEW_LIST_SUCCESS, response);
 
+	}
+
+	@GetMapping("/partnership-list")
+	@Operation(summary = "제휴 매장 둘러보기", description = "최근 한달 간 제휴 이용수가 많았던 매장")
+	public CommonResponse<List<PlaceReviewRankResponse>> readAllPartnerships(
+		@CurrentUserId Long userId
+	) {
+		List<PlaceReviewRankResponse> response = reviewService.readPopularPartnerships(userId);
+		return CommonResponse.success(ReviewResponseCode.GET_RANK_SUCCESS, response);
 	}
 }

@@ -10,7 +10,7 @@ import com.campus.campus.domain.review.domain.entity.ReviewImage;
 
 public interface ReviewImageRepository extends JpaRepository<ReviewImage, Long> {
 
-	List<ReviewImage> findAllByReviewOrderbyIdAsc(Review review);
+	List<ReviewImage> findAllByReviewOrderByIdAsc(Review review);
 
 	List<ReviewImage> findAllByReviewIdInOrderByIdAsc(@Param("reviewIds") List<Long> reviewIds);
 

@@ -5,9 +5,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.RankingScope;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
@@ -91,4 +93,18 @@ public class ReviewMapper {
 			.ranking(rankingResponse)
 			.build();
 	}
+
+	public PlaceReviewRankResponse toTopPartnershipResponse(
+		StudentCouncilPost post
+	) {
+		return PlaceReviewRankResponse.builder()
+			.placeId(post.getPlace().getPlaceId())
+			.placeName(post.getPlace().getPlaceName())
+			.category(post.getPlace().getPlaceCategory())
+			.partnership(post.getTitle())
+			.thumbnailUrl(post.getThumbnailImageUrl())
+			// .reviewCount(projection.getReviewCount())
+			.build();
+	}
+
 }

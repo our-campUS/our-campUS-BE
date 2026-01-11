@@ -13,10 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
+import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
@@ -32,6 +35,7 @@ import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
 import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
@@ -50,6 +54,7 @@ public class ReviewService {
 	private final PlaceService placeService;
 	private final ReviewImageRepository reviewImageRepository;
 	private final PresignedUrlService presignedUrlService;
+	private final StudentCouncilPostRepository studentCouncilPostRepository;
 
 	@Transactional
 	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
@@ -73,7 +78,7 @@ public class ReviewService {
 		}
 
 		List<String> imageUrls = reviewImageRepository
-			.findAllByReviewOrderbyIdAsc(review)
+			.findAllByReviewOrderByIdAsc(review)
 			.stream()
 			.map(ReviewImage::getImageUrl)
 			.toList();
@@ -91,7 +96,7 @@ public class ReviewService {
 			.orElseThrow(ReviewNotFoundException::new);
 
 		List<String> imageUrls = reviewImageRepository
-			.findAllByReviewOrderbyIdAsc(review)
+			.findAllByReviewOrderByIdAsc(review)
 			.stream()
 			.map(ReviewImage::getImageUrl)
 			.toList();
@@ -213,6 +218,35 @@ public class ReviewService {
 
 	}
 
+	@Transactional(readOnly = true)
+	public List<PlaceReviewRankResponse> readPopularPartnerships(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime from = now.minusMonths(1);
+
+		//리뷰가 가장 많은 top3 placeIds
+		List<StudentCouncilPost> partnerships =
+			studentCouncilPostRepository.findTop3RecommendedPartnershipPlaces(
+				user.getMajor().getMajorId(),
+				user.getCollege().getCollegeId(),
+				user.getSchool().getSchoolId(),
+				from,
+				now
+			);
+
+		log.info("찾은 결과:{}", partnerships.stream().toList());
+
+		if (partnerships.isEmpty()) {
+			return List.of();
+		}
+
+		return partnerships.stream()
+			.map(reviewMapper::toTopPartnershipResponse)
+			.toList();
+	}
+
 	//이미지 삭제
 	private void cleanupUnusedImages(List<ReviewImage> oldImages, ReviewRequest request) {
 		List<String> newUrls = request.imageUrls() == null ? List.of() : request.imageUrls();
@@ -240,10 +274,11 @@ public class ReviewService {
 
 	private ReviewCreateResult getCreateResult(Place place, User user) {
 		//해당 장소 리뷰 개수
-		long totalReviewCountOfPlace = reviewRepository.countByPlaceId(place.getPlaceId());
+		long totalReviewCountOfPlace = reviewRepository.countByPlace_PlaceId(place.getPlaceId());
 
 		//해당 장소에서 유저가 쓴 리뷰가 몇번째인지
-		long userReviewCountOfPlace = reviewRepository.countByPlaceIdAndUserId(place.getPlaceId(), user.getId());
+		long userReviewCountOfPlace = reviewRepository.countByPlace_PlaceIdAndUser_Id(place.getPlaceId(),
+			user.getId());
 		boolean isFirstReviewOfPlace = totalReviewCountOfPlace == 1;
 
 		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, userReviewCountOfPlace);

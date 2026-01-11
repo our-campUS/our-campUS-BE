@@ -30,9 +30,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 		Pageable pageable
 	);
 
-	long countByPlaceId(long placeId);
+	long countByPlace_PlaceId(long placeId);
 
-	long countByPlaceIdAndUserId(long placeId, long userId);
+	long countByPlace_PlaceIdAndUser_Id(long placeId, long userId);
 
 	long countByPlace_PlaceIdAndUser_Major_MajorId(long placeId, long majorId);
 
