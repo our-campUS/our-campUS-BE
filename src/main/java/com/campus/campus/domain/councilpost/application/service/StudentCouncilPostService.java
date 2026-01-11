@@ -53,8 +53,6 @@ public class StudentCouncilPostService {
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final ApplicationEventPublisher eventPublisher;
 	private final PlaceService placeService;
-	private final StudentCouncilPostRepository studentCouncilPostRepository;
-	private final PartnershipService partnershipService;
 
 	@Transactional
 	public GetPostResponse create(Long councilId, PostRequest dto) {
