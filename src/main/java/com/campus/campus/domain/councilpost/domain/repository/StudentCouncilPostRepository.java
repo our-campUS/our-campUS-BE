@@ -250,7 +250,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 			SELECT p
 			FROM StudentCouncilPost p
 			JOIN p.writer w
-			JOIN p.place pl
+			JOIN FETCH p.place pl
 			LEFT JOIN w.school s
 			LEFT JOIN w.college c
 			LEFT JOIN w.major m

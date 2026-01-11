@@ -170,9 +170,7 @@ public class PartnershipService {
 			.orElseThrow(UserNotFoundException::new);
 
 		double distanceMeter = GeoUtil.distanceMeter(
-			userLat, userLng,
-			place.getCoordinate().latitude(),
-			place.getCoordinate().longitude()
+			userLat, userLng, place.getCoordinate().latitude(), place.getCoordinate().longitude()
 		);
 		double rounded = Math.round(distanceMeter * 100.0) / 100.0;
 
