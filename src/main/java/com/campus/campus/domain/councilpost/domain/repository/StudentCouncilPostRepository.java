@@ -100,12 +100,14 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		      WHERE w.councilType = :councilType
 		        AND s.schoolId = :schoolId
 		        AND (:category IS NULL OR p.category = :category)
+				AND (:excludePostId IS NULL OR p.id <> :excludePostId)
 		        AND w.deletedAt IS NULL
 		""")
 	Page<StudentCouncilPost> findBySchoolId(
 		@Param("schoolId") Long schoolId,
 		@Param("category") PostCategory category,
 		@Param("councilType") CouncilType councilType,
+		@Param("excludePostId") Long excludePostId,
 		Pageable pageable
 	);
 
