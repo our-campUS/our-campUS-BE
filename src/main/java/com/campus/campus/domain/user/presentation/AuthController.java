@@ -24,9 +24,9 @@ public class AuthController {
 	private final KakaoOauthService kakaoOauthService;
 
 	@PostMapping("/login/kakao")
-	@Operation(summary = "카카오 로그인")
-	public CommonResponse<OauthLoginResponse> kakaoLogin(@RequestParam("code") String code) {
-		OauthLoginResponse response = kakaoOauthService.login(code);
+	@Operation(summary = "카카오 로그인 (Native App 방식)")
+	public CommonResponse<OauthLoginResponse> kakaoLogin(@RequestParam("token") String kakaoAccessToken) {
+		OauthLoginResponse response = kakaoOauthService.login(kakaoAccessToken);
 
 		return CommonResponse.success(UserResponseCode.LOGIN_SUCCESS, response);
 	}
