@@ -2,12 +2,13 @@ package com.campus.campus.global.firebase.application.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.global.firebase.exception.FirebaseInitializationFailedException;
@@ -28,11 +29,12 @@ public class FirebaseInitializer {
 			return;
 		}
 
-		try (InputStream serviceAccount = new ClassPathResource(firebaseCredentialsPath).getInputStream()) {
+		try (InputStream serviceAccount = Files.newInputStream(Path.of(firebaseCredentialsPath))) {
 
 			FirebaseOptions options = FirebaseOptions.builder()
 				.setCredentials(GoogleCredentials.fromStream(serviceAccount))
 				.build();
+
 			FirebaseApp.initializeApp(options);
 
 		} catch (IOException e) {
