@@ -136,6 +136,10 @@ public class StudentCouncilPostForUserService {
 	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId, Long excludePostId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
+		if (user.isProfileNotCompleted() || user.getMajor() == null) {
+			throw new MajorNotSetException();
+		}
+
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
