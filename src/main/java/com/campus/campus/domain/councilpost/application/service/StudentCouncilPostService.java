@@ -2,6 +2,7 @@ package com.campus.campus.domain.councilpost.application.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,6 +17,7 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostDetailResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
@@ -33,6 +35,8 @@ import com.campus.campus.domain.councilpost.domain.repository.PostImageRepositor
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.entity.PlaceImages;
+import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -48,6 +52,7 @@ public class StudentCouncilPostService {
 	private final StudentCouncilPostRepository postRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
+	private final PlaceImagesRepository placeImagesRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final ApplicationEventPublisher eventPublisher;
@@ -96,7 +101,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional(readOnly = true)
-	public GetPostResponse findById(Long postId, Long currentUserId) {
+	public GetPostDetailResponse findById(Long postId, Long currentCouncilId) {
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -106,7 +111,9 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, currentUserId);
+		List<String> placeImageUrls = getPlaceImageUrls(post.getPlace());
+
+		return studentCouncilPostMapper.toGetPostDetailResponse(post, imageUrls, placeImageUrls, currentCouncilId);
 	}
 
 	@Transactional(readOnly = true)
@@ -246,6 +253,16 @@ public class StudentCouncilPostService {
 			.toList();
 
 		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
+	}
+
+	private List<String> getPlaceImageUrls(Place place) {
+		if (place == null || place.getPlaceKey() == null) {
+			return Collections.emptyList();
+		}
+
+		return placeImagesRepository.findByPlaceKey(place.getPlaceKey()).stream()
+			.map(PlaceImages::getImageUrl)
+			.toList();
 	}
 
 	//이미지 삭제

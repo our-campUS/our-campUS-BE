@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostDetailResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
@@ -169,8 +170,8 @@ public class StudentCouncilPostController {
 
 	@GetMapping("/{postId}")
 	@Operation(summary = "학생회 게시글 상세 조회")
-	public CommonResponse<GetPostResponse> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
-		GetPostResponse responseDto = postService.findById(postId, councilId);
+	public CommonResponse<GetPostDetailResponse> getPost(@PathVariable Long postId, @CurrentCouncilId Long councilId) {
+		GetPostDetailResponse responseDto = postService.findById(postId, councilId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, responseDto);
 	}
