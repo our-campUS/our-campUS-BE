@@ -1,6 +1,5 @@
 package com.campus.campus.domain.place.domain.repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -19,12 +18,12 @@ public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 	@Query("""
 			SELECT lp.place.placeId
 			FROM LikedPlace lp
-			WHERE lp.user.id=:userId 
+			WHERE lp.user.id=:userId
 			 and lp.place.placeId in :placeIds
 		""")
 	Set<Long> findLikedPlaceIds(
 		@Param("userId") Long userId,
-		@Param("placeIds") List<Long> placeIds
+		@Param("placeIds") Set<Long> placeIds
 	);
 
 	boolean existsByUserAndPlace(User user, Place place);

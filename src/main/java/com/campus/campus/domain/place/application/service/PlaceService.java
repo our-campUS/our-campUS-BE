@@ -112,14 +112,23 @@ public class PlaceService {
 		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
-	@Transactional
-	public Place findOrCreatePlace(PostRequest request) {
-		SavedPlaceInfo place = request.place();
+	public Place findOrCreatePlace(SavedPlaceInfo place) {
 		String placeKey = place.placeKey();
 
-		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
 		return placeRepository.findByPlaceKey(placeKey)
-			.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place)));
+			.orElseGet(() -> {
+				try {
+					Place newPlace = placeRepository.save(placeMapper.createPlace(place));
+
+					migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
+
+					return newPlace;
+				} catch (DataIntegrityViolationException e) {
+					log.info("해당 키에 대한 장소 동시 생성이 감지되었습니다.: {}", placeKey);
+					return placeRepository.findByPlaceKey(placeKey)
+						.orElseThrow(PlaceCreationException::new);
+				}
+			});
 	}
 
 	//장소 저장
@@ -218,6 +227,9 @@ public class PlaceService {
 	}
 
 	private void migrateImagesToOci(String placeKey, List<String> imageUrls) {
+		if (imageUrls == null || imageUrls.isEmpty()) {
+			return;
+		}
 
 		//google 이미지 OCI 업로드
 		for (String googleUrl : imageUrls) {

@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class StudentCouncilPostForUserController {
+	private final StudentCouncilPostForUserService postService;
 
 	@PostMapping("/{postId}/like")
 	@Operation(summary = "학생회 게시글 좋아요 토글")
@@ -56,8 +57,6 @@ public class StudentCouncilPostForUserController {
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
 	}
 
-	private final StudentCouncilPostForUserService postService;
-
 	@GetMapping("/school")
 	@Operation(
 		summary = "학교 학생회 게시글 목록 조회",
@@ -79,10 +78,11 @@ public class StudentCouncilPostForUserController {
 		@RequestParam(required = false) PostCategory category,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "20") int size,
-		@RequestParam(required = false)	Long excludePostId,
+		@RequestParam(required = false) Long excludePostId,
 		@CurrentUserId Long userId
 	) {
-		Page<PostListItemResponse> responseDto = postService.findSchoolPosts(category, page, size, userId, excludePostId);
+		Page<PostListItemResponse> responseDto = postService.findSchoolPosts(category, page, size, userId,
+			excludePostId);
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
@@ -111,7 +111,8 @@ public class StudentCouncilPostForUserController {
 		@RequestParam(required = false) Long excludePostId,
 		@CurrentUserId Long userId
 	) {
-		Page<PostListItemResponse> responseDto = postService.findCollegePosts(category, page, size, userId, excludePostId);
+		Page<PostListItemResponse> responseDto = postService.findCollegePosts(category, page, size, userId,
+			excludePostId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
@@ -141,7 +142,8 @@ public class StudentCouncilPostForUserController {
 		@RequestParam(required = false) Long excludePostId,
 		@CurrentUserId Long userId
 	) {
-		Page<PostListItemResponse> responseDto = postService.findMajorPosts(category, page, size, userId, excludePostId);
+		Page<PostListItemResponse> responseDto = postService.findMajorPosts(category, page, size, userId,
+			excludePostId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
