@@ -92,6 +92,7 @@ public class StudentCouncilPostController {
 							      "https://maps.googleapis.com/maps/api/place/photo?maxWidth=800&photo_reference=example3"
 							    ]
 							  },
+							  "detailedLocation": "대운동장",
 							  "startDateTime": "2025-04-10T18:00",
 							  "thumbnailIcon": "EVENT",
 							  "imageUrls": []

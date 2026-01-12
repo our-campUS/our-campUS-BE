@@ -221,6 +221,7 @@ public class StudentCouncilPostService {
 			dto.title(),
 			dto.content(),
 			place,
+			dto.detailedLocation(),
 			normalized.startDateTime(),
 			normalized.endDateTime(),
 			dto.thumbnailImageUrl(),

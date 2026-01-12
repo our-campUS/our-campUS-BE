@@ -34,9 +34,8 @@ public class StudentCouncilPostMapper {
 			post.getCategory(),
 			post.getTitle(),
 			post.getPlace().getPlaceName(),
-			post.isEvent()
-				? post.getStartDateTime()
-				: post.getEndDateTime(),
+			post.getDetailedLocation(),
+			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
 			isLiked
@@ -49,6 +48,7 @@ public class StudentCouncilPostMapper {
 			post.getCategory(),
 			post.getTitle(),
 			post.getPlace().getPlaceName(),
+			post.getDetailedLocation(),
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon()
@@ -61,6 +61,7 @@ public class StudentCouncilPostMapper {
 			post.getCategory(),
 			post.getTitle(),
 			post.getPlace().getPlaceName(),
+			post.getDetailedLocation(),
 			post.getStartDateTime(),
 			post.getThumbnailIcon()
 		);
@@ -86,6 +87,7 @@ public class StudentCouncilPostMapper {
 			.title(post.getTitle())
 			.content(post.getContent())
 			.placeName(post.getPlace().getPlaceName())
+			.detailedLocation(post.getDetailedLocation())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
 			.images(images != null ? images : Collections.emptyList());
@@ -111,6 +113,7 @@ public class StudentCouncilPostMapper {
 			.title(post.getTitle())
 			.content(post.getContent())
 			.place(post.getPlace().getPlaceName())
+			.detailedLocation(post.getDetailedLocation())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
 			.isLiked(isLiked)
@@ -139,6 +142,7 @@ public class StudentCouncilPostMapper {
 			post.getId(),
 			post.getTitle(),
 			post.getPlace().getPlaceName(),
+			post.getDetailedLocation(),
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl()
 		);
@@ -152,6 +156,7 @@ public class StudentCouncilPostMapper {
 			.title(dto.title())
 			.content(dto.content())
 			.place(place)
+			.detailedLocation(dto.detailedLocation())
 			.startDateTime(startDateTime)
 			.endDateTime(endDateTime)
 			.thumbnailImageUrl(dto.thumbnailImageUrl())
