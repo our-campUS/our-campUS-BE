@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
-import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.service.PlaceService;
@@ -24,6 +23,7 @@ import com.campus.campus.domain.review.application.dto.response.ReviewCreateResp
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -77,13 +77,10 @@ public class ReviewService {
 			}
 		}
 
-		List<String> imageUrls = reviewImageRepository
-			.findAllByReviewOrderByIdAsc(review)
-			.stream()
-			.map(ReviewImage::getImageUrl)
-			.toList();
+		String imageUrl =
+			request.imageUrls() == null ? null : request.imageUrls().getFirst();
 
-		ReviewResponse response = reviewMapper.toReviewResponse(review, imageUrls);
+		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, imageUrl);
 		ReviewCreateResult createResult = getCreateResult(place, user);
 		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
 
@@ -134,7 +131,7 @@ public class ReviewService {
 	}
 
 	@Transactional
-	public ReviewResponse update(Long userId, Long reviewId, ReviewRequest request) {
+	public WriteReviewResponse update(Long userId, Long reviewId, ReviewRequest request) {
 
 		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
@@ -162,13 +159,10 @@ public class ReviewService {
 
 		cleanupUnusedImages(oldImages, request);
 
-		List<String> imageUrls = reviewImageRepository
-			.findAllByReview(review)
-			.stream()
-			.map(ReviewImage::getImageUrl)
-			.toList();
+		String imageUrl =
+			request.imageUrls() == null ? null : request.imageUrls().getFirst();
 
-		return reviewMapper.toReviewResponse(review, imageUrls);
+		return reviewMapper.toWriteReviewResponse(review, imageUrl);
 	}
 
 	@Transactional(readOnly = true)
@@ -216,7 +210,7 @@ public class ReviewService {
 			)
 			.toList();
 
-		Review last = reviews.get(reviews.size() - 1);
+		Review last = reviews.getLast();
 
 		return reviewMapper.toCursorReviewResponse(items, last, hasNext);
 
@@ -237,7 +231,8 @@ public class ReviewService {
 				user.getCollege().getCollegeId(),
 				user.getSchool().getSchoolId(),
 				from,
-				now
+				now,
+				PageRequest.of(0, 3)
 			);
 
 		log.info("찾은 결과:{}", partnerships.stream().toList());
@@ -270,7 +265,7 @@ public class ReviewService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (PostOciImageDeleteFailedException e) {
+			} catch (OciObjectDeleteFailException e) {
 				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}
@@ -281,11 +276,10 @@ public class ReviewService {
 		long totalReviewCountOfPlace = reviewRepository.countByPlace_PlaceId(place.getPlaceId());
 
 		//해당 장소에서 유저가 쓴 리뷰가 몇번째인지
-		long userReviewCountOfPlace = reviewRepository.countByPlace_PlaceIdAndUser_Id(place.getPlaceId(),
-			user.getId());
+		long count = reviewRepository.countByPlaceAndUser(place, user);
 		boolean isFirstReviewOfPlace = totalReviewCountOfPlace == 1;
 
-		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, userReviewCountOfPlace);
+		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, count);
 
 	}
 

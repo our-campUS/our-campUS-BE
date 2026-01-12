@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.domain.entity.Review;
+import com.campus.campus.domain.user.domain.entity.User;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
@@ -32,7 +34,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 	long countByPlace_PlaceId(long placeId);
 
-	long countByPlace_PlaceIdAndUser_Id(long placeId, long userId);
+	long countByPlaceAndUser(Place place, User user);
 
 	long countByPlace_PlaceIdAndUser_Major_MajorId(long placeId, long majorId);
 
