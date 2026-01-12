@@ -34,7 +34,6 @@ import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
-import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -59,7 +58,7 @@ public class ReviewService {
 	@Transactional
 	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
 		User user = userRepository.findById(userId)
-			.orElseThrow(UserNotFirstLoginException::new);
+			.orElseThrow(UserNotFoundException::new);
 
 		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
@@ -270,7 +269,7 @@ public class ReviewService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (PostOciImageDeleteFailedException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}

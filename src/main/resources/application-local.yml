@@ -70,3 +70,8 @@ server-uri: http://localhost:8080
 firebase:
   credentials:
     path: ${FIREBASE_CREDENTIALS_PATH}
+
+clova:
+  ocr:
+    invoke-url: https://clovaocr-api.ncloud.com/ocr/v1/receipt
+    secret-key: ${OCR_KEY}
