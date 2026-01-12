@@ -121,9 +121,7 @@ public class PlaceService {
 			.orElseGet(() -> {
 				Place newPlace = placeRepository.save(placeMapper.createPlace(place));
 
-				if (place.imgUrls() != null && !place.imgUrls().isEmpty()) {
-					migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
-				}
+				migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
 
 				return newPlace;
 			});
@@ -225,6 +223,9 @@ public class PlaceService {
 	}
 
 	private void migrateImagesToOci(String placeKey, List<String> imageUrls) {
+		if (imageUrls == null || imageUrls.isEmpty()) {
+			return;
+		}
 
 		//google 이미지 OCI 업로드
 		for (String googleUrl : imageUrls) {
