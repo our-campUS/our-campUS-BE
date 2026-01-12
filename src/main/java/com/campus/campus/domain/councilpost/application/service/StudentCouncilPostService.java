@@ -3,7 +3,9 @@ package com.campus.campus.domain.councilpost.application.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -269,7 +271,7 @@ public class StudentCouncilPostService {
 	private void cleanupUnusedImages(String oldThumbnailUrl, List<PostImage> oldImages, PostRequest dto) {
 		List<String> newUrls = dto.imageUrls() == null ? List.of() : dto.imageUrls();
 
-		List<String> deleteTargets = new ArrayList<>();
+		Set<String> deleteTargets = new HashSet<>();
 
 		// 썸네일 변경 시 이전 썸네일
 		if (oldThumbnailUrl != null && !oldThumbnailUrl.equals(dto.thumbnailImageUrl())) {
@@ -290,7 +292,7 @@ public class StudentCouncilPostService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (PostOciImageDeleteFailedException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}
