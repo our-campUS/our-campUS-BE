@@ -12,13 +12,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
+import com.campus.campus.domain.review.application.service.OcrService;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -33,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class ReviewController {
 
 	private final ReviewService reviewService;
+	private final OcrService ocrService;
 
 	@PostMapping
 	@Operation(
@@ -82,6 +87,9 @@ public class ReviewController {
 	}
 
 	@PostMapping("/receipt-ocr")
+	public CommonResponse<ReceiptResultDto> upload(@RequestPart MultipartFile file) {
+		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file));
+	}
 
 	@GetMapping("/{reviewId}")
 	@Operation(summary = "리뷰 상세 조회")
