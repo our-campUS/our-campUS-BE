@@ -113,8 +113,7 @@ public class PlaceService {
 	}
 
 	@Transactional
-	public Place findOrCreatePlace(PostRequest request) {
-		SavedPlaceInfo place = request.place();
+	public Place findOrCreatePlace(SavedPlaceInfo place) {
 		String placeKey = place.placeKey();
 
 		return placeRepository.findByPlaceKey(placeKey)
