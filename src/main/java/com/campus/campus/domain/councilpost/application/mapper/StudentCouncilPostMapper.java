@@ -86,6 +86,7 @@ public class StudentCouncilPostMapper {
 			.title(post.getTitle())
 			.content(post.getContent())
 			.placeName(post.getPlace().getPlaceName())
+			.detailedLocation(post.getDetailedLocation())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
 			.images(images != null ? images : Collections.emptyList());
@@ -111,6 +112,7 @@ public class StudentCouncilPostMapper {
 			.title(post.getTitle())
 			.content(post.getContent())
 			.place(post.getPlace().getPlaceName())
+			.detailedLocation(post.getDetailedLocation())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
 			.isLiked(isLiked)
@@ -152,6 +154,7 @@ public class StudentCouncilPostMapper {
 			.title(dto.title())
 			.content(dto.content())
 			.place(place)
+			.detailedLocation(dto.detailedLocation())
 			.startDateTime(startDateTime)
 			.endDateTime(endDateTime)
 			.thumbnailImageUrl(dto.thumbnailImageUrl())
