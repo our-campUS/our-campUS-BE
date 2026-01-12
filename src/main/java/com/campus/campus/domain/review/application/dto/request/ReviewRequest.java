@@ -18,7 +18,7 @@ public record ReviewRequest(
 
 	@NotNull
 	@Schema(example = "3.5")
-	double star,
+	Double star,
 
 	List<String> imageUrls,
 

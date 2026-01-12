@@ -281,6 +281,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("now") LocalDateTime now
 	);
 
+	@EntityGraph(attributePaths = {"place"})
 	@Query(value = """
 		SELECT scp.*
 		       FROM student_council_post scp
@@ -309,17 +310,6 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("schoolId") Long schoolId,
 		@Param("from") LocalDateTime from,
 		@Param("now") LocalDateTime now
-	);
-
-	@Query("""
-			SELECT scp
-			FROM StudentCouncilPost scp
-			WHERE scp.place.placeId IN :placeIds
-			AND scp.writer.id = :writerId
-			ORDER BY scp.createdAt DESC
-		""")
-	List<StudentCouncilPost> findRepresentativePosts(
-		@Param("placeIds") List<Long> placeIds
 	);
 
 }

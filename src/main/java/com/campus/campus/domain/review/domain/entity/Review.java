@@ -33,7 +33,7 @@ public class Review extends BaseEntity {
 
 	private String content;
 
-	private double star;
+	private Double star;
 
 	//영수증 제휴 인증 여부
 	@Column(name = "is_verified")
@@ -49,7 +49,7 @@ public class Review extends BaseEntity {
 
 	public void update(
 		String content,
-		double star
+		Double star
 	) {
 		this.content = content;
 		this.star = star;

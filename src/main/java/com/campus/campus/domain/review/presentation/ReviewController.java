@@ -85,7 +85,7 @@ public class ReviewController {
 	@Operation(summary = "리뷰 상세 조회")
 	public CommonResponse<ReviewResponse> readReview(@PathVariable Long reviewId) {
 		ReviewResponse response = reviewService.readReview(reviewId);
-		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
+		return CommonResponse.success(ReviewResponseCode.GET_REVIEW_SUCCESS, response);
 	}
 
 	@DeleteMapping("/{reviewId}")
@@ -111,7 +111,7 @@ public class ReviewController {
 	public CommonResponse<CursorPageReviewResponse<ReviewResponse>> readAllReviews(
 		@PathVariable Long placeId,
 		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursorCreatedAt,
-		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Long cursorId,
+		@RequestParam(required = false) Long cursorId,
 		@RequestParam(defaultValue = "10") int size
 	) {
 		CursorPageReviewResponse<ReviewResponse> response = reviewService.getReviewList(placeId, cursorCreatedAt,
