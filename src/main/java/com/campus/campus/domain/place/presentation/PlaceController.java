@@ -38,7 +38,7 @@ public class PlaceController {
 
 	@GetMapping("/search")
 	@Operation(summary = "현위치 기반 가까운 순으로 장소 키워드 검색", description = "검색 결과 5개 검색되도록 함")
-	public CommonResponse<List<SavedPlaceInfo>> getPlaceInfo(
+	public CommonResponse<List<SavedPlaceInfo>> getPlaceInfoWithLocationAndKeyword(
 		@Parameter(
 			description = "검색할 키워드",
 			example = "스타벅스"
@@ -55,7 +55,16 @@ public class PlaceController {
 		)
 		@RequestParam double lng
 	) {
-		List<SavedPlaceInfo> searchResponse = placeService.search(lat, lng, keyword);
+		List<SavedPlaceInfo> searchResponse = placeService.searchByLocationAndKeyword(lat, lng, keyword);
+
+		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
+	}
+
+	@GetMapping("/search/keyword")
+	@Operation(summary = "키워드 기반 장소 검색")
+	public CommonResponse<List<SavedPlaceInfo>> getPlaceInfoWithKeyword(@RequestParam String keyword) {
+		List<SavedPlaceInfo> searchResponse = placeService.searchByKeyword(keyword);
+
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
 
@@ -80,6 +89,7 @@ public class PlaceController {
 	public CommonResponse<LikeResponse> likePlace(@Valid @RequestBody SavedPlaceInfo request,
 		@CurrentUserId Long userId) {
 		LikeResponse response = placeService.likePlace(request, userId);
+
 		return CommonResponse.success(PlaceResponseCode.PLACE_SAVE_SUCCESS, response);
 	}
 
@@ -121,6 +131,7 @@ public class PlaceController {
 		)
 		@RequestParam(defaultValue = "5") int size) {
 		List<PartnershipResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size, lat, lng);
+
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACES_SUCCESS, response);
 	}
 
