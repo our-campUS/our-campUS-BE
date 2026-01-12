@@ -27,7 +27,6 @@ import com.campus.campus.domain.councilpost.application.dto.response.NormalizedD
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
-import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.application.exception.ThumbnailRequiredException;
 import com.campus.campus.domain.councilpost.application.mapper.StudentCouncilPostMapper;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
@@ -173,7 +172,7 @@ public class StudentCouncilPostService {
 
 		List<PostImage> postImages = postImageRepository.findAllByPost(post);
 
-		List<String> deleteTargets = new ArrayList<>();
+		Set<String> deleteTargets = new HashSet<>();
 
 		if (post.getThumbnailImageUrl() != null) {
 			deleteTargets.add(post.getThumbnailImageUrl());
@@ -189,7 +188,7 @@ public class StudentCouncilPostService {
 		for (String imageUrl : deleteTargets) {
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (PostOciImageDeleteFailedException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패: {}", imageUrl, e);
 			}
 		}
