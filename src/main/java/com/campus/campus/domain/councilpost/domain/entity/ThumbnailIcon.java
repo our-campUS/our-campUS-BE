@@ -5,5 +5,9 @@ public enum ThumbnailIcon {
 	EVENT,
 	NOTICE,
 	FOOD,
-	SPORTS
+	SPORTS,
+	CONVENIENCE,
+	BAR,
+	EDUCATION,
+	HOSPITAL
 }

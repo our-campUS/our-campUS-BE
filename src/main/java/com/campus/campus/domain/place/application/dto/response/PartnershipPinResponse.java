@@ -1,4 +1,4 @@
-package com.campus.campus.domain.partnership.application.dto.response;
+package com.campus.campus.domain.place.application.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

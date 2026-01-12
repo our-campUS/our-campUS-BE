@@ -22,6 +22,7 @@ public record GetPostForUserResponse(
 	String title,
 	String content,
 	String place,
+	String detailedLocation,
 	LocalDate startDate,
 	LocalDate endDate,
 	LocalDateTime startDateTime,
