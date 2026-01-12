@@ -112,7 +112,6 @@ public class PlaceService {
 		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
-	@Transactional
 	public Place findOrCreatePlace(SavedPlaceInfo place) {
 		String placeKey = place.placeKey();
 
