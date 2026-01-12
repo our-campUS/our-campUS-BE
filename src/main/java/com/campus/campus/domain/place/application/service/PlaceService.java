@@ -118,11 +118,17 @@ public class PlaceService {
 
 		return placeRepository.findByPlaceKey(placeKey)
 			.orElseGet(() -> {
-				Place newPlace = placeRepository.save(placeMapper.createPlace(place));
+				try {
+					Place newPlace = placeRepository.save(placeMapper.createPlace(place));
 
-				migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
+					migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
 
-				return newPlace;
+					return newPlace;
+				} catch (DataIntegrityViolationException e) {
+					log.info("해당 키에 대한 장소 동시 생성이 감지되었습니다.: {}", placeKey);
+					return placeRepository.findByPlaceKey(placeKey)
+						.orElseThrow(PlaceCreationException::new);
+				}
 			});
 	}
 
