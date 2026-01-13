@@ -35,6 +35,7 @@ import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
+import com.campus.campus.domain.stamp.application.service.StampService;
 import com.campus.campus.domain.stamp.domain.repository.StampRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -56,6 +57,7 @@ public class ReviewService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final StampService stampService;
 	private final StampRepository stampRepository;
 
 	@Transactional
@@ -76,6 +78,13 @@ public class ReviewService {
 			for (String imageUrl : request.imageUrls()) {
 				reviewImageRepository.save(reviewMapper.createReviewImage(review, imageUrl));
 			}
+		}
+
+		// isOcrVerificationSuccess는 ocr이 성공했다고 가정하고 구현했습니다. 이는 ocr을 구현하면서 수정해주시면 됩니다.
+		boolean isOcrVerificationSuccess = true;
+		if (isOcrVerificationSuccess) {
+			review.verify();
+			stampService.grantStampForReview(user, review);
 		}
 
 		String imageUrl =
