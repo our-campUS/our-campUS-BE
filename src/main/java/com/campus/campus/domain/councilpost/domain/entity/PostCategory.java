@@ -31,7 +31,7 @@ public enum PostCategory {
 			}
 			return new NormalizedDateTime(
 				dto.startDateTime().with(LocalTime.MIN),
-				dto.endDateTime().with(LocalTime.MAX)
+				dto.endDateTime().with(LocalTime.of(23, 59, 59))
 			);
 		}
 	};
