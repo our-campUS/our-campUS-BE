@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
@@ -280,5 +281,33 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("minLng") Double minLng,
 		@Param("maxLng") Double maxLng,
 		@Param("now") LocalDateTime now
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
+	@Query("""
+        SELECT p FROM StudentCouncilPost p
+        JOIN FETCH p.writer w
+        JOIN FETCH p.place pl
+        LEFT JOIN w.school s
+        LEFT JOIN w.college c
+        LEFT JOIN w.major m
+        WHERE p.category = 'PARTNERSHIP'
+          AND p.thumbnailIcon = :icon
+          AND :now BETWEEN p.startDateTime AND p.endDateTime
+          AND w.deletedAt IS NULL
+          AND (
+               (w.councilType = 'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
+            OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
+            OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
+          )
+        ORDER BY function('RAND')
+        """)
+	List<StudentCouncilPost> findRandomPartnershipPlace(
+		@Param("schoolId") Long schoolId,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
+		@Param("icon") ThumbnailIcon icon,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
 	);
 }
