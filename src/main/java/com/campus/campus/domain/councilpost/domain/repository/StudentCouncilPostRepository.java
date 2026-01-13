@@ -281,4 +281,36 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("maxLng") Double maxLng,
 		@Param("now") LocalDateTime now
 	);
+
+	@EntityGraph(attributePaths = {"place"})
+	@Query("""
+		    SELECT scp
+		    FROM StudentCouncilPost scp
+		    JOIN scp.writer sc
+		    LEFT JOIN Review r
+		           ON r.place = scp.place
+		          AND r.createdAt >= :from
+		    WHERE scp.startDateTime <= :now
+		      AND scp.endDateTime >= :now
+		      AND (
+		             (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.MAJOR_COUNCIL
+		                  AND sc.major.majorId = :majorId)
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.COLLEGE_COUNCIL
+		                  AND sc.college.collegeId = :collegeId)
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.SCHOOL_COUNCIL
+		                  AND sc.school.schoolId = :schoolId)
+		      )
+			AND sc.deletedAt IS NULL
+		    GROUP BY scp
+		    ORDER BY COUNT(r.id) DESC
+		""")
+	List<StudentCouncilPost> findTop3RecommendedPartnershipPlaces(
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId,
+		@Param("from") LocalDateTime from,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
+	);
+
 }

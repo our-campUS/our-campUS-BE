@@ -19,6 +19,7 @@ bin/
 
 ### IntelliJ IDEA ###
 .env
+.oci-keys/
 .idea
 *.iws
 *.iml
@@ -26,6 +27,7 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+src/main/resources/oci
 
 ### NetBeans ###
 /nbproject/private/

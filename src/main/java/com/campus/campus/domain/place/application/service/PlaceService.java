@@ -14,7 +14,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
@@ -88,7 +87,7 @@ public class PlaceService {
 
 		return processSearchResults(naverSearchResponse);
 	}
-
+	
 	public Place findOrCreatePlace(SavedPlaceInfo place) {
 		String placeKey = place.placeKey();
 
