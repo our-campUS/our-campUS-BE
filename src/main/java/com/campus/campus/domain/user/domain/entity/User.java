@@ -50,9 +50,9 @@ public class User extends BaseEntity {
 	@Column(name = "campus_nickname")
 	private String campusNickname;
 
-	@Column(name = "is_reward_needed")
+	@Column(name = "reward_needed")
 	@Builder.Default
-	private boolean isRewardNeeded = false;
+	private boolean RewardNeeded = false;
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
@@ -87,7 +87,7 @@ public class User extends BaseEntity {
 		return this.school == null || this.major == null;
 	}
 
-	public void updateIsRewardNeeded(boolean isRewardNeeded) {
-		this.isRewardNeeded = isRewardNeeded;
+	public void updateRewardNeeded(boolean RewardNeeded) {
+		this.RewardNeeded = RewardNeeded;
 	}
 }

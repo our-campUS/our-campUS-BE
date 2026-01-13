@@ -28,7 +28,7 @@ public class StampService {
 
 		int currentStampCount = stampRepository.countByUser(user);
 		if (currentStampCount >= 10 && !user.isRewardNeeded()) {
-			user.updateIsRewardNeeded(true);
+			user.updateRewardNeeded(true);
 		}
 	}
 }
