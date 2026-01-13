@@ -35,6 +35,7 @@ import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
+import com.campus.campus.domain.stamp.domain.repository.StampRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -55,6 +56,7 @@ public class ReviewService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final StampRepository stampRepository;
 
 	@Transactional
 	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
@@ -65,7 +67,6 @@ public class ReviewService {
 			throw new PostImageLimitExceededException();
 		}
 
-		//place 객체 생성
 		Place place = placeService.findOrCreatePlace(request.place());
 
 		Review review = reviewMapper.createReview(request, user, place);
@@ -274,14 +275,13 @@ public class ReviewService {
 	}
 
 	private ReviewCreateResult getCreateResult(Place place, User user) {
-		//해당 장소 리뷰 개수
 		long totalReviewCountOfPlace = reviewRepository.countByPlace_PlaceId(place.getPlaceId());
 
-		//해당 장소에서 유저가 쓴 리뷰가 몇번째인지
 		long count = reviewRepository.countByPlaceAndUser(place, user);
 		boolean isFirstReviewOfPlace = totalReviewCountOfPlace == 1;
+		int NumberOfStamp = stampRepository.countByUser(user);
 
-		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, count);
+		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, count, NumberOfStamp);
 
 	}
 
