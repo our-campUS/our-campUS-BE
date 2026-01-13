@@ -66,9 +66,9 @@ public class PlaceService {
 	private static final LocalTime CAFE_START = LocalTime.of(14, 0);
 	private static final LocalTime CAFE_END = LocalTime.of(17, 0);
 	private static final LocalTime DINNER_START = LocalTime.of(17, 0);
-	private static final LocalTime DINNER_END = LocalTime.of(23, 0);
-	private static final LocalTime BAR_START = LocalTime.of(23, 0);
-	private static final LocalTime BAR_END = LocalTime.of(0, 0);
+	private static final LocalTime DINNER_END = LocalTime.of(20, 0);
+	private static final LocalTime BAR_START = LocalTime.of(20, 0);
+	private static final LocalTime BAR_END = LocalTime.of(23, 30);
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
 	private final NaverMapClient naverMapClient;
