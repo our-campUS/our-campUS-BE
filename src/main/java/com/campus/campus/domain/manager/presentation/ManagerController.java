@@ -17,6 +17,7 @@ import com.campus.campus.domain.manager.application.dto.response.CertifyRequestC
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
+import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
 import com.campus.campus.domain.manager.application.service.ManagerService;
 import com.campus.campus.global.common.response.CommonResponse;
 
@@ -67,5 +68,14 @@ public class ManagerController {
 		List<CertifyRequestCouncilListResponse> responses = managerService.getCertifyRequestCouncils();
 
 		return CommonResponse.success(ManagerResponseCode.CERTIFY_REQUEST_LIST_SUCCESS, responses);
+	}
+
+	@GetMapping("/reward/need/users")
+	@PreAuthorize("hasRole('MANAGER')")
+	@Operation(summary = "스탬프 보상이 필요한 유저 목록 조회")
+	public CommonResponse<List<StampRewardNeededUserListResponse>> getStampRewardNeededUserList() {
+		List<StampRewardNeededUserListResponse> responses = managerService.getStampRewardNeededUserList();
+
+		return CommonResponse.success(ManagerResponseCode.REWARD_NEEDED_USER_LIST_SUCCESS, responses);
 	}
 }

@@ -18,11 +18,15 @@ import com.campus.campus.domain.manager.application.dto.response.CertifyRequestC
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
+import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
 import com.campus.campus.domain.manager.application.exception.ManagerNotFoundException;
 import com.campus.campus.domain.manager.application.exception.PasswordNotCorrectException;
 import com.campus.campus.domain.manager.application.mapper.ManagerMapper;
 import com.campus.campus.domain.manager.domain.entity.Manager;
 import com.campus.campus.domain.manager.domain.repository.ManagerRepository;
+import com.campus.campus.domain.stamp.domain.repository.StampRepository;
+import com.campus.campus.domain.user.domain.entity.User;
+import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.util.jwt.JwtProvider;
 import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 
@@ -34,6 +38,8 @@ import lombok.RequiredArgsConstructor;
 public class ManagerService {
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final ManagerRepository managerRepository;
+	private final UserRepository userRepository;
+	private final StampRepository stampRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProvider jwtProvider;
 	private final RedisTokenService redisTokenService;
@@ -94,6 +100,17 @@ public class ManagerService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		return managerMapper.toCertifyRequestCouncilResponse(studentCouncil);
+	}
+
+	public List<StampRewardNeededUserListResponse> getStampRewardNeededUserList() {
+		List<User> rewardNeededUsers = userRepository.findAllByRewardNeededIsTrueAndDeletedAtIsNull();
+
+		return rewardNeededUsers.stream()
+			.map(user -> {
+					int stampCount = stampRepository.countByUser(user);
+					return managerMapper.toStampRewardNeededUserListResponse(user, stampCount);
+				}
+			).toList();
 	}
 
 	private void sendCouncilApprovedMail(String to) {

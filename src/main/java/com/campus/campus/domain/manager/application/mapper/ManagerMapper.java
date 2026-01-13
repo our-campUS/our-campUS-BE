@@ -7,7 +7,9 @@ import com.campus.campus.domain.manager.application.dto.response.CertifyRequestC
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
+import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
 import com.campus.campus.domain.manager.domain.entity.Manager;
+import com.campus.campus.domain.user.domain.entity.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +45,19 @@ public class ManagerMapper {
 			studentCouncil.getId(),
 			studentCouncil.getCouncilName(),
 			studentCouncil.getElectionImageUrl()
+		);
+	}
+
+	public StampRewardNeededUserListResponse toStampRewardNeededUserListResponse(User user, int stampCount) {
+		String nickname = user.getCampusNickname();
+		if (nickname == null || nickname.isBlank()) {
+			nickname = user.getNickname();
+		}
+		return new StampRewardNeededUserListResponse(
+			user.getId(),
+			nickname,
+			stampCount,
+			user.isRewardNeeded()
 		);
 	}
 }
