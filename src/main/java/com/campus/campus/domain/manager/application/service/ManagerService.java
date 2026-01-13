@@ -14,6 +14,7 @@ import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.manager.application.dto.request.CouncilApproveOrDenyRequest;
 import com.campus.campus.domain.manager.application.dto.request.ManagerLoginRequest;
+import com.campus.campus.domain.manager.application.dto.request.RewardRequest;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilResponse;
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
@@ -24,7 +25,10 @@ import com.campus.campus.domain.manager.application.exception.PasswordNotCorrect
 import com.campus.campus.domain.manager.application.mapper.ManagerMapper;
 import com.campus.campus.domain.manager.domain.entity.Manager;
 import com.campus.campus.domain.manager.domain.repository.ManagerRepository;
+import com.campus.campus.domain.stamp.domain.entity.Reward;
+import com.campus.campus.domain.stamp.domain.repository.RewardRepository;
 import com.campus.campus.domain.stamp.domain.repository.StampRepository;
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.util.jwt.JwtProvider;
@@ -40,6 +44,7 @@ public class ManagerService {
 	private final ManagerRepository managerRepository;
 	private final UserRepository userRepository;
 	private final StampRepository stampRepository;
+	private final RewardRepository rewardRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProvider jwtProvider;
 	private final RedisTokenService redisTokenService;
@@ -111,6 +116,18 @@ public class ManagerService {
 					return managerMapper.toStampRewardNeededUserListResponse(user, stampCount);
 				}
 			).toList();
+	}
+
+	@Transactional
+	public void grantRewardToUser(Long userId, RewardRequest rewardRequest) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Reward reward = managerMapper.createReward(user, rewardRequest);
+
+		rewardRepository.save(reward);
+
+		user.updateRewardNeeded(false);
 	}
 
 	private void sendCouncilApprovedMail(String to) {
