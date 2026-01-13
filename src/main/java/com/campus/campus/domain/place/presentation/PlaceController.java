@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
 import com.campus.campus.domain.place.application.service.PartnershipPlaceService;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
@@ -55,7 +56,7 @@ public class PlaceController {
 		)
 		@RequestParam double lng
 	) {
-		List<SavedPlaceInfo> searchResponse = placeService.searchByLocationAndKeyword(lat, lng, keyword);
+		List<SavedPlaceInfo> searchResponse = placeService.searchByLocationAndKeyword(lat, lng, keyword, 3);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
@@ -63,7 +64,7 @@ public class PlaceController {
 	@GetMapping("/search/keyword")
 	@Operation(summary = "키워드 기반 장소 검색")
 	public CommonResponse<List<SavedPlaceInfo>> getPlaceInfoWithKeyword(@RequestParam String keyword) {
-		List<SavedPlaceInfo> searchResponse = placeService.searchByKeyword(keyword);
+		List<SavedPlaceInfo> searchResponse = placeService.searchByKeyword(keyword, 3);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
@@ -130,7 +131,8 @@ public class PlaceController {
 			example = "5"
 		)
 		@RequestParam(defaultValue = "5") int size) {
-		List<PartnershipResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size, lat, lng);
+		List<PartnershipResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size, lat,
+			lng);
 
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACES_SUCCESS, response);
 	}
@@ -189,5 +191,17 @@ public class PlaceController {
 		return CommonResponse.success(
 			PlaceResponseCode.CHECK_ONE_PARTNERSHIP_PLACE_SUCCESS,
 			partnershipPlaceService.getPartnershipDetail(postId, userId, lat, lng));
+	}
+
+	@GetMapping("/random")
+	@Operation(summary = "시간대별 랜덤 장소 추천 (제휴 장소 2, 랜덤 장소 2) (홈화면)")
+	public CommonResponse<RecommendPlaceByTimeResponse> getRandomPlaceByTime(
+		@CurrentUserId Long userId,
+		@RequestParam double lat,
+		@RequestParam double lng
+	) {
+		RecommendPlaceByTimeResponse response = placeService.findRecommendations(userId, lat, lng);
+
+		return CommonResponse.success(PlaceResponseCode.GET_RANDOM_PLACE_SUCCESS, response);
 	}
 }

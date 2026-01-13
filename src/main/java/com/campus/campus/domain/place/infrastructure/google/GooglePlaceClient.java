@@ -51,7 +51,7 @@ public class GooglePlaceClient {
 	/*
 	 * 장소 이름 + 주소를 기준으로 google places에서 이미지 URL 목록을 가져옴
 	 */
-	public List<String> fetchImages(String name, String address, int limit) {
+	public List<String> fetchImages(String name, String address, int imageLimit) {
 		boolean acquired = false;
 		try {
 			acquired = googleApiSemaphore.tryAcquire(5, TimeUnit.SECONDS);
@@ -73,7 +73,7 @@ public class GooglePlaceClient {
 
 			//imageURL 생성
 			List<String> imageUrls = photoRefs.stream()
-				.limit(3)
+				.limit(imageLimit)
 				.map(this::buildPhotoUrl)
 				.toList();
 

@@ -8,6 +8,9 @@ import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
@@ -66,6 +69,37 @@ public class PlaceMapper {
 			distance,
 			post.getEndDateTime().toLocalDate(),
 			imgUrls
+		);
+	}
+
+	public RecommendPlaceByTimeResponse toRecommendPlaceByTimeResponse(String type,
+		List<RecommendPartnershipPlaceResponse> partnershipPosts, List<RecommendNearByPlaceResponse> nearbyPlaces) {
+
+		return new RecommendPlaceByTimeResponse(type, partnershipPosts, nearbyPlaces);
+	}
+
+	public RecommendPartnershipPlaceResponse toRecommendPartnershipPlaceResponse(StudentCouncilPost post) {
+		return new RecommendPartnershipPlaceResponse(
+			post.getPlace().getPlaceId(),
+			post.getPlace().getPlaceName(),
+			post.getWriter().getCouncilName(),
+			post.getTitle(),
+			post.getPlace().getAddress(),
+			post.getThumbnailImageUrl()
+		);
+	}
+
+	public RecommendNearByPlaceResponse toRecommendNearByPlaceResponse(SavedPlaceInfo savedPlaceInfo,
+		List<String> imageUrl) {
+		return new RecommendNearByPlaceResponse(
+			savedPlaceInfo.placeName(),
+			savedPlaceInfo.placeKey(),
+			savedPlaceInfo.address(),
+			savedPlaceInfo.category(),
+			savedPlaceInfo.link(),
+			savedPlaceInfo.telephone(),
+			savedPlaceInfo.coordinate(),
+			imageUrl
 		);
 	}
 
