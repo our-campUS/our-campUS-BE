@@ -52,7 +52,7 @@ public class User extends BaseEntity {
 
 	@Column(name = "reward_needed")
 	@Builder.Default
-	private boolean RewardNeeded = false;
+	private boolean rewardNeeded = false;
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
@@ -87,7 +87,7 @@ public class User extends BaseEntity {
 		return this.school == null || this.major == null;
 	}
 
-	public void updateRewardNeeded(boolean RewardNeeded) {
-		this.RewardNeeded = RewardNeeded;
+	public void updateRewardNeeded(boolean rewardNeeded) {
+		this.rewardNeeded = rewardNeeded;
 	}
 }
