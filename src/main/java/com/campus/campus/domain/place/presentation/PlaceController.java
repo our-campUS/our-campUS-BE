@@ -202,6 +202,6 @@ public class PlaceController {
 	) {
 		RecommendPlaceByTimeResponse response = placeService.findRecommendations(userId, lat, lng);
 
-		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, response);
+		return CommonResponse.success(PlaceResponseCode.GET_RANDOM_PLACE_SUCCESS, response);
 	}
 }
