@@ -66,9 +66,9 @@ public class PlaceService {
 	private static final LocalTime CAFE_START = LocalTime.of(14, 0);
 	private static final LocalTime CAFE_END = LocalTime.of(17, 0);
 	private static final LocalTime DINNER_START = LocalTime.of(17, 0);
-	private static final LocalTime DINNER_END = LocalTime.of(20, 0);
-	private static final LocalTime BAR_START = LocalTime.of(20, 0);
-	private static final LocalTime BAR_END = LocalTime.of(23, 0);
+	private static final LocalTime DINNER_END = LocalTime.of(23, 0);
+	private static final LocalTime BAR_START = LocalTime.of(23, 0);
+	private static final LocalTime BAR_END = LocalTime.of(0, 0);
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
 	private final NaverMapClient naverMapClient;
@@ -78,6 +78,7 @@ public class PlaceService {
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PlaceImagesRepository placeImagesRepository;
 	private final PresignedUrlService presignedUrlService;
+	private final RedisPlaceCacheService redisPlaceCacheService;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
@@ -360,7 +361,18 @@ public class PlaceService {
 	}
 
 	private List<RecommendNearByPlaceResponse> getRandomNearByPlaces(double lat, double lng, String keyword) {
-		List<SavedPlaceInfo> searchResults = searchByLocationAndKeyword(lat, lng, keyword, 1);
+		Optional<List<SavedPlaceInfo>> cachedPlaces = redisPlaceCacheService.getCachedPlaces(lat, lng, keyword);
+
+		List<SavedPlaceInfo> searchResults;
+
+		if (cachedPlaces.isPresent()) {
+			searchResults = cachedPlaces.get();
+		} else {
+			searchResults = searchByLocationAndKeyword(lat, lng, keyword, 1);
+			if (!searchResults.isEmpty()) {
+				redisPlaceCacheService.cachePlaces(keyword, lat, lng, searchResults);
+			}
+		}
 
 		if (searchResults.isEmpty()) {
 			return List.of();
