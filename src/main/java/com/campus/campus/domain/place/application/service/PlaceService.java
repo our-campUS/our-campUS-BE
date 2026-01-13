@@ -326,15 +326,15 @@ public class PlaceService {
 	}
 
 	private boolean isCafeTime(LocalTime now) {
-		return !now.isBefore(CAFE_START) && !now.isAfter(CAFE_END);
+		return !now.isBefore(CAFE_START) && now.isBefore(CAFE_END);
 	}
 
 	private boolean isDinnerTime(LocalTime now) {
-		return !now.isBefore(DINNER_START) && !now.isAfter(DINNER_END);
+		return !now.isBefore(DINNER_START) && now.isBefore(DINNER_END);
 	}
 
 	private boolean isBarTime(LocalTime now) {
-		return !now.isBefore(BAR_START) && !now.isAfter(BAR_END);
+		return !now.isBefore(BAR_START) && now.isBefore(BAR_END);
 	}
 
 	private RecommendPlaceByTimeResponse generateResponse(User user, double lat, double lng, ThumbnailIcon icon,
