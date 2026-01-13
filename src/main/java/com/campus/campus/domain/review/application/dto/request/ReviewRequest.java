@@ -6,17 +6,21 @@ import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record ReviewRequest(
 
 	@NotNull
-	@Size(min = 10, message = "리뷰 내용은 최소 20자 이상이어야 합니다.")
+	@Size(min = 10, message = "리뷰 내용은 최소 10자 이상이어야 합니다.")
 	@Schema(example = "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.")
 	String content,
 
 	@NotNull
+	@DecimalMin(value = "0.0", inclusive = true)
+	@DecimalMax(value = "5.0", inclusive = true)
 	@Schema(example = "3.5")
 	Double star,
 

@@ -19,6 +19,7 @@ bin/
 
 ### IntelliJ IDEA ###
 .env
+.oci-keys/
 .idea
 *.iws
 *.iml
