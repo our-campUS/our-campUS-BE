@@ -1,9 +1,10 @@
 package com.campus.campus.domain.review.application.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +39,6 @@ import com.campus.campus.domain.user.application.exception.UserNotFoundException
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
-import com.campus.campus.global.oci.exception.OciObjectDeleteFailException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -114,7 +114,7 @@ public class ReviewService {
 
 		List<ReviewImage> reviewImages = reviewImageRepository.findAllByReview(review);
 
-		List<String> deleted = new ArrayList<>();
+		Set<String> deleted = new HashSet<>();
 		reviewImages.stream()
 			.map(ReviewImage::getImageUrl)
 			.forEach(deleted::add);
@@ -125,7 +125,7 @@ public class ReviewService {
 		for (String imageUrl : deleted) {
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (OciObjectDeleteFailException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패: {}", imageUrl, e);
 			}
 		}
@@ -251,7 +251,7 @@ public class ReviewService {
 	//이미지 삭제
 	private void cleanupUnusedImages(List<ReviewImage> oldImages, ReviewRequest request) {
 		List<String> newUrls = request.imageUrls() == null ? List.of() : request.imageUrls();
-		List<String> deleteTargets = new ArrayList<>();
+		Set<String> deleteTargets = new HashSet<>();
 
 		// 본문 이미지 중 제거된 이미지
 		oldImages.stream()
@@ -267,7 +267,7 @@ public class ReviewService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (OciObjectDeleteFailException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}
