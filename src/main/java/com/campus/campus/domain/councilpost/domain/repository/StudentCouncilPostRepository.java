@@ -300,7 +300,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
             OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
             OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
           )
-        ORDER BY function('RAND')
+        ORDER BY p.id DESC
         """)
 	List<StudentCouncilPost> findRandomPartnershipPlace(
 		@Param("schoolId") Long schoolId,

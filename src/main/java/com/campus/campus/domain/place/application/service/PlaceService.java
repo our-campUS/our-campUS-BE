@@ -351,11 +351,20 @@ public class PlaceService {
 		Long collegeId = user.getCollege() != null ? user.getCollege().getCollegeId() : null;
 		Long majorId = user.getMajor() != null ? user.getMajor().getMajorId() : null;
 
+		int poolSize = 15;
 		List<StudentCouncilPost> posts = studentCouncilPostRepository.findRandomPartnershipPlace(
-			schoolId, collegeId, majorId, icon, LocalDateTime.now(KST), PageRequest.of(0, 2)
+			schoolId, collegeId, majorId, icon, LocalDateTime.now(KST), PageRequest.of(0, poolSize)
 		);
 
-		return posts.stream()
+		if (posts.isEmpty()) {
+			return List.of();
+		}
+
+		List<StudentCouncilPost> mutablePosts = new ArrayList<>(posts);
+		Collections.shuffle(mutablePosts);
+
+		return mutablePosts.stream()
+			.limit(2)
 			.map(placeMapper::toRecommendPartnershipPlaceResponse)
 			.toList();
 	}
