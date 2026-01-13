@@ -286,8 +286,8 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
 	@Query("""
         SELECT p FROM StudentCouncilPost p
-        JOIN FETCH p.writer w
-        JOIN FETCH p.place pl
+        JOIN p.writer w
+        JOIN p.place pl
         LEFT JOIN w.school s
         LEFT JOIN w.college c
         LEFT JOIN w.major m
