@@ -293,13 +293,14 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		    WHERE scp.startDateTime <= :now
 		      AND scp.endDateTime >= :now
 		      AND (
-		             (sc.councilType = com.campus.campus.domain.studentcouncil.domain.CouncilType.MAJOR_COUNCIL
+		             (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.MAJOR_COUNCIL
 		                  AND sc.major.majorId = :majorId)
-		          OR (sc.councilType = com.campus.campus.domain.studentcouncil.domain.CouncilType.COLLEGE_COUNCIL
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.COLLEGE_COUNCIL
 		                  AND sc.college.collegeId = :collegeId)
-		          OR (sc.councilType = com.campus.campus.domain.studentcouncil.domain.CouncilType.SCHOOL_COUNCIL
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.SCHOOL_COUNCIL
 		                  AND sc.school.schoolId = :schoolId)
 		      )
+			AND sc.deletedAt IS NULL
 		    GROUP BY scp
 		    ORDER BY COUNT(r.id) DESC
 		""")

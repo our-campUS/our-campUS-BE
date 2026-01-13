@@ -78,7 +78,8 @@ public class ReviewService {
 		}
 
 		String imageUrl =
-			request.imageUrls() == null ? null : request.imageUrls().getFirst();
+			(request.imageUrls() == null || request.imageUrls().isEmpty())
+				? null : request.imageUrls().getFirst();
 
 		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, imageUrl);
 		ReviewCreateResult createResult = getCreateResult(place, user);
@@ -160,7 +161,8 @@ public class ReviewService {
 		cleanupUnusedImages(oldImages, request);
 
 		String imageUrl =
-			request.imageUrls() == null ? null : request.imageUrls().getFirst();
+			(request.imageUrls() == null || request.imageUrls().isEmpty())
+				? null : request.imageUrls().getFirst();
 
 		return reviewMapper.toWriteReviewResponse(review, imageUrl);
 	}

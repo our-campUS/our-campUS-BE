@@ -19,6 +19,7 @@ import com.campus.campus.domain.review.application.dto.response.CursorPageReview
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -97,12 +98,12 @@ public class ReviewController {
 
 	@PatchMapping("/{reviewId}")
 	@Operation(summary = "리뷰 수정")
-	public CommonResponse<ReviewResponse> updateReview(
+	public CommonResponse<WriteReviewResponse> updateReview(
 		@CurrentUserId Long userId,
 		@PathVariable Long reviewId,
 		@RequestBody @Valid ReviewRequest request
 	) {
-		ReviewResponse response = reviewService.update(userId, reviewId, request);
+		WriteReviewResponse response = reviewService.update(userId, reviewId, request);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_UPDATE_SUCCESS, response);
 	}
 
