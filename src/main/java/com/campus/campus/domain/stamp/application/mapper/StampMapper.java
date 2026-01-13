@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.stamp.application.dto.response.RewardResponse;
+import com.campus.campus.domain.stamp.application.dto.response.StampReviewResponse;
 import com.campus.campus.domain.stamp.domain.entity.Reward;
 import com.campus.campus.domain.stamp.domain.entity.Stamp;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -18,6 +19,16 @@ public class StampMapper {
 			reward.getRewardId(),
 			reward.getRewardImageUrl(),
 			reward.getCreatedAt()
+		);
+	}
+
+	public StampReviewResponse toStampReviewResponse(Stamp stamp) {
+		Review review = stamp.getReview();
+
+		return new StampReviewResponse(
+			review.getId(),
+			review.getPlace().getPlaceName(),
+			review.getCreatedAt()
 		);
 	}
 
