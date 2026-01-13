@@ -11,6 +11,7 @@ import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostC
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostDetailResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
@@ -20,6 +21,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.PostListIte
 import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.user.domain.entity.User;
 
@@ -87,6 +89,33 @@ public class StudentCouncilPostMapper {
 			.title(post.getTitle())
 			.content(post.getContent())
 			.placeName(post.getPlace().getPlaceName())
+			.detailedLocation(post.getDetailedLocation())
+			.thumbnailImageUrl(post.getThumbnailImageUrl())
+			.thumbnailIcon(post.getThumbnailIcon())
+			.images(images != null ? images : Collections.emptyList());
+
+		if (post.isEvent()) {
+			builder.startDateTime(post.getStartDateTime());
+		} else {
+			builder.startDate(post.getDisplayStartDate());
+			builder.endDate(post.getDisplayEndDate());
+		}
+
+		return builder.build();
+	}
+
+	public GetPostDetailResponse toGetPostDetailResponse(StudentCouncilPost post, List<String> images,
+		List<String> placeImageUrls, Long currentCouncilId) {
+		var writer = post.getWriter();
+		var builder = GetPostDetailResponse.builder()
+			.id(post.getId())
+			.writerId(writer.getId())
+			.writerName(writer.getCouncilName())
+			.isWriter(post.isWrittenByCouncil(currentCouncilId))
+			.category(post.getCategory())
+			.title(post.getTitle())
+			.content(post.getContent())
+			.place(toSavedPlaceInfo(post.getPlace(), placeImageUrls))
 			.detailedLocation(post.getDetailedLocation())
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
@@ -186,6 +215,23 @@ public class StudentCouncilPostMapper {
 			writer.getCouncilName(),
 			post.getCategory(),
 			topic
+		);
+	}
+
+	private SavedPlaceInfo toSavedPlaceInfo(Place place, List<String> imageUrls) {
+		if (place == null) {
+			return null;
+		}
+
+		return new SavedPlaceInfo(
+			place.getPlaceName(),
+			place.getPlaceKey(),
+			place.getAddress(),
+			place.getPlaceCategory(),
+			place.getNaverPlaceUrl(),
+			place.getPhone(),
+			place.getCoordinate(),
+			imageUrls != null ? imageUrls : Collections.emptyList()
 		);
 	}
 }

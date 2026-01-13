@@ -59,7 +59,7 @@ public class PlaceService {
 	private final ExecutorService executorService;
 	private final GeoCoderClient geoCoderClient;
 
-	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
+	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword) {
 		String searchWord = keyword;
 
 		try {
@@ -79,36 +79,13 @@ public class PlaceService {
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
 
-		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
-			.map(item -> {
-				String name = stripHtml(item.title());
-				String address = item.roadAddress();
-				String placeKey = PlaceKeyGenerator.generate(name, address);
-				String naverPlaceUrl = buildNaverPlaceUrl(item);
-				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
-			})
-			.toList();
+		return processSearchResults(naverSearchResponse);
+	}
 
-		List<String> placeKeys = candidates.stream()
-			.map(SearchCandidateResponse::placeKey)
-			.distinct()
-			.toList();
+	public List<SavedPlaceInfo> searchByKeyword(String keyword) {
+		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
 
-		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
-			.collect(Collectors.groupingBy(
-				PlaceImages::getPlaceKey,
-				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
-			));
-
-		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
-			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
-					executorService)
-				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
-				.exceptionally(ex -> fallback(response)))
-			.toList();
-
-		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-		return futures.stream().map(CompletableFuture::join).toList();
+		return processSearchResults(naverSearchResponse);
 	}
 	
 	public Place findOrCreatePlace(SavedPlaceInfo place) {
@@ -171,6 +148,39 @@ public class PlaceService {
 		likedPlacesRepository.save(savedLikedPlace);
 
 		return placeMapper.toLikeResponse(place);
+	}
+
+	private List<SavedPlaceInfo> processSearchResults(NaverSearchResponse naverSearchResponse) {
+		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
+			.map(item -> {
+				String name = stripHtml(item.title());
+				String address = item.roadAddress();
+				String placeKey = PlaceKeyGenerator.generate(name, address);
+				String naverPlaceUrl = buildNaverPlaceUrl(item);
+				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
+			})
+			.toList();
+
+		List<String> placeKeys = candidates.stream()
+			.map(SearchCandidateResponse::placeKey)
+			.distinct()
+			.toList();
+
+		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
+			.collect(Collectors.groupingBy(
+				PlaceImages::getPlaceKey,
+				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
+			));
+
+		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
+			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
+					executorService)
+				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
+				.exceptionally(ex -> fallback(response)))
+			.toList();
+
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
 	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images) {
