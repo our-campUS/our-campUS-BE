@@ -1,20 +1,29 @@
 package com.campus.campus.domain.stamp.application.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.review.domain.entity.Review;
+import com.campus.campus.domain.stamp.application.dto.response.RewardResponse;
 import com.campus.campus.domain.stamp.application.mapper.StampMapper;
 import com.campus.campus.domain.stamp.domain.entity.Stamp;
+import com.campus.campus.domain.stamp.domain.repository.RewardRepository;
 import com.campus.campus.domain.stamp.domain.repository.StampRepository;
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
+import com.campus.campus.domain.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class StampService {
 	private final StampRepository stampRepository;
+	private final RewardRepository rewardRepository;
+	private final UserRepository userRepository;
 	private final StampMapper stampMapper;
 
 	@Transactional
@@ -30,5 +39,15 @@ public class StampService {
 		if (currentStampCount >= 10 && !user.isRewardNeeded()) {
 			user.updateRewardNeeded(true);
 		}
+	}
+
+	public List<RewardResponse> findRewards(Long userId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		return rewardRepository.findAllByUserOrderByRewardIdDesc(user)
+			.stream()
+			.map(stampMapper::toRewardResponse)
+			.toList();
 	}
 }
