@@ -31,12 +31,13 @@ public class ClovaOcrClient {
 	public String requestReceiptOcr(File imageFile) {
 		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
+		//message 파트
 		body.add("message", createMessage());
 		body.add("file", new FileSystemResource(imageFile));
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 		headers.set("X-OCR-SECRET", secretKey);
+		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
 		HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
 
@@ -48,10 +49,10 @@ public class ClovaOcrClient {
 	private String createMessage() {
 		return """
 			{
-			  "images":[{"format":"jpg","name":"receipt"}],
-			  "requestId":"%s",
 			  "version":"V2",
-			  "timestamp":%d
+			  "requestId":"%s",
+			  "timestamp":%d,
+			  "images":[{"format":"jpg","name":"file"}],
 			}
 			""".formatted(UUID.randomUUID(), System.currentTimeMillis());
 	}
