@@ -50,6 +50,9 @@ public class StudentCouncilPost extends BaseEntity {
 	@JoinColumn(name = "place_id")
 	private Place place;
 
+	@Column(name = "detailed_location")
+	private String detailedLocation;
+
 	private LocalDateTime startDateTime;
 	private LocalDateTime endDateTime;
 
@@ -62,6 +65,7 @@ public class StudentCouncilPost extends BaseEntity {
 		String title,
 		String content,
 		Place place,
+		String detailedLocation,
 		LocalDateTime startDateTime,
 		LocalDateTime endDateTime,
 		String thumbnailImageUrl,
@@ -71,6 +75,7 @@ public class StudentCouncilPost extends BaseEntity {
 		this.title = title;
 		this.content = content;
 		this.place = place;
+		this.detailedLocation = detailedLocation;
 		this.startDateTime = startDateTime;
 		this.endDateTime = endDateTime;
 		this.category = category;

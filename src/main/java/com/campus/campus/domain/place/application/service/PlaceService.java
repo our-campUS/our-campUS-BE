@@ -14,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
@@ -59,7 +60,7 @@ public class PlaceService {
 	private final ExecutorService executorService;
 	private final GeoCoderClient geoCoderClient;
 
-	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
+	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword) {
 		String searchWord = keyword;
 
 		try {
@@ -79,45 +80,32 @@ public class PlaceService {
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
 
-		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
-			.map(item -> {
-				String name = stripHtml(item.title());
-				String address = item.roadAddress();
-				String placeKey = PlaceKeyGenerator.generate(name, address);
-				String naverPlaceUrl = buildNaverPlaceUrl(item);
-				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
-			})
-			.toList();
-
-		List<String> placeKeys = candidates.stream()
-			.map(SearchCandidateResponse::placeKey)
-			.distinct()
-			.toList();
-
-		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
-			.collect(Collectors.groupingBy(
-				PlaceImages::getPlaceKey,
-				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
-			));
-
-		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
-			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
-					executorService)
-				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
-				.exceptionally(ex -> fallback(response)))
-			.toList();
-
-		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-		return futures.stream().map(CompletableFuture::join).toList();
+		return processSearchResults(naverSearchResponse);
 	}
 
-	@Transactional
+	public List<SavedPlaceInfo> searchByKeyword(String keyword) {
+		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
+
+		return processSearchResults(naverSearchResponse);
+	}
+
 	public Place findOrCreatePlace(SavedPlaceInfo place) {
 		String placeKey = place.placeKey();
 
-		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
 		return placeRepository.findByPlaceKey(placeKey)
-			.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place)));
+			.orElseGet(() -> {
+				try {
+					Place newPlace = placeRepository.save(placeMapper.createPlace(place));
+
+					migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
+
+					return newPlace;
+				} catch (DataIntegrityViolationException e) {
+					log.info("해당 키에 대한 장소 동시 생성이 감지되었습니다.: {}", placeKey);
+					return placeRepository.findByPlaceKey(placeKey)
+						.orElseThrow(PlaceCreationException::new);
+				}
+			});
 	}
 
 	//장소 저장
@@ -161,6 +149,39 @@ public class PlaceService {
 		likedPlacesRepository.save(savedLikedPlace);
 
 		return placeMapper.toLikeResponse(place);
+	}
+
+	private List<SavedPlaceInfo> processSearchResults(NaverSearchResponse naverSearchResponse) {
+		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
+			.map(item -> {
+				String name = stripHtml(item.title());
+				String address = item.roadAddress();
+				String placeKey = PlaceKeyGenerator.generate(name, address);
+				String naverPlaceUrl = buildNaverPlaceUrl(item);
+				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
+			})
+			.toList();
+
+		List<String> placeKeys = candidates.stream()
+			.map(SearchCandidateResponse::placeKey)
+			.distinct()
+			.toList();
+
+		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
+			.collect(Collectors.groupingBy(
+				PlaceImages::getPlaceKey,
+				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
+			));
+
+		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
+			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
+					executorService)
+				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
+				.exceptionally(ex -> fallback(response)))
+			.toList();
+
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
 	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images) {
@@ -216,6 +237,9 @@ public class PlaceService {
 	}
 
 	private void migrateImagesToOci(String placeKey, List<String> imageUrls) {
+		if (imageUrls == null || imageUrls.isEmpty()) {
+			return;
+		}
 
 		//google 이미지 OCI 업로드
 		for (String googleUrl : imageUrls) {

@@ -6,10 +6,9 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
-import com.campus.campus.domain.partnership.application.dto.response.PartnershipPinResponse;
+import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
-import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;

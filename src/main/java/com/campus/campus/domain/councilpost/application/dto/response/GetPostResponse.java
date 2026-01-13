@@ -23,6 +23,7 @@ public record GetPostResponse(
 	String title,
 	String content,
 	String placeName,
+	String detailedLocation,
 	LocalDate startDate,
 	LocalDate endDate,
 	LocalDateTime startDateTime,

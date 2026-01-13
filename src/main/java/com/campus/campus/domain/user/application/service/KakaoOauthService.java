@@ -46,8 +46,9 @@ public class KakaoOauthService {
 	private long refreshTokenExpirationSeconds;
 
 	@Transactional
-	public OauthLoginResponse login(String kakaoAccessToken) {
-		KakaoUserResponse kakaoUser = getUserInfo(kakaoAccessToken);
+	public OauthLoginResponse login(String authorizationCode) {
+		KakaoTokenResponse kakaoToken = getToken(authorizationCode);
+		KakaoUserResponse kakaoUser = getUserInfo(kakaoToken.accessToken());
 
 		User user = findOrCreateUser(kakaoUser);
 
