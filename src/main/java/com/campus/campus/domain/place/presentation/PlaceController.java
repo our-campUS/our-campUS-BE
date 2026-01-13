@@ -55,7 +55,7 @@ public class PlaceController {
 		)
 		@RequestParam double lng
 	) {
-		List<SavedPlaceInfo> searchResponse = placeService.searchByLocationAndKeyword(lat, lng, keyword);
+		List<SavedPlaceInfo> searchResponse = placeService.searchByLocationAndKeyword(lat, lng, keyword, 3);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
@@ -63,7 +63,7 @@ public class PlaceController {
 	@GetMapping("/search/keyword")
 	@Operation(summary = "키워드 기반 장소 검색")
 	public CommonResponse<List<SavedPlaceInfo>> getPlaceInfoWithKeyword(@RequestParam String keyword) {
-		List<SavedPlaceInfo> searchResponse = placeService.searchByKeyword(keyword);
+		List<SavedPlaceInfo> searchResponse = placeService.searchByKeyword(keyword, 3);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
