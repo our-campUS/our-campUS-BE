@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Size;
 public record ReviewRequest(
 
 	@NotNull
-	@Size(min = 20, message = "리뷰 내용은 최소 20자 이상이어야 합니다.")
+	@Size(min = 10, message = "리뷰 내용은 최소 20자 이상이어야 합니다.")
 	@Schema(example = "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.")
 	String content,
 
