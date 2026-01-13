@@ -25,5 +25,10 @@ public class StampService {
 
 		Stamp stamp = stampMapper.createStamp(user, review);
 		stampRepository.save(stamp);
+
+		int currentStampCount = stampRepository.countByUser(user);
+		if (currentStampCount >= 10 && !user.isRewardNeeded()) {
+			user.updateIsRewardNeeded(true);
+		}
 	}
 }
