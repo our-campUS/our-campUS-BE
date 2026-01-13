@@ -3,29 +3,27 @@ package com.campus.campus.domain.user.application.service;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import com.campus.campus.domain.user.application.exception.NicknameNotMatchException;
-import com.campus.campus.domain.user.application.exception.UserSignupForbiddenException;
-import com.campus.campus.domain.user.application.exception.UserNotFoundException;
-import com.campus.campus.global.auth.application.mapper.LoginMapper;
-import com.campus.campus.domain.user.application.mapper.UserMapper;
-import com.campus.campus.domain.user.domain.entity.User;
-import com.campus.campus.domain.user.domain.repository.UserRepository;
-import com.campus.campus.global.auth.application.dto.KakaoTokenResponse;
-import com.campus.campus.global.auth.application.dto.KakaoUserResponse;
-import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
-import com.campus.campus.global.auth.application.property.KakaoOauthProperty;
-import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
-import com.campus.campus.global.util.jwt.JwtProvider;
-
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+
+import com.campus.campus.domain.user.application.exception.NicknameNotMatchException;
+import com.campus.campus.domain.user.application.exception.UserNotFoundException;
+import com.campus.campus.domain.user.application.exception.UserSignupForbiddenException;
+import com.campus.campus.domain.user.application.mapper.UserMapper;
+import com.campus.campus.domain.user.domain.entity.User;
+import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.auth.application.dto.KakaoUserResponse;
+import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
+import com.campus.campus.global.auth.application.mapper.LoginMapper;
+import com.campus.campus.global.auth.application.property.KakaoOauthProperty;
+import com.campus.campus.global.util.jwt.JwtProvider;
+import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
