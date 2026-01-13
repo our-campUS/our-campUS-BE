@@ -5,7 +5,7 @@ import lombok.Builder;
 @Builder
 public record ReviewCreateResult(
 	boolean isFirstReviewOfPlace,
-	int userReviewCountOfPlace
-	// int NumberOfUserStamp,
+	int userReviewCountOfPlace,
+	int NumberOfUserStamp
 ) {
 }

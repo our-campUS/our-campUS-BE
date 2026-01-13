@@ -87,11 +87,12 @@ public class ReviewMapper {
 			.build();
 	}
 
-	public ReviewCreateResult toReviewCreateResult(boolean isFirstReviewOfPlace, long userReviewCountOfPlace) {
+	public ReviewCreateResult toReviewCreateResult(boolean isFirstReviewOfPlace, long userReviewCountOfPlace,
+		int numberOfUserStamp) {
 		return ReviewCreateResult.builder()
 			.isFirstReviewOfPlace(isFirstReviewOfPlace)
 			.userReviewCountOfPlace((int)userReviewCountOfPlace)
-			//스탬프 추가 예정
+			.NumberOfUserStamp(numberOfUserStamp)
 			.build();
 	}
 
