@@ -92,7 +92,7 @@ public class ReviewMapper {
 		return ReviewCreateResult.builder()
 			.isFirstReviewOfPlace(isFirstReviewOfPlace)
 			.userReviewCountOfPlace((int)userReviewCountOfPlace)
-			.NumberOfUserStamp(numberOfUserStamp)
+			.numberOfUserStamp(numberOfUserStamp)
 			.build();
 	}
 
