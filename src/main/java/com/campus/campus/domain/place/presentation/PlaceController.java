@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
-import com.campus.campus.domain.place.application.service.PartnershipPlaceService;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.service.PartnershipPlaceService;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -130,7 +130,8 @@ public class PlaceController {
 			example = "5"
 		)
 		@RequestParam(defaultValue = "5") int size) {
-		List<PartnershipResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size, lat, lng);
+		List<PartnershipResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size, lat,
+			lng);
 
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACES_SUCCESS, response);
 	}
@@ -190,4 +191,5 @@ public class PlaceController {
 			PlaceResponseCode.CHECK_ONE_PARTNERSHIP_PLACE_SUCCESS,
 			partnershipPlaceService.getPartnershipDetail(postId, userId, lat, lng));
 	}
+
 }

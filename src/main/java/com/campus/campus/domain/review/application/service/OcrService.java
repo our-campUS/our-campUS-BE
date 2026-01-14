@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.PaymentInfo;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptItemDto;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptOcrResponse;
@@ -32,8 +33,9 @@ public class OcrService {
 
 	private final ClovaOcrClient clovaOcrClient;
 	private final ObjectMapper objectMapper;
+	private final ReviewService reviewService;
 
-	public ReceiptResultDto processReceipt(MultipartFile file) {
+	public ReviewPartnerResponse processReceipt(MultipartFile file, Long userId, Long placeId) {
 		//MultipartFIle -> byte[]
 		byte[] imageBytes;
 		try {
@@ -46,7 +48,9 @@ public class OcrService {
 		String rawResponse = clovaOcrClient.requestReceiptOcr(imageBytes, file.getOriginalFilename());
 
 		ReceiptOcrResponse ocrResponse = parse(rawResponse);
-		return extractReceiptResult(ocrResponse);
+		ReceiptResultDto result = extractReceiptResult(ocrResponse);
+
+		return reviewService.findPartnership(placeId, result, userId);
 	}
 
 	private ReceiptOcrResponse parse(String json) {

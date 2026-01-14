@@ -20,8 +20,8 @@ import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
+import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
-import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
 import com.campus.campus.domain.review.application.service.OcrService;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -87,8 +87,13 @@ public class ReviewController {
 	}
 
 	@PostMapping("/receipt-ocr")
-	public CommonResponse<ReceiptResultDto> upload(@RequestPart MultipartFile file) {
-		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file));
+	@Operation(summary = "영수증 ocr을 통해 제휴 매장 이용 인증")
+	public CommonResponse<ReviewPartnerResponse> upload(
+		@RequestPart MultipartFile file,
+		@RequestParam(required = false) Long placeId,
+		@CurrentUserId Long userId
+	) {
+		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file, userId, placeId));
 	}
 
 	@GetMapping("/{reviewId}")

@@ -27,6 +27,7 @@ import com.campus.campus.domain.place.application.dto.response.partnership.Partn
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -45,6 +46,7 @@ public class PartnershipPlaceService {
 	private final PostImageRepository postImageRepository;
 	private final PlaceMapper placeMapper;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final ReviewService reviewService;
 
 	@Transactional(readOnly = true)
 	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
@@ -94,6 +96,9 @@ public class PartnershipPlaceService {
 			.map(post -> post.getPlace().getPlaceId())
 			.collect(Collectors.toSet());
 
+		Map<Long, Double> averageStarMap =
+			reviewService.getAverageListOfStars(placeIds);
+
 		Map<Long, List<String>> postImageMap = postImageRepository.findAllByPostIn(targetPosts)
 			.stream()
 			.collect(Collectors.groupingBy(
@@ -117,13 +122,16 @@ public class PartnershipPlaceService {
 				List<String> images = postImageMap.getOrDefault(post.getId(), List.of());
 				boolean isLiked = likedPlaceIds.contains(post.getPlace().getPlaceId());
 
+				double averageStar = averageStarMap.getOrDefault(post.getId(), 0.0);
+
 				return placeMapper.toPartnershipResponse(
 					user,
 					post,
 					post.getPlace(),
 					isLiked,
 					images,
-					rounded
+					rounded,
+					averageStar
 				);
 			})
 			.toList();
@@ -173,8 +181,10 @@ public class PartnershipPlaceService {
 			userLat, userLng, place.getCoordinate().latitude(), place.getCoordinate().longitude()
 		);
 		double rounded = Math.round(distanceMeter * 100.0) / 100.0;
+		double averageStar = reviewService.getAverageOfStars(place.getPlaceId());
 
-		return placeMapper.toPartnershipResponse(user, post, place, isLiked(place, user), getImgUrls(post), rounded);
+		return placeMapper.toPartnershipResponse(user, post, place, isLiked(place, user), getImgUrls(post), rounded,
+			averageStar);
 	}
 
 	private boolean isLiked(Place place, User user) {

@@ -313,4 +313,28 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("now") LocalDateTime now
 	);
 
+	@Query("""
+				SELECT p
+				FROM StudentCouncilPost p
+				JOIN p.writer w
+				LEFT JOIN w.major m
+				LEFT JOIN w.college c
+				LEFT JOIN w.school s
+				WHERE p.place.placeId = :placeId
+				  AND p.startDateTime <= :paymentDate
+				  AND p.endDateTime >= :paymentDate
+				  AND (
+					   (w.councilType = :'MAJOR_COUNCIL' AND m.majorId = :majorId)
+					OR (w.councilType = :'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
+					OR (w.councilType = :'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
+				  )
+		""")
+	Optional<StudentCouncilPost> findValidPartnershipForUserScope(
+		@Param("placeId") Long placeId,
+		@Param("paymentDate") LocalDateTime paymentDate,
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId
+	);
+
 }

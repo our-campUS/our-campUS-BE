@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
-import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
@@ -15,6 +15,7 @@ import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
+import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.user.domain.entity.User;
 
 @Component
@@ -50,7 +51,7 @@ public class PlaceMapper {
 	}
 
 	public PartnershipResponse toPartnershipResponse(User user, StudentCouncilPost post, Place place, boolean isLiked,
-		List<String> imgUrls, double distance) {
+		List<String> imgUrls, double distance, Double averageStar) {
 		return new PartnershipResponse(
 			place.getPlaceId(),
 			place.getPlaceKey(),
@@ -61,11 +62,21 @@ public class PlaceMapper {
 			place.getCoordinate().longitude(),
 			resolveTag(post, user),
 			isLiked,
-			5.0, //리뷰 구현 이후 수정 예정
+			averageStar,
 			post.getTitle(),
 			distance,
 			post.getEndDateTime().toLocalDate(),
 			imgUrls
+		);
+	}
+
+	public ReviewPartnerResponse toReviewPartnerResponse(StudentCouncilPost post, Place place, double averageStar) {
+		return new ReviewPartnerResponse(
+			place.getPlaceName(),
+			place.getPlaceCategory(),
+			post.getWriter().getCouncilName(),
+			averageStar, //리뷰 별점
+			post.getTitle()
 		);
 	}
 

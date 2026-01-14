@@ -1,9 +1,12 @@
 package com.campus.campus.domain.review.application.service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
@@ -15,15 +18,21 @@ import com.campus.campus.domain.councilpost.application.exception.PostImageLimit
 import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
+import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
+import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
+import com.campus.campus.domain.review.application.exception.NotPartnershipReceiptException;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -54,6 +63,8 @@ public class ReviewService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
+	private final PlaceRepository placeRepository;
+	private final PlaceMapper placeMapper;
 
 	@Transactional
 	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
@@ -219,6 +230,64 @@ public class ReviewService {
 
 		return reviewMapper.toCursorReviewResponse(items, last, hasNext);
 
+	}
+
+	@Transactional(readOnly = true)
+	public ReviewPartnerResponse findPartnership(Long placeId, ReceiptResultDto result, Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+		Long majorId = user.getMajor().getMajorId();
+		Long collegeId = user.getCollege().getCollegeId();
+		Long schoolId = user.getSchool().getSchoolId();
+
+		//OCR 리턴 타입보고 변경해야 함
+		DateTimeFormatter formatter =
+			DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
+		LocalDateTime paymentDateTime =
+			LocalDateTime.parse(result.paymentDate(), formatter);
+
+		//제휴기간 내에 결제 했는지 확인
+		StudentCouncilPost post = studentCouncilPostRepository.findValidPartnershipForUserScope(
+			placeId, paymentDateTime, majorId, collegeId, schoolId
+		).orElseThrow(NotPartnershipReceiptException::new);
+
+		double averageStar = getAverageOfStars(placeId);
+		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar);
+	}
+
+	@Transactional(readOnly = true)
+	public double getAverageOfStars(Long placeId) {
+		List<Review> reviews = reviewRepository.findAllByPlaceId(placeId);
+		double averageStar = reviews.stream()
+			.mapToDouble(Review::getStar)
+			.average()
+			.orElse(0.0);
+		return averageStar;
+	}
+
+	@Transactional(readOnly = true)
+	public Map<Long, Double> getAverageListOfStars(Set<Long> placeIds) {
+
+		if (placeIds == null || placeIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		List<PlaceStarAvgRow> rows =
+			reviewRepository.findAverageStarsByPlaceIds(placeIds);
+
+		// 조회된 placeId → 평균
+		Map<Long, Double> avgMap = rows.stream()
+			.collect(Collectors.toMap(
+				PlaceStarAvgRow::placeId,
+				row -> row.avgStar() != null ? row.avgStar() : 0.0
+			));
+
+		// 리뷰가 하나도 없는 placeId는 0.0으로 채움
+		for (Long placeId : placeIds) {
+			avgMap.putIfAbsent(placeId, 0.0);
+		}
+
+		return avgMap;
 	}
 
 	@Transactional(readOnly = true)
