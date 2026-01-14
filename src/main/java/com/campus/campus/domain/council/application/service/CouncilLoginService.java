@@ -25,7 +25,7 @@ import com.campus.campus.domain.council.application.exception.PasswordNotCorrect
 import com.campus.campus.domain.council.application.exception.PrecautionNotAgreeException;
 import com.campus.campus.domain.council.application.exception.SignupEmailNotFoundException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
-import com.campus.campus.domain.council.application.mapper.StudentCouncilLoginMapper;
+import com.campus.campus.domain.council.application.mapper.StudentCouncilMapper;
 import com.campus.campus.domain.council.application.util.CouncilNameGenerator;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
@@ -58,7 +58,7 @@ public class CouncilLoginService {
 	private final SchoolRepository schoolRepository;
 	private final CollegeRepository collegeRepository;
 	private final MajorRepository majorRepository;
-	private final StudentCouncilLoginMapper studentCouncilLoginMapper;
+	private final StudentCouncilMapper studentCouncilMapper;
 	private final EmailVerificationRepository emailVerificationRepository;
 	private final JwtProvider jwtProvider;
 	private final SecurityConfig securityConfig;
@@ -90,7 +90,7 @@ public class CouncilLoginService {
 
 		CouncilScope scope = validateCouncilScope(studentCouncilSignUpRequest, school);
 
-		StudentCouncil studentCouncil = studentCouncilLoginMapper.createStudentCouncil(
+		StudentCouncil studentCouncil = studentCouncilMapper.createStudentCouncil(
 			studentCouncilSignUpRequest, school, scope.college, scope.major);
 
 		String councilName = councilNameGenerator.buildCouncilName(studentCouncil);
@@ -122,7 +122,7 @@ public class CouncilLoginService {
 		redisTokenService.setRefreshToken("COUNCIL", String.valueOf(studentCouncil.getId()), refreshToken,
 			refreshTokenExpirationSeconds);
 
-		return studentCouncilLoginMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
+		return studentCouncilMapper.toStudentCouncilLoginResponse(studentCouncil, accessToken, refreshToken);
 	}
 
 	@Transactional
@@ -139,7 +139,7 @@ public class CouncilLoginService {
 
 		emailVerification.use();
 
-		return studentCouncilLoginMapper.toStudentCouncilFindIdResponse(studentCouncil.getLoginId());
+		return studentCouncilMapper.toStudentCouncilFindIdResponse(studentCouncil.getLoginId());
 	}
 
 	@Transactional
