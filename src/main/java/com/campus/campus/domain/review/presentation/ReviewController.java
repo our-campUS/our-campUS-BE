@@ -42,6 +42,7 @@ public class ReviewController {
 	@PostMapping
 	@Operation(
 		summary = "리뷰 작성",
+		description = "영수증 리뷰 정상적으로 완료 시에 isVerified=true로 주세요!",
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 			required = true,
 			content = @io.swagger.v3.oas.annotations.media.Content(

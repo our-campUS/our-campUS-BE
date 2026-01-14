@@ -283,6 +283,8 @@ public class ReviewService {
 			placeId, paymentDateTime, majorId, collegeId, schoolId
 		).orElseThrow(NotPartnershipReceiptException::new);
 
+		//review isVerified 필드 true로 변경
+
 		double averageStar = getAverageOfStars(placeId);
 		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar);
 	}

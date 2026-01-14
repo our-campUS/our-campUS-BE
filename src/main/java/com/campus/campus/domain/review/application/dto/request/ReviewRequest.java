@@ -41,7 +41,10 @@ public record ReviewRequest(
 		description = "/search API에서 반환된 결과 중 하나를 선택")
 	@NotNull
 	@Valid
-	SavedPlaceInfo place
+	SavedPlaceInfo place,
+
+	@Schema(example = "true")
+	boolean isVerified
 
 ) {
 }
