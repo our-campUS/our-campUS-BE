@@ -3,6 +3,7 @@ package com.campus.campus.domain.manager.application.mapper;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.manager.application.dto.request.RewardGrantedEvent;
 import com.campus.campus.domain.manager.application.dto.request.RewardRequest;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilResponse;
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
@@ -67,6 +68,13 @@ public class ManagerMapper {
 		return Reward.builder()
 			.user(user)
 			.rewardImageUrl(rewardRequest.rewardImageUrl())
+			.build();
+	}
+
+	public RewardGrantedEvent createRewardGrantedEvent(Long userId, String rewardName) {
+		return RewardGrantedEvent.builder()
+			.userId(userId)
+			.rewardName(rewardName)
 			.build();
 	}
 }

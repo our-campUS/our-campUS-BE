@@ -3,6 +3,7 @@ package com.campus.campus.domain.manager.application.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,6 +49,7 @@ public class ManagerService {
 	private final RedisTokenService redisTokenService;
 	private final ManagerMapper managerMapper;
 	private final JavaMailSender javaMailSender;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Value("${jwt.refresh.expiration-seconds}")
 	private long refreshTokenExpirationSeconds;
@@ -128,6 +130,8 @@ public class ManagerService {
 		rewardRepository.save(reward);
 
 		user.updateRewardNeeded(false);
+
+		eventPublisher.publishEvent(managerMapper.createRewardGrantedEvent(userId, "스탬프 보상"));
 	}
 
 	private void sendCouncilApprovedMail(String to) {
