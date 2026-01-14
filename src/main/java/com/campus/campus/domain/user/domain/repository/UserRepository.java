@@ -33,8 +33,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
        """)
 	Optional<User> findByIdWithAcademicInfo(@Param("userId") Long userId);
 
-	List<User> findAllByRewardNeededIsTrueAndDeletedAtIsNull();
-
 	@Query("""
 		SELECT u, COUNT(s)
 		FROM User u

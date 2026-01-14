@@ -27,7 +27,6 @@ import com.campus.campus.domain.manager.domain.entity.Manager;
 import com.campus.campus.domain.manager.domain.repository.ManagerRepository;
 import com.campus.campus.domain.stamp.domain.entity.Reward;
 import com.campus.campus.domain.stamp.domain.repository.RewardRepository;
-import com.campus.campus.domain.stamp.domain.repository.StampRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -43,7 +42,6 @@ public class ManagerService {
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final ManagerRepository managerRepository;
 	private final UserRepository userRepository;
-	private final StampRepository stampRepository;
 	private final RewardRepository rewardRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProvider jwtProvider;
