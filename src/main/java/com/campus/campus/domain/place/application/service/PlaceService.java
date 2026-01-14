@@ -111,7 +111,6 @@ public class PlaceService {
 		return processSearchResults(naverSearchResponse, imageLimit);
 	}
 
-	@Transactional(readOnly = true)
 	public List<SearchPlaceInfoResponse> searchByLocationAndKeywordWithInfo(Long userId, double lat, double lng,
 		String keyword, int imageLimit) {
 		List<SavedPlaceInfo> basicResults = searchByLocationAndKeyword(lat, lng, keyword, imageLimit);
