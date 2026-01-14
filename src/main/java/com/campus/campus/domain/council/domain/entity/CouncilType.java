@@ -10,15 +10,11 @@ public enum CouncilType {
 				user.getSchool().getSchoolId().equals(writer.getSchool().getSchoolId());
 		}
 
-		@Override public String topic(StudentCouncil writer) {
+		@Override
+		public String topic(StudentCouncil writer) {
 			return "school_" + writer.getSchool().getSchoolId();
 		}
 
-		@Override public Long scopeId(StudentCouncil writer) {
-			return writer.getSchool().getSchoolId();
-		}
-
-		@Override public Scope scope() { return Scope.SCHOOL; }
 	},
 	COLLEGE_COUNCIL {
 		@Override
@@ -27,15 +23,10 @@ public enum CouncilType {
 				user.getCollege().getCollegeId().equals(writer.getCollege().getCollegeId());
 		}
 
-		@Override public String topic(StudentCouncil writer) {
+		@Override
+		public String topic(StudentCouncil writer) {
 			return "college_" + writer.getCollege().getCollegeId();
 		}
-
-		@Override public Long scopeId(StudentCouncil writer) {
-			return writer.getCollege().getCollegeId();
-		}
-
-		@Override public Scope scope() { return Scope.COLLEGE; }
 	},
 	MAJOR_COUNCIL {
 		@Override
@@ -44,20 +35,15 @@ public enum CouncilType {
 				user.getMajor().getMajorId().equals(writer.getMajor().getMajorId());
 		}
 
-		@Override public String topic(StudentCouncil writer) {
+		@Override
+		public String topic(StudentCouncil writer) {
 			return "major_" + writer.getMajor().getMajorId();
 		}
 
-		@Override public Long scopeId(StudentCouncil writer) {
-			return writer.getMajor().getMajorId();
-		}
-
-		@Override public Scope scope() { return Scope.MAJOR; }
 	};
 
-	public enum Scope { SCHOOL, COLLEGE, MAJOR }
-
 	public abstract boolean hasAccess(User user, StudentCouncil writer);
+
 	public abstract String topic(StudentCouncil writer);
 
 }
