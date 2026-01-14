@@ -314,26 +314,25 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		Pageable pageable
 	);
 
-
 	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
 	@Query("""
-        SELECT p FROM StudentCouncilPost p
-        JOIN p.writer w
-        JOIN p.place pl
-        LEFT JOIN w.school s
-        LEFT JOIN w.college c
-        LEFT JOIN w.major m
-        WHERE p.category = 'PARTNERSHIP'
-          AND p.thumbnailIcon = :icon
-          AND :now BETWEEN p.startDateTime AND p.endDateTime
-          AND w.deletedAt IS NULL
-          AND (
-               (w.councilType = 'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
-            OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
-            OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
-          )
-        ORDER BY p.id DESC
-        """)
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		JOIN p.place pl
+		LEFT JOIN w.school s
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
+		WHERE p.category = 'PARTNERSHIP'
+		  AND p.thumbnailIcon = :icon
+		  AND :now BETWEEN p.startDateTime AND p.endDateTime
+		  AND w.deletedAt IS NULL
+		  AND (
+		       (w.councilType = 'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
+		    OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
+		    OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
+		  )
+		ORDER BY p.id DESC
+		""")
 	List<StudentCouncilPost> findRandomPartnershipPlace(
 		@Param("schoolId") Long schoolId,
 		@Param("collegeId") Long collegeId,
@@ -341,5 +340,20 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("icon") ThumbnailIcon icon,
 		@Param("now") LocalDateTime now,
 		Pageable pageable
+	);
+
+	@Query("""
+		    SELECT p.place.placeKey, w.councilName, p.title
+		    FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    JOIN p.place pl
+		    WHERE pl.placeKey IN :placeKeys
+		      AND p.category = 'PARTNERSHIP'
+		      AND :now BETWEEN p.startDateTime AND p.endDateTime
+		      AND w.deletedAt IS NULL
+		""")
+	List<Object[]> findActivePartnershipsByPlaceKeys(
+		@Param("placeKeys") List<String> placeKeys,
+		@Param("now") LocalDateTime now
 	);
 }

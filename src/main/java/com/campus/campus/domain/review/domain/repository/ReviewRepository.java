@@ -32,6 +32,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 		Pageable pageable
 	);
 
+	@Query("""
+		    SELECT r.place.placeKey, AVG(r.star)
+		    FROM Review r
+		    WHERE r.place.placeKey IN :placeKeys
+		    GROUP BY r.place.placeKey
+		""")
+	List<Object[]> findAverageStarsByPlaceKeys(@Param("placeKeys") List<String> placeKeys);
+
 	long countByPlace_PlaceId(long placeId);
 
 	long countByPlaceAndUser(Place place, User user);

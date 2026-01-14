@@ -8,6 +8,8 @@ import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPartnershipInfoResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
@@ -39,6 +41,23 @@ public class PlaceMapper {
 			item.telephone(),
 			toCoordinate(item),
 			images
+		);
+	}
+
+	public SearchPlaceInfoResponse toSearchPlaceInfoResponse(SavedPlaceInfo savedPlaceInfo, boolean isLiked,
+		List<SearchPartnershipInfoResponse> partnerships, Double averageStar) {
+		return new SearchPlaceInfoResponse(
+			savedPlaceInfo.placeName(),
+			savedPlaceInfo.placeKey(),
+			savedPlaceInfo.address(),
+			savedPlaceInfo.category(),
+			savedPlaceInfo.link(),
+			savedPlaceInfo.telephone(),
+			savedPlaceInfo.coordinate(),
+			savedPlaceInfo.imgUrls(),
+			isLiked,
+			partnerships,
+			averageStar
 		);
 	}
 
