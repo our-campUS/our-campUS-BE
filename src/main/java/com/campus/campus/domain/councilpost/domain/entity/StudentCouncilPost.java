@@ -103,4 +103,11 @@ public class StudentCouncilPost extends BaseEntity {
 		return writer != null && writer.getId().equals(councilId);
 	}
 
+	public boolean isClosed(LocalDateTime now) {
+		if (this.category == PostCategory.EVENT) {
+			return this.startDateTime != null && now.toLocalDate().isAfter(this.startDateTime.toLocalDate());
+		} else {
+			return this.endDateTime != null && this.endDateTime.isBefore(now);
+		}
+	}
 }
