@@ -83,7 +83,10 @@ public class ManagerController {
 	@PostMapping("reward/grant/{userId}")
 	@PreAuthorize("hasRole('MANAGER')")
 	@Operation(summary = "스탬프 보상 지급")
-	public CommonResponse<Void> grantRewardToUser(@PathVariable Long userId, RewardRequest rewardRequest) {
+	public CommonResponse<Void> grantRewardToUser(
+		@PathVariable Long userId,
+		@Valid @RequestBody RewardRequest rewardRequest
+	) {
 		managerService.grantRewardToUser(userId, rewardRequest);
 
 		return CommonResponse.success(ManagerResponseCode.GRANT_REWARD_SUCCESS);
