@@ -108,12 +108,14 @@ public class ManagerService {
 	}
 
 	public List<StampRewardNeededUserListResponse> getStampRewardNeededUserList() {
-		List<User> rewardNeededUsers = userRepository.findAllByRewardNeededIsTrueAndDeletedAtIsNull();
+		List<Object[]> rewardNeededUsers = userRepository.findRewardNeededUsersWithStampCount();
 
 		return rewardNeededUsers.stream()
-			.map(user -> {
-					int stampCount = stampRepository.countByUser(user);
-					return managerMapper.toStampRewardNeededUserListResponse(user, stampCount);
+			.map(rewardNeededUser -> {
+					User user = (User)rewardNeededUser[0];
+					Long count = (Long)rewardNeededUser[1];
+
+					return managerMapper.toStampRewardNeededUserListResponse(user, count.intValue());
 				}
 			).toList();
 	}
