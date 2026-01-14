@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,11 +26,13 @@ import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPartnershipInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
@@ -46,6 +49,7 @@ import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
+import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -83,6 +87,7 @@ public class PlaceService {
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
 	private final GeoCoderClient geoCoderClient;
+	private final ReviewRepository reviewRepository;
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		String searchWord = keyword;
@@ -103,8 +108,48 @@ public class PlaceService {
 
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
-
 		return processSearchResults(naverSearchResponse, imageLimit);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SearchPlaceInfoResponse> searchByLocationAndKeywordWithInfo(Long userId, double lat, double lng,
+		String keyword, int imageLimit) {
+		List<SavedPlaceInfo> basicResults = searchByLocationAndKeyword(lat, lng, keyword, imageLimit);
+
+		if (basicResults.isEmpty()) {
+			return List.of();
+		}
+
+		List<String> placeKeys = basicResults.stream()
+			.map(SavedPlaceInfo::placeKey)
+			.toList();
+
+		Set<String> likedKeys = (userId != null)
+			? likedPlacesRepository.findLikedPlaceKeys(userId, placeKeys)
+			: Collections.emptySet();
+
+		Map<String, Double> starMap = reviewRepository.findAverageStarsByPlaceKeys(placeKeys).stream()
+			.collect(Collectors.toMap(
+				obj -> (String)obj[0],
+				obj -> (Double)obj[1]
+			));
+
+		Map<String, List<SearchPartnershipInfoResponse>> partnershipMap = studentCouncilPostRepository
+			.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST)).stream()
+			.collect(Collectors.groupingBy(
+				obj -> (String)obj[0],
+				Collectors.mapping(
+					obj -> new SearchPartnershipInfoResponse((String)obj[1], (String)obj[2]),
+					Collectors.toList()
+				)
+			));
+
+		return basicResults.stream()
+			.map(info -> placeMapper.toSearchPlaceInfoResponse(
+				info, likedKeys.contains(info.placeKey()), partnershipMap.getOrDefault(info.placeKey(), List.of()),
+				Math.round(starMap.getOrDefault(info.placeKey(), 0.0) * 10.0) / 10.0
+			))
+			.toList();
 	}
 
 	public List<SavedPlaceInfo> searchByKeyword(String keyword, int imageLimit) {
