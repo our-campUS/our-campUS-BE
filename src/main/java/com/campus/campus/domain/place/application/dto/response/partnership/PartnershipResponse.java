@@ -3,6 +3,8 @@ package com.campus.campus.domain.place.application.dto.response.partnership;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
+
 public record PartnershipResponse(
 	Long placeId,
 	String placeKey,
@@ -19,6 +21,8 @@ public record PartnershipResponse(
 	LocalDate endDate, //제휴 끝나는 시점
 
 	//StudentCouncilPost 이미지 받아오기
-	List<String> imgUrls
+	List<String> imgUrls,
+	List<SimpleReviewResponse> reviews,
+	int reviewSize
 ) {
 }

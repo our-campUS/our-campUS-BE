@@ -27,6 +27,7 @@ import com.campus.campus.domain.place.application.dto.response.partnership.Partn
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -131,7 +132,9 @@ public class PartnershipPlaceService {
 					isLiked,
 					images,
 					rounded,
-					averageStar
+					averageStar,
+					null,
+					null
 				);
 			})
 			.toList();
@@ -183,8 +186,11 @@ public class PartnershipPlaceService {
 		double rounded = Math.round(distanceMeter * 100.0) / 100.0;
 		double averageStar = reviewService.getAverageOfStars(place.getPlaceId());
 
+		List<SimpleReviewResponse> reviews = reviewService.getReviewSummaryList(place.getPlaceId());
+		int reviewCount = reviewService.getReviewCount(place.getPlaceId());
+
 		return placeMapper.toPartnershipResponse(user, post, place, isLiked(place, user), getImgUrls(post), rounded,
-			averageStar);
+			averageStar, reviews, reviewCount);
 	}
 
 	private boolean isLiked(Place place, User user) {

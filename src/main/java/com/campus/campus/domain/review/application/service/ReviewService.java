@@ -21,7 +21,6 @@ import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPost
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
-import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
@@ -31,6 +30,7 @@ import com.campus.campus.domain.review.application.dto.response.ReviewCreateResu
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
 import com.campus.campus.domain.review.application.exception.NotPartnershipReceiptException;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
@@ -63,7 +63,6 @@ public class ReviewService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
-	private final PlaceRepository placeRepository;
 	private final PlaceMapper placeMapper;
 
 	@Transactional
@@ -182,6 +181,39 @@ public class ReviewService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<SimpleReviewResponse> getReviewSummaryList(Long placeId) {
+
+		List<Review> reviews =
+			reviewRepository.findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(placeId);
+
+		if (reviews.isEmpty()) {
+			return List.of();
+		}
+
+		List<Long> reviewIds = reviews.stream()
+			.map(Review::getId)
+			.toList();
+
+		Map<Long, String> imageMap =
+			reviewImageRepository.findAllByReviewIdInOrderByIdAsc(reviewIds)
+				.stream()
+				.collect(Collectors.toMap(
+					img -> img.getReview().getId(),
+					ReviewImage::getImageUrl,
+					(existing, ignored) -> existing
+				));
+
+		return reviews.stream()
+			.map(review ->
+				reviewMapper.toSimpleReviewResponse(
+					review,
+					imageMap.get(review.getId())
+				)
+			)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
 	public CursorPageReviewResponse<ReviewResponse> getReviewList(
 		Long placeId,
 		LocalDateTime cursorCreatedAt,
@@ -263,6 +295,12 @@ public class ReviewService {
 			.average()
 			.orElse(0.0);
 		return averageStar;
+	}
+
+	@Transactional(readOnly = true)
+	public int getReviewCount(Long placeId) {
+		List<Review> reviews = reviewRepository.findAllByPlaceId(placeId);
+		return reviews.size();
 	}
 
 	@Transactional(readOnly = true)

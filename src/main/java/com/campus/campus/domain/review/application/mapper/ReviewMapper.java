@@ -15,6 +15,7 @@ import com.campus.campus.domain.review.application.dto.response.ReviewCreateResp
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -40,6 +41,15 @@ public class ReviewMapper {
 			.nextCursorCreatedAt(null)
 			.nextCursorId(null)
 			.hasNext(false)
+			.build();
+	}
+
+	public SimpleReviewResponse toSimpleReviewResponse(Review review, String imageUrl) {
+		return SimpleReviewResponse.builder()
+			.star(review.getStar())
+			.writerName(review.getUser().getNickname())
+			.content(review.getContent())
+			.thumbnailImgUrl(imageUrl)
 			.build();
 	}
 

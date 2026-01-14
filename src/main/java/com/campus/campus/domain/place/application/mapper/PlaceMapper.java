@@ -16,6 +16,7 @@ import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.user.domain.entity.User;
 
 @Component
@@ -51,7 +52,7 @@ public class PlaceMapper {
 	}
 
 	public PartnershipResponse toPartnershipResponse(User user, StudentCouncilPost post, Place place, boolean isLiked,
-		List<String> imgUrls, double distance, Double averageStar) {
+		List<String> imgUrls, double distance, Double averageStar, List<SimpleReviewResponse> reviews, Integer size) {
 		return new PartnershipResponse(
 			place.getPlaceId(),
 			place.getPlaceKey(),
@@ -66,7 +67,9 @@ public class PlaceMapper {
 			post.getTitle(),
 			distance,
 			post.getEndDateTime().toLocalDate(),
-			imgUrls
+			imgUrls,
+			reviews,
+			size
 		);
 	}
 
