@@ -9,6 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostCreatedEvent;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
+import com.campus.campus.domain.notification.application.service.NotificationService;
 import com.campus.campus.global.firebase.application.service.FirebaseCloudMessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class CouncilPostPushListener {
 	private static final String DATA_KEY_CATEGORY = "category";
 
 	private final FirebaseCloudMessageService firebaseCloudMessageService;
+	private final NotificationService notificationService;
 
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -35,6 +37,8 @@ public class CouncilPostPushListener {
 
 		log.info("[PUSH] after_commit event received. topic={}, postId={}, category={}",
 			event.topic(), event.postId(), event.category());
+
+		notificationService.saveCouncilPostCreated(event, title, body);
 
 		firebaseCloudMessageService.sendToTopic(
 			event.topic(),

@@ -32,4 +32,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
        AND u.deletedAt IS NULL
        """)
 	Optional<User> findByIdWithAcademicInfo(@Param("userId") Long userId);
+
+	List<User> findAllByMajor_MajorIdAndDeletedAtIsNull(Long majorId);
+
+	List<User> findAllByCollege_CollegeIdAndDeletedAtIsNull(Long collegeId);
+
+	List<User> findAllBySchool_SchoolIdAndDeletedAtIsNull(Long schoolId);
+
 }
