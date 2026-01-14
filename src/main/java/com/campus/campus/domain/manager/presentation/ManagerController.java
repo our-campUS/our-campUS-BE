@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.manager.application.dto.request.CouncilApproveOrDenyRequest;
 import com.campus.campus.domain.manager.application.dto.request.ManagerLoginRequest;
+import com.campus.campus.domain.manager.application.dto.request.RewardRequest;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilResponse;
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
+import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
 import com.campus.campus.domain.manager.application.service.ManagerService;
 import com.campus.campus.global.common.response.CommonResponse;
 
@@ -67,5 +69,26 @@ public class ManagerController {
 		List<CertifyRequestCouncilListResponse> responses = managerService.getCertifyRequestCouncils();
 
 		return CommonResponse.success(ManagerResponseCode.CERTIFY_REQUEST_LIST_SUCCESS, responses);
+	}
+
+	@GetMapping("/rewards/necessary-users")
+	@PreAuthorize("hasRole('MANAGER')")
+	@Operation(summary = "스탬프 보상이 필요한 유저 목록 조회")
+	public CommonResponse<List<StampRewardNeededUserListResponse>> getStampRewardNeededUserList() {
+		List<StampRewardNeededUserListResponse> responses = managerService.getStampRewardNeededUserList();
+
+		return CommonResponse.success(ManagerResponseCode.REWARD_NEEDED_USER_LIST_SUCCESS, responses);
+	}
+
+	@PostMapping("reward/grant/{userId}")
+	@PreAuthorize("hasRole('MANAGER')")
+	@Operation(summary = "스탬프 보상 지급")
+	public CommonResponse<Void> grantRewardToUser(
+		@PathVariable Long userId,
+		@Valid @RequestBody RewardRequest rewardRequest
+	) {
+		managerService.grantRewardToUser(userId, rewardRequest);
+
+		return CommonResponse.success(ManagerResponseCode.GRANT_REWARD_SUCCESS);
 	}
 }

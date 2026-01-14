@@ -65,6 +65,9 @@ public class StudentCouncil extends BaseEntity {
 	@Column(name = "council_name")
 	private String councilName;
 
+	@Column(name = "council_nickname")
+	private String councilNickname;
+
 	@Column(name = "election_image_url")
 	private String electionImageUrl;
 
@@ -84,6 +87,10 @@ public class StudentCouncil extends BaseEntity {
 
 	public void changeEmail(String newEmail) {
 		this.email = newEmail;
+	}
+
+	public void updateCouncilNickname(String nickname) {
+		this.councilNickname = nickname;
 	}
 
 	public void generateCouncilName(String councilName) {

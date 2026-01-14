@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.user.application.dto.request.UserWithdrawRequest;
+import com.campus.campus.domain.user.application.service.KakaoOauthService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
-import com.campus.campus.domain.user.application.service.KakaoOauthService;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

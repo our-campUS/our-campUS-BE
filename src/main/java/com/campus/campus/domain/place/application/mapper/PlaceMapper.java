@@ -6,10 +6,14 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
-import com.campus.campus.domain.partnership.application.dto.response.PartnershipPinResponse;
+import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPartnershipInfoResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
-import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
@@ -40,6 +44,23 @@ public class PlaceMapper {
 		);
 	}
 
+	public SearchPlaceInfoResponse toSearchPlaceInfoResponse(SavedPlaceInfo savedPlaceInfo, boolean isLiked,
+		List<SearchPartnershipInfoResponse> partnerships, Double averageStar) {
+		return new SearchPlaceInfoResponse(
+			savedPlaceInfo.placeName(),
+			savedPlaceInfo.placeKey(),
+			savedPlaceInfo.address(),
+			savedPlaceInfo.category(),
+			savedPlaceInfo.link(),
+			savedPlaceInfo.telephone(),
+			savedPlaceInfo.coordinate(),
+			savedPlaceInfo.imgUrls(),
+			isLiked,
+			partnerships,
+			averageStar
+		);
+	}
+
 	public PartnershipPinResponse toPartnershipPinResponse(StudentCouncilPost post, Place place) {
 		return new PartnershipPinResponse(
 			post.getId(),
@@ -67,6 +88,37 @@ public class PlaceMapper {
 			distance,
 			post.getEndDateTime().toLocalDate(),
 			imgUrls
+		);
+	}
+
+	public RecommendPlaceByTimeResponse toRecommendPlaceByTimeResponse(String type,
+		List<RecommendPartnershipPlaceResponse> partnershipPosts, List<RecommendNearByPlaceResponse> nearbyPlaces) {
+
+		return new RecommendPlaceByTimeResponse(type, partnershipPosts, nearbyPlaces);
+	}
+
+	public RecommendPartnershipPlaceResponse toRecommendPartnershipPlaceResponse(StudentCouncilPost post) {
+		return new RecommendPartnershipPlaceResponse(
+			post.getPlace().getPlaceId(),
+			post.getPlace().getPlaceName(),
+			post.getWriter().getCouncilName(),
+			post.getTitle(),
+			post.getPlace().getAddress(),
+			post.getThumbnailImageUrl()
+		);
+	}
+
+	public RecommendNearByPlaceResponse toRecommendNearByPlaceResponse(SavedPlaceInfo savedPlaceInfo,
+		List<String> imageUrl) {
+		return new RecommendNearByPlaceResponse(
+			savedPlaceInfo.placeName(),
+			savedPlaceInfo.placeKey(),
+			savedPlaceInfo.address(),
+			savedPlaceInfo.category(),
+			savedPlaceInfo.link(),
+			savedPlaceInfo.telephone(),
+			savedPlaceInfo.coordinate(),
+			imageUrl
 		);
 	}
 

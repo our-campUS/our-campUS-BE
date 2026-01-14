@@ -22,6 +22,7 @@ public record GetPostForUserResponse(
 	String title,
 	String content,
 	String place,
+	String detailedLocation,
 	LocalDate startDate,
 	LocalDate endDate,
 	LocalDateTime startDateTime,
@@ -30,6 +31,8 @@ public record GetPostForUserResponse(
 	ThumbnailIcon thumbnailIcon,
 
 	boolean isLiked,
+
+	boolean isEnded,
 
 	List<String> images
 ) {

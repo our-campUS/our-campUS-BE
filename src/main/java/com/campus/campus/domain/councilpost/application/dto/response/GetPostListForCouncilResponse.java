@@ -4,9 +4,11 @@ import java.time.LocalDateTime;
 
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record GetPostListForCouncilResponse(
 	@Schema(description = "게시글 id", example = "1")
 	Long postId,
@@ -19,6 +21,9 @@ public record GetPostListForCouncilResponse(
 
 	@Schema(description = "장소", example = "310관 1층")
 	String place,
+
+	@Schema(description = "상세 장소", example = "가천관 301호")
+	String detailedLocation,
 
 	@Schema(description = "시간(끝나는 시간 or 행사날짜", example = "2026-01-10T18:00:00")
 	LocalDateTime dateTime,

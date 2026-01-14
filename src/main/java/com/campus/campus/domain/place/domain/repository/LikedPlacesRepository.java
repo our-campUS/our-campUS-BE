@@ -19,13 +19,21 @@ public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 	@Query("""
 			SELECT lp.place.placeId
 			FROM LikedPlace lp
-			WHERE lp.user.id=:userId 
+			WHERE lp.user.id=:userId
 			 and lp.place.placeId in :placeIds
 		""")
 	Set<Long> findLikedPlaceIds(
 		@Param("userId") Long userId,
-		@Param("placeIds") List<Long> placeIds
+		@Param("placeIds") Set<Long> placeIds
 	);
 
 	boolean existsByUserAndPlace(User user, Place place);
+
+	@Query("""
+		    SELECT lp.place.placeKey
+		    FROM LikedPlace lp
+		    WHERE lp.user.id = :userId
+		      AND lp.place.placeKey IN :placeKeys
+		""")
+	Set<String> findLikedPlaceKeys(@Param("userId") Long userId, @Param("placeKeys") List<String> placeKeys);
 }

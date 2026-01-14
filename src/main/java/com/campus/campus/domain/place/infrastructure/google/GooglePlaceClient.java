@@ -6,14 +6,18 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.campus.campus.domain.place.application.dto.response.google.GooglePhoto;
 import com.campus.campus.domain.place.application.dto.response.google.GooglePlaceDetailResponse;
 import com.campus.campus.domain.place.application.dto.response.google.GoogleTextSearchResponse;
 
+import io.netty.channel.ChannelOption;
 import lombok.extern.slf4j.Slf4j;
+import reactor.netty.http.client.HttpClient;
 
 @Component
 @Slf4j
@@ -28,16 +32,26 @@ public class GooglePlaceClient {
 	public GooglePlaceClient(
 		@Value("${map.google.places.api-key}") String apiKey
 	) {
+		HttpClient httpClient = HttpClient.create()
+			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+			.followRedirect(true);
+
+		ExchangeStrategies strategies = ExchangeStrategies.builder()
+			.codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+			.build();
 		this.apiKey = apiKey;
+
 		this.webClient = WebClient.builder()
 			.baseUrl(BASE_URL)
+			.clientConnector(new ReactorClientHttpConnector(httpClient))
+			.exchangeStrategies(strategies)
 			.build();
 	}
 
 	/*
 	 * 장소 이름 + 주소를 기준으로 google places에서 이미지 URL 목록을 가져옴
 	 */
-	public List<String> fetchImages(String name, String address, int limit) {
+	public List<String> fetchImages(String name, String address, int imageLimit) {
 		boolean acquired = false;
 		try {
 			acquired = googleApiSemaphore.tryAcquire(5, TimeUnit.SECONDS);
@@ -59,7 +73,7 @@ public class GooglePlaceClient {
 
 			//imageURL 생성
 			List<String> imageUrls = photoRefs.stream()
-				.limit(3)
+				.limit(imageLimit)
 				.map(this::buildPhotoUrl)
 				.toList();
 
@@ -148,7 +162,7 @@ public class GooglePlaceClient {
 	 */
 	private String buildPhotoUrl(String photoRef) {
 		return "https://maps.googleapis.com/maps/api/place/photo"
-			+ "?maxWidth=800"
+			+ "?maxwidth=800"
 			+ "&photo_reference=" + photoRef
 			+ "&key=" + apiKey;
 	}

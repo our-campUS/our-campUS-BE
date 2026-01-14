@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
@@ -220,6 +221,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 			LEFT JOIN w.school s
 			LEFT JOIN w.college c
 			LEFT JOIN w.major m
+			JOIN p.place pl
 			WHERE w.deletedAt IS NULL
 			  AND p.category = :category
 			  AND p.startDateTime <= :now
@@ -249,7 +251,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 			SELECT p
 			FROM StudentCouncilPost p
 			JOIN p.writer w
-			JOIN p.place pl
+			JOIN FETCH p.place pl
 			LEFT JOIN w.school s
 			LEFT JOIN w.college c
 			LEFT JOIN w.major m
@@ -278,6 +280,80 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("maxLat") Double maxLat,
 		@Param("minLng") Double minLng,
 		@Param("maxLng") Double maxLng,
+		@Param("now") LocalDateTime now
+	);
+
+	@EntityGraph(attributePaths = {"place"})
+	@Query("""
+		    SELECT scp
+		    FROM StudentCouncilPost scp
+		    JOIN scp.writer sc
+		    LEFT JOIN Review r
+		           ON r.place = scp.place
+		          AND r.createdAt >= :from
+		    WHERE scp.startDateTime <= :now
+		      AND scp.endDateTime >= :now
+		      AND (
+		             (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.MAJOR_COUNCIL
+		                  AND sc.major.majorId = :majorId)
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.COLLEGE_COUNCIL
+		                  AND sc.college.collegeId = :collegeId)
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.SCHOOL_COUNCIL
+		                  AND sc.school.schoolId = :schoolId)
+		      )
+			AND sc.deletedAt IS NULL
+		    GROUP BY scp
+		    ORDER BY COUNT(r.id) DESC
+		""")
+	List<StudentCouncilPost> findTop3RecommendedPartnershipPlaces(
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId,
+		@Param("from") LocalDateTime from,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		JOIN p.place pl
+		LEFT JOIN w.school s
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
+		WHERE p.category = 'PARTNERSHIP'
+		  AND p.thumbnailIcon = :icon
+		  AND :now BETWEEN p.startDateTime AND p.endDateTime
+		  AND w.deletedAt IS NULL
+		  AND (
+		       (w.councilType = 'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
+		    OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
+		    OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
+		  )
+		ORDER BY p.id DESC
+		""")
+	List<StudentCouncilPost> findRandomPartnershipPlace(
+		@Param("schoolId") Long schoolId,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
+		@Param("icon") ThumbnailIcon icon,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
+	);
+
+	@Query("""
+		    SELECT p.place.placeKey, w.councilName, p.title
+		    FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    JOIN p.place pl
+		    WHERE pl.placeKey IN :placeKeys
+		      AND p.category = 'PARTNERSHIP'
+		      AND :now BETWEEN p.startDateTime AND p.endDateTime
+		      AND w.deletedAt IS NULL
+		""")
+	List<Object[]> findActivePartnershipsByPlaceKeys(
+		@Param("placeKeys") List<String> placeKeys,
 		@Param("now") LocalDateTime now
 	);
 }

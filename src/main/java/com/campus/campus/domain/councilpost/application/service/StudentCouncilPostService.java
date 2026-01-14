@@ -2,7 +2,10 @@ package com.campus.campus.domain.councilpost.application.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,7 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostDetailResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
@@ -23,7 +27,6 @@ import com.campus.campus.domain.councilpost.application.dto.response.NormalizedD
 import com.campus.campus.domain.councilpost.application.exception.NotPostWriterException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
-import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.application.exception.ThumbnailRequiredException;
 import com.campus.campus.domain.councilpost.application.mapper.StudentCouncilPostMapper;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
@@ -33,6 +36,8 @@ import com.campus.campus.domain.councilpost.domain.repository.PostImageRepositor
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.entity.PlaceImages;
+import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -48,6 +53,7 @@ public class StudentCouncilPostService {
 	private final StudentCouncilPostRepository postRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final PostImageRepository postImageRepository;
+	private final PlaceImagesRepository placeImagesRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final ApplicationEventPublisher eventPublisher;
@@ -70,7 +76,7 @@ public class StudentCouncilPostService {
 		NormalizedDateTime normalized = dto.category().validateAndNormalize(dto);
 
 		//Place 객체 생성
-		Place place = placeService.findOrCreatePlace(dto);
+		Place place = placeService.findOrCreatePlace(dto.place());
 
 		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
 			writer, place, dto, normalized.startDateTime(), normalized.endDateTime()
@@ -96,7 +102,7 @@ public class StudentCouncilPostService {
 	}
 
 	@Transactional(readOnly = true)
-	public GetPostResponse findById(Long postId, Long currentUserId) {
+	public GetPostDetailResponse findById(Long postId, Long currentCouncilId) {
 		StudentCouncilPost post = postRepository.findByIdWithFullInfo(postId)
 			.orElseThrow(PostNotFoundException::new);
 
@@ -106,7 +112,9 @@ public class StudentCouncilPostService {
 			.map(PostImage::getImageUrl)
 			.toList();
 
-		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, currentUserId);
+		List<String> placeImageUrls = getPlaceImageUrls(post.getPlace());
+
+		return studentCouncilPostMapper.toGetPostDetailResponse(post, imageUrls, placeImageUrls, currentCouncilId);
 	}
 
 	@Transactional(readOnly = true)
@@ -164,7 +172,7 @@ public class StudentCouncilPostService {
 
 		List<PostImage> postImages = postImageRepository.findAllByPost(post);
 
-		List<String> deleteTargets = new ArrayList<>();
+		Set<String> deleteTargets = new HashSet<>();
 
 		if (post.getThumbnailImageUrl() != null) {
 			deleteTargets.add(post.getThumbnailImageUrl());
@@ -180,7 +188,7 @@ public class StudentCouncilPostService {
 		for (String imageUrl : deleteTargets) {
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (PostOciImageDeleteFailedException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패: {}", imageUrl, e);
 			}
 		}
@@ -214,13 +222,14 @@ public class StudentCouncilPostService {
 
 		Place place = post.getPlace();
 		if (dto.place() != null && (place == null || !dto.place().placeName().equals(place.getPlaceName()))) {
-			place = placeService.findOrCreatePlace(dto);
+			place = placeService.findOrCreatePlace(dto.place());
 		}
 
 		post.update(
 			dto.title(),
 			dto.content(),
 			place,
+			dto.detailedLocation(),
 			normalized.startDateTime(),
 			normalized.endDateTime(),
 			dto.thumbnailImageUrl(),
@@ -247,11 +256,21 @@ public class StudentCouncilPostService {
 		return studentCouncilPostMapper.toGetPostResponse(post, imageUrls, councilId);
 	}
 
+	private List<String> getPlaceImageUrls(Place place) {
+		if (place == null || place.getPlaceKey() == null) {
+			return Collections.emptyList();
+		}
+
+		return placeImagesRepository.findByPlaceKey(place.getPlaceKey()).stream()
+			.map(PlaceImages::getImageUrl)
+			.toList();
+	}
+
 	//이미지 삭제
 	private void cleanupUnusedImages(String oldThumbnailUrl, List<PostImage> oldImages, PostRequest dto) {
 		List<String> newUrls = dto.imageUrls() == null ? List.of() : dto.imageUrls();
 
-		List<String> deleteTargets = new ArrayList<>();
+		Set<String> deleteTargets = new HashSet<>();
 
 		// 썸네일 변경 시 이전 썸네일
 		if (oldThumbnailUrl != null && !oldThumbnailUrl.equals(dto.thumbnailImageUrl())) {
@@ -272,7 +291,7 @@ public class StudentCouncilPostService {
 
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (PostOciImageDeleteFailedException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패 (파일이 없을 수 있음): {}", imageUrl, e);
 			}
 		}

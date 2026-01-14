@@ -45,6 +45,9 @@ public record PostRequest(
 	@Valid
 	SavedPlaceInfo place,
 
+	@Schema(description = "상세 장소 (예: 310관 B301호)", example = "310관 B301호") // 추가됨
+	String detailedLocation,
+
 	@Schema(example = "2025-04-10T18:00")
 	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
 	LocalDateTime startDateTime,

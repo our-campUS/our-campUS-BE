@@ -2,22 +2,37 @@ package com.campus.campus.domain.place.application.service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.councilpost.application.exception.AcademicInfoNotSetException;
+import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
+import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
+import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPartnershipInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
@@ -34,6 +49,7 @@ import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
+import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -49,18 +65,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PlaceService {
 
+	private static final LocalTime LUNCH_START = LocalTime.of(11, 30);
+	private static final LocalTime LUNCH_END = LocalTime.of(14, 0);
+	private static final LocalTime CAFE_START = LocalTime.of(14, 0);
+	private static final LocalTime CAFE_END = LocalTime.of(17, 0);
+	private static final LocalTime DINNER_START = LocalTime.of(17, 0);
+	private static final LocalTime DINNER_END = LocalTime.of(20, 0);
+	private static final LocalTime BAR_START = LocalTime.of(20, 0);
+	private static final LocalTime BAR_END = LocalTime.of(23, 30);
+	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
 	private final NaverMapClient naverMapClient;
 	private final PlaceMapper placeMapper;
 	private final PlaceRepository placeRepository;
 	private final GooglePlaceClient googleClient;
+	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PlaceImagesRepository placeImagesRepository;
 	private final PresignedUrlService presignedUrlService;
+	private final RedisPlaceCacheService redisPlaceCacheService;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
 	private final GeoCoderClient geoCoderClient;
+	private final ReviewRepository reviewRepository;
 
-	public List<SavedPlaceInfo> search(double lat, double lng, String keyword) {
+	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		String searchWord = keyword;
 
 		try {
@@ -79,47 +108,72 @@ public class PlaceService {
 
 		//네이버에서 특정 장소 기본정보 받아오기
 		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
-
-		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
-			.map(item -> {
-				String name = stripHtml(item.title());
-				String address = item.roadAddress();
-				String placeKey = PlaceKeyGenerator.generate(name, address);
-				String naverPlaceUrl = buildNaverPlaceUrl(item);
-				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
-			})
-			.toList();
-
-		List<String> placeKeys = candidates.stream()
-			.map(SearchCandidateResponse::placeKey)
-			.distinct()
-			.toList();
-
-		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
-			.collect(Collectors.groupingBy(
-				PlaceImages::getPlaceKey,
-				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
-			));
-
-		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
-			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images),
-					executorService)
-				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
-				.exceptionally(ex -> fallback(response)))
-			.toList();
-
-		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-		return futures.stream().map(CompletableFuture::join).toList();
+		return processSearchResults(naverSearchResponse, imageLimit);
 	}
 
-	@Transactional
-	public Place findOrCreatePlace(PostRequest request) {
-		SavedPlaceInfo place = request.place();
+	public List<SearchPlaceInfoResponse> searchByLocationAndKeywordWithInfo(Long userId, double lat, double lng,
+		String keyword, int imageLimit) {
+		List<SavedPlaceInfo> basicResults = searchByLocationAndKeyword(lat, lng, keyword, imageLimit);
+
+		if (basicResults.isEmpty()) {
+			return List.of();
+		}
+
+		List<String> placeKeys = basicResults.stream()
+			.map(SavedPlaceInfo::placeKey)
+			.toList();
+
+		Set<String> likedKeys = (userId != null)
+			? likedPlacesRepository.findLikedPlaceKeys(userId, placeKeys)
+			: Collections.emptySet();
+
+		Map<String, Double> starMap = reviewRepository.findAverageStarsByPlaceKeys(placeKeys).stream()
+			.collect(Collectors.toMap(
+				obj -> (String)obj[0],
+				obj -> (Double)obj[1]
+			));
+
+		Map<String, List<SearchPartnershipInfoResponse>> partnershipMap = studentCouncilPostRepository
+			.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST)).stream()
+			.collect(Collectors.groupingBy(
+				obj -> (String)obj[0],
+				Collectors.mapping(
+					obj -> new SearchPartnershipInfoResponse((String)obj[1], (String)obj[2]),
+					Collectors.toList()
+				)
+			));
+
+		return basicResults.stream()
+			.map(info -> placeMapper.toSearchPlaceInfoResponse(
+				info, likedKeys.contains(info.placeKey()), partnershipMap.getOrDefault(info.placeKey(), List.of()),
+				Math.round(starMap.getOrDefault(info.placeKey(), 0.0) * 10.0) / 10.0
+			))
+			.toList();
+	}
+
+	public List<SavedPlaceInfo> searchByKeyword(String keyword, int imageLimit) {
+		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
+
+		return processSearchResults(naverSearchResponse, imageLimit);
+	}
+
+	public Place findOrCreatePlace(SavedPlaceInfo place) {
 		String placeKey = place.placeKey();
 
-		//이미 Place 존재하는지 확인 후 없으면 객체 생성 후 저장
 		return placeRepository.findByPlaceKey(placeKey)
-			.orElseGet(() -> placeRepository.save(placeMapper.createPlace(place)));
+			.orElseGet(() -> {
+				try {
+					Place newPlace = placeRepository.save(placeMapper.createPlace(place));
+
+					migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
+
+					return newPlace;
+				} catch (DataIntegrityViolationException e) {
+					log.info("해당 키에 대한 장소 동시 생성이 감지되었습니다.: {}", placeKey);
+					return placeRepository.findByPlaceKey(placeKey)
+						.orElseThrow(PlaceCreationException::new);
+				}
+			});
 	}
 
 	//장소 저장
@@ -165,10 +219,67 @@ public class PlaceService {
 		return placeMapper.toLikeResponse(place);
 	}
 
-	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images) {
+	@Transactional(readOnly = true)
+	public RecommendPlaceByTimeResponse findRecommendations(Long userId, double lat, double lng) {
+		LocalTime now = LocalTime.now(KST);
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (user.isProfileNotCompleted()) {
+			throw new AcademicInfoNotSetException();
+		}
+
+		if (isLunchTime(now)) {
+			return generateResponse(user, lat, lng, ThumbnailIcon.FOOD, "식당", "LUNCH");
+		} else if (isCafeTime(now)) {
+			return generateResponse(user, lat, lng, ThumbnailIcon.CAFE, "카페", "CAFE");
+		} else if (isDinnerTime(now)) {
+			return generateResponse(user, lat, lng, ThumbnailIcon.FOOD, "식당", "DINNER");
+		} else if (isBarTime(now)) {
+			return generateResponse(user, lat, lng, ThumbnailIcon.BAR, "술집", "BAR");
+		} else {
+			return placeMapper.toRecommendPlaceByTimeResponse("잠잘시간입니다.", List.of(), List.of());
+		}
+	}
+
+	private List<SavedPlaceInfo> processSearchResults(NaverSearchResponse naverSearchResponse, int imageLimit) {
+		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
+			.map(item -> {
+				String name = stripHtml(item.title());
+				String address = item.roadAddress();
+				String placeKey = PlaceKeyGenerator.generate(name, address);
+				String naverPlaceUrl = buildNaverPlaceUrl(item);
+				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
+			})
+			.toList();
+
+		List<String> placeKeys = candidates.stream()
+			.map(SearchCandidateResponse::placeKey)
+			.distinct()
+			.toList();
+
+		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
+			.collect(Collectors.groupingBy(
+				PlaceImages::getPlaceKey,
+				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
+			));
+
+		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
+			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images, imageLimit),
+					executorService)
+				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
+				.exceptionally(ex -> fallback(response)))
+			.toList();
+
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+		return futures.stream().map(CompletableFuture::join).toList();
+	}
+
+	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images,
+		int imageLimit) {
 		List<String> cached = images.getOrDefault(response.placeKey(), List.of());
 		List<String> placeImages = !cached.isEmpty()
-			? cached : googleClient.fetchImages(response.name(), response.address(), 3);
+			? cached : googleClient.fetchImages(response.name(), response.address(), imageLimit);
 
 		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
 			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages
@@ -218,6 +329,9 @@ public class PlaceService {
 	}
 
 	private void migrateImagesToOci(String placeKey, List<String> imageUrls) {
+		if (imageUrls == null || imageUrls.isEmpty()) {
+			return;
+		}
 
 		//google 이미지 OCI 업로드
 		for (String googleUrl : imageUrls) {
@@ -249,6 +363,87 @@ public class PlaceService {
 			.findFirst()
 			.map(AddressResponse.Result::getText)
 			.orElse(null);
+	}
+
+	private boolean isLunchTime(LocalTime now) {
+		return !now.isBefore(LUNCH_START) && now.isBefore(LUNCH_END);
+	}
+
+	private boolean isCafeTime(LocalTime now) {
+		return !now.isBefore(CAFE_START) && now.isBefore(CAFE_END);
+	}
+
+	private boolean isDinnerTime(LocalTime now) {
+		return !now.isBefore(DINNER_START) && now.isBefore(DINNER_END);
+	}
+
+	private boolean isBarTime(LocalTime now) {
+		return !now.isBefore(BAR_START) && now.isBefore(BAR_END);
+	}
+
+	private RecommendPlaceByTimeResponse generateResponse(User user, double lat, double lng, ThumbnailIcon icon,
+		String keyword, String type) {
+		List<RecommendPartnershipPlaceResponse> partnerships = getRandomPartnerships(user, icon);
+
+		List<RecommendNearByPlaceResponse> externalPlaces = getRandomNearByPlaces(lat, lng, keyword);
+
+		return placeMapper.toRecommendPlaceByTimeResponse(type, partnerships, externalPlaces);
+	}
+
+	private List<RecommendPartnershipPlaceResponse> getRandomPartnerships(User user, ThumbnailIcon icon) {
+		Long schoolId = user.getSchool().getSchoolId();
+		Long collegeId = user.getCollege() != null ? user.getCollege().getCollegeId() : null;
+		Long majorId = user.getMajor() != null ? user.getMajor().getMajorId() : null;
+
+		int poolSize = 15;
+		List<StudentCouncilPost> posts = studentCouncilPostRepository.findRandomPartnershipPlace(
+			schoolId, collegeId, majorId, icon, LocalDateTime.now(KST), PageRequest.of(0, poolSize)
+		);
+
+		if (posts.isEmpty()) {
+			return List.of();
+		}
+
+		List<StudentCouncilPost> mutablePosts = new ArrayList<>(posts);
+		Collections.shuffle(mutablePosts);
+
+		return mutablePosts.stream()
+			.limit(2)
+			.map(placeMapper::toRecommendPartnershipPlaceResponse)
+			.toList();
+	}
+
+	private List<RecommendNearByPlaceResponse> getRandomNearByPlaces(double lat, double lng, String keyword) {
+		Optional<List<SavedPlaceInfo>> cachedPlaces = redisPlaceCacheService.getCachedPlaces(lat, lng, keyword);
+
+		List<SavedPlaceInfo> searchResults;
+
+		if (cachedPlaces.isPresent()) {
+			searchResults = cachedPlaces.get();
+		} else {
+			searchResults = searchByLocationAndKeyword(lat, lng, keyword, 1);
+			if (!searchResults.isEmpty()) {
+				redisPlaceCacheService.cachePlaces(keyword, lat, lng, searchResults);
+			}
+		}
+
+		if (searchResults.isEmpty()) {
+			return List.of();
+		}
+
+		List<SavedPlaceInfo> mutableList = new ArrayList<>(searchResults);
+		Collections.shuffle(mutableList);
+
+		return mutableList.stream()
+			.limit(2)
+			.map(info -> {
+				List<String> imageUrl = (info.imgUrls() != null && !info.imgUrls().isEmpty())
+					? List.of(info.imgUrls().get(0))
+					: Collections.emptyList();
+
+				return placeMapper.toRecommendNearByPlaceResponse(info, imageUrl);
+			})
+			.toList();
 	}
 
 }
