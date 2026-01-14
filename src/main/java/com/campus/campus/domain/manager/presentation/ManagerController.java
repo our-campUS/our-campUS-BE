@@ -71,7 +71,7 @@ public class ManagerController {
 		return CommonResponse.success(ManagerResponseCode.CERTIFY_REQUEST_LIST_SUCCESS, responses);
 	}
 
-	@GetMapping("/reward/need/users")
+	@GetMapping("/rewards/necessary-users")
 	@PreAuthorize("hasRole('MANAGER')")
 	@Operation(summary = "스탬프 보상이 필요한 유저 목록 조회")
 	public CommonResponse<List<StampRewardNeededUserListResponse>> getStampRewardNeededUserList() {
