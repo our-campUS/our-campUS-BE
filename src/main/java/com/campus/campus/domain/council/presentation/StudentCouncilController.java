@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeEmailRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangePasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilNicknameRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
 import com.campus.campus.domain.council.application.service.CouncilService;
 import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -39,5 +41,15 @@ public class StudentCouncilController {
 		councilService.changePassword(councilId, studentCouncilChangePasswordRequest);
 
 		return CommonResponse.success(StudentCouncilResponseCode.CHANGE_PASSWORD_SUCCESS);
+	}
+
+	@PatchMapping("/change/nickname")
+	@Operation(summary = "학생회 닉네임 변경")
+	public CommonResponse<StudentCouncilNicknameResponse> changeNickname(@CurrentCouncilId Long councilId,
+		@Valid @RequestBody StudentCouncilNicknameRequest studentCouncilNicknameRequest) {
+		StudentCouncilNicknameResponse response = councilService.changeCouncilNickname(councilId,
+			studentCouncilNicknameRequest);
+
+		return CommonResponse.success(StudentCouncilResponseCode.CHANGE_NICKNAME_SUCCESS, response);
 	}
 }
