@@ -105,7 +105,7 @@ public class StudentCouncilPost extends BaseEntity {
 
 	public boolean isClosed(LocalDateTime now) {
 		if (this.category == PostCategory.EVENT) {
-			return this.startDateTime != null && this.startDateTime.isBefore(now);
+			return this.startDateTime != null && now.toLocalDate().isAfter(this.startDateTime.toLocalDate());
 		} else {
 			return this.endDateTime != null && this.endDateTime.isBefore(now);
 		}
