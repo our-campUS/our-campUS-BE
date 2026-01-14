@@ -1,18 +1,20 @@
 package com.campus.campus.domain.review.infrastructure.ocr;
 
-import java.io.File;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import com.campus.campus.domain.review.application.exception.ReceiptImageFormatException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,32 +30,53 @@ public class ClovaOcrClient {
 	@Value("${clova.ocr.secret-key}")
 	private String secretKey;
 
-	public String requestReceiptOcr(File imageFile) {
-		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+	public String requestReceiptOcr(byte[] imageBytes, String originalFilename) {
+		//이미지->Base64
+		String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+		extractFormat(originalFilename);
+
+		//json body 구성
+		Map<String, Object> image = new HashMap<>();
+		image.put("format", "png");
+		image.put("data", base64Image);
+		image.put("name", "receipt_test2");
 
 		//message 파트
-		body.add("message", createMessage());
-		body.add("file", new FileSystemResource(imageFile));
+		Map<String, Object> body = new HashMap<>();
+		body.put("version", "V2");
+		body.put("requestId", UUID.randomUUID().toString());
+		body.put("timestamp", System.currentTimeMillis());
+		body.put("images", List.of(image));
 
+		//header
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("X-OCR-SECRET", secretKey);
-		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+		headers.setContentType(MediaType.APPLICATION_JSON);
 
-		HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+		HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
+		//호출
 		ResponseEntity<String> response =
 			restTemplate.postForEntity(invokeUrl, request, String.class);
 		return response.getBody();
 	}
 
-	private String createMessage() {
-		return """
-			{
-			  "version":"V2",
-			  "requestId":"%s",
-			  "timestamp":%d,
-			  "images":[{"format":"jpg","name":"file"}],
-			}
-			""".formatted(UUID.randomUUID(), System.currentTimeMillis());
+	private String extractFormat(String originalFilename) {
+		if (originalFilename == null) {
+			throw new ReceiptImageFormatException();
+		}
+
+		String lower = originalFilename.toLowerCase();
+
+		if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+			return "jpg";
+		}
+
+		if (lower.endsWith(".png")) {
+			return "png";
+		}
+
+		throw new ReceiptImageFormatException();
 	}
+
 }

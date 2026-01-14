@@ -1,6 +1,7 @@
 package com.campus.campus.domain.review.application.dto.response.ocr;
 
-public record ReceiptWrapper(
-	ReceiptResult result
+public record ReceiptOcrItem(
+	TextField name,
+	TextField price
 ) {
 }
