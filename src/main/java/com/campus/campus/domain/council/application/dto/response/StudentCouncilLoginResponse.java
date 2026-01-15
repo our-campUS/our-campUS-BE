@@ -41,6 +41,9 @@ public record StudentCouncilLoginResponse(
 	String councilNickname,
 
 	@Schema(description = "학생회 프로필 이미지 url", example = "https://www.example.com.png")
-	String councilProfileImageUrl
+	String councilProfileImageUrl,
+
+	@Schema(description = "학생회 대표자 이름", example = "한승현")
+	String councilPresident
 ) {
 }
