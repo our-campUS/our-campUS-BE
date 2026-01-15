@@ -94,7 +94,7 @@ public class StudentCouncilNoticeService {
 		Pageable pageable = PageRequest.of(
 			Math.max(page - 1, 0),
 			size,
-			Sort.by(Sort.Direction.DESC, "createdAt")
+			Sort.by(Sort.Direction.DESC, "createTimeBeforeNow")
 		);
 
 		Page<StudentCouncilNotice> notices = noticeRepository.findAllWithWriter(pageable);
