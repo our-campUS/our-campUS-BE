@@ -42,4 +42,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		GROUP BY u
 		""")
 	List<Object[]> findRewardNeededUsersWithStampCount();
+
+	List<User> findAllByMajor_MajorIdAndDeletedAtIsNull(Long majorId);
+
+	List<User> findAllByCollege_CollegeIdAndDeletedAtIsNull(Long collegeId);
+
+	List<User> findAllBySchool_SchoolIdAndDeletedAtIsNull(Long schoolId);
+
 }
