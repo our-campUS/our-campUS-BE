@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus.domain.user.application.dto.request.CampusNicknameUpdateRequest;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
+import com.campus.campus.domain.user.application.dto.response.UserInfoIdsResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.application.service.UserService;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -49,4 +50,12 @@ public class UserController {
 
 		return CommonResponse.success(UserResponseCode.GET_USER_INFO_SUCCESS, userInfoResponse);
 	}
+
+	@GetMapping("/ids")
+	@Operation(summary = "사용자 소속 정보 조회(Topic 구독) - ID만")
+	public CommonResponse<UserInfoIdsResponse> getUserInfoIdsInfo(@CurrentUserId Long userId) {
+		UserInfoIdsResponse res = userService.getUserInfoIds(userId);
+		return CommonResponse.success(UserResponseCode.GET_USER_INFO_SUCCESS, res);
+	}
+
 }
