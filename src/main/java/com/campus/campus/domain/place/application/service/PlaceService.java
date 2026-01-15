@@ -2,6 +2,7 @@ package com.campus.campus.domain.place.application.service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,23 +15,29 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campus.campus.domain.councilpost.application.dto.request.PostRequest;
+import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.util.PlaceKeyGenerator;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
+import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
+import com.campus.campus.domain.place.domain.entity.UserPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.place.domain.repository.PartnershipSuggestionRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
+import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
@@ -59,6 +66,9 @@ public class PlaceService {
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
 	private final GeoCoderClient geoCoderClient;
+	private final PartnershipSuggestionRepository partnershipSuggestionRepository;
+	private final StudentCouncilRepository studentCouncilRepository;
+	private final UserPartnershipSuggestionRepository userPartnershipSuggestionRepository;
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword) {
 		String searchWord = keyword;
@@ -108,6 +118,41 @@ public class PlaceService {
 			});
 	}
 
+	//제휴 신청
+	@Transactional
+	public void suggestPartnership(Long userId, SavedPlaceInfo placeInfo) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Place place = findOrCreatePlace(placeInfo);
+
+		//이미 신청했는지 체크
+		if (userPartnershipSuggestionRepository
+			.existsByUserAndPlace(user, place)) {
+			throw new AlreadySuggestedPartnershipException();
+		}
+
+		//중복 방지 저장
+		userPartnershipSuggestionRepository.save(
+			UserPartnershipSuggestion.create(user, place)
+		);
+
+		//유저 소속 studentCouncil
+		List<StudentCouncil> councils = resolveCouncils(user);
+
+		// demand 조회 or 생성
+		for (StudentCouncil council : councils) {
+			CouncilPartnershipSuggestion demand =
+				partnershipSuggestionRepository.findByPlaceAndCouncil(place, council)
+					.orElseGet(() ->
+						partnershipSuggestionRepository.save(
+							CouncilPartnershipSuggestion.create(place, council)
+						));
+			demand.increase();
+		}
+
+	}
+
 	//장소 저장
 	@Transactional
 	public LikeResponse likePlace(SavedPlaceInfo placeInfo, Long userId) {
@@ -125,25 +170,8 @@ public class PlaceService {
 			return new LikeResponse(null, false);
 		}
 
-		//Place 엔티티 생성
-		Place place;
-		try {
-			//조회
-			place = placeRepository.findByPlaceKey(placeKey)
-				.orElseGet(() -> {
-					//없으면 생성
-					String placeName = stripHtml(placeInfo.placeName());
-					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo));
-					//신규 생성된 경우에만 이미지 저장
-					migrateImagesToOci(newPlace.getPlaceKey(), placeInfo.imgUrls());
+		Place place = findOrCreatePlace(placeInfo);
 
-					return newPlace;
-				});
-		} catch (DataIntegrityViolationException e) {
-			//동시 생성으로 unique 제약 위반 시 다시 조회
-			place = placeRepository.findByPlaceKey(placeKey)
-				.orElseThrow(PlaceCreationException::new);
-		}
 		//likedPlace 저장
 		LikedPlace savedLikedPlace = placeMapper.createLikedPlace(user, place);
 		likedPlacesRepository.save(savedLikedPlace);
@@ -234,6 +262,30 @@ public class PlaceService {
 			return trimmed.replace("http://", "https://");
 		}
 		return null;
+	}
+
+	private List<StudentCouncil> resolveCouncils(User user) {
+		List<StudentCouncil> councils = new ArrayList<>();
+
+		if (user.getMajor() != null) {
+			studentCouncilRepository.findByMajor_MajorId(
+				user.getMajor().getMajorId()
+			).ifPresent(councils::add);
+		}
+
+		if (user.getCollege() != null) {
+			studentCouncilRepository.findByCollege_CollegeId(
+				user.getCollege().getCollegeId()
+			).ifPresent(councils::add);
+		}
+
+		if (user.getSchool() != null) {
+			studentCouncilRepository.findBySchool_SchoolId(
+				user.getSchool().getSchoolId()
+			).ifPresent(councils::add);
+		}
+
+		return councils;
 	}
 
 	private void migrateImagesToOci(String placeKey, List<String> imageUrls) {

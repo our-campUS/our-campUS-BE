@@ -143,4 +143,5 @@ public class ReviewController {
 		List<PlaceReviewRankResponse> response = reviewService.readPopularPartnerships(userId);
 		return CommonResponse.success(ReviewResponseCode.GET_RANK_SUCCESS, response);
 	}
+
 }

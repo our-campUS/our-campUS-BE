@@ -192,4 +192,14 @@ public class PlaceController {
 			partnershipPlaceService.getPartnershipDetail(postId, userId, lat, lng));
 	}
 
+	@PostMapping("/suggest-partnership")
+	@Operation(summary = "제휴 신청하기")
+	public CommonResponse<Void> suggestPartnership(
+		@CurrentUserId Long userId,
+		@Valid @RequestBody SavedPlaceInfo placeInfo
+	) {
+		placeService.suggestPartnership(userId, placeInfo);
+		return CommonResponse.success(PlaceResponseCode.PARTNERSHIP_SUGGEST_SUCCESS);
+	}
+
 }
