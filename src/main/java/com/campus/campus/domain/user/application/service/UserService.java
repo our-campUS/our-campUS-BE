@@ -95,7 +95,7 @@ public class UserService {
 			.orElseThrow(UserNotFoundException::new);
 
 		if (user.getLastProfileUpdatedAt() != null) {
-			LocalDateTime nextAvailableDate = user.getLastProfileUpdatedAt().plusMonths(6);
+			LocalDateTime nextAvailableDate = user.getLastProfileUpdatedAt().plusMonths(3);
 			if (LocalDateTime.now().isBefore(nextAvailableDate)) {
 				throw new AcademicInfoUpdateRestrictionException();
 			}

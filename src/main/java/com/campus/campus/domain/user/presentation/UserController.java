@@ -57,7 +57,7 @@ public class UserController {
 	}
 
 	@PatchMapping("/profile/academic")
-	@Operation(summary = "사용자 학적 정보 수정 (6개월 1회 제한)")
+	@Operation(summary = "사용자 학적 정보 수정 (3개월 1회 제한)")
 	public CommonResponse<ChangeUserAcademicResponse> updateAcademicInfo(@CurrentUserId Long userId,
 		@RequestBody @Valid ChangeUserAcademicRequest changeUserAcademicRequest) {
 		ChangeUserAcademicResponse response = userService.updateUserAcademic(userId, changeUserAcademicRequest);

@@ -55,7 +55,7 @@ public class UserMapper {
 			user.getSchool().getSchoolName(),
 			user.getMajor().getCollege().getCollegeName(),
 			user.getMajor().getMajorName(),
-			user.getLastProfileUpdatedAt()
+			user.getLastProfileUpdatedAt().plusMonths(3)
 		);
 	}
 }
