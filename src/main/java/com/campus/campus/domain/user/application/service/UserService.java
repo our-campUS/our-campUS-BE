@@ -20,6 +20,7 @@ import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.dto.response.ChangeProfileImageResponse;
 import com.campus.campus.domain.user.application.dto.response.ChangeUserAcademicResponse;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
+import com.campus.campus.domain.user.application.dto.response.UserInfoIdsResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.application.exception.AcademicInfoUpdateRestrictionException;
 import com.campus.campus.domain.user.application.exception.NicknameAlreadyExistsException;
@@ -123,4 +124,12 @@ public class UserService {
 
 		return userMapper.toUserInfoResponse(user);
 	}
+
+	public UserInfoIdsResponse getUserInfoIds(Long userId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		return userMapper.toUserInfoIdsResponse(user);
+	}
+
 }
