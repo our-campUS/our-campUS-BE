@@ -9,6 +9,9 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.place.application.service.PlaceService;
+import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.PaymentInfo;
 import com.campus.campus.domain.review.application.dto.response.ocr.PriceInfo;
@@ -35,8 +38,12 @@ public class OcrService {
 	private final ClovaOcrClient clovaOcrClient;
 	private final ObjectMapper objectMapper;
 	private final ReviewService reviewService;
+	private final PlaceService placeService;
 
-	public ReviewPartnerResponse processReceipt(MultipartFile file, Long userId, Long placeId) {
+	public ReviewPartnerResponse processReceipt(MultipartFile file, Long userId, SavedPlaceInfo placeInfo) {
+		Place place = placeService.findOrCreatePlace(placeInfo);
+		Long placeId = place.getPlaceId();
+
 		//MultipartFIle -> byte[]
 		byte[] imageBytes;
 		try {

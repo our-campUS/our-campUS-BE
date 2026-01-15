@@ -12,9 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
+import com.campus.campus.domain.place.application.dto.response.PlaceDetailView;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.application.service.PartnershipPlaceService;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
@@ -95,7 +96,7 @@ public class PlaceController {
 
 	@GetMapping("/partnership")
 	@Operation(summary = "리스트로 제휴 장소 전체 조회", description = "무한 스크롤 방식으로 제휴 장소 목록을 조회합니다.")
-	public CommonResponse<List<PartnershipResponse>> getPartnershipPlaces(
+	public CommonResponse<List<PartnershipDetailResponse>> getPartnershipPlaces(
 		@CurrentUserId Long userId,
 		@Parameter(
 			description = "현재 위치의 위도",
@@ -130,10 +131,31 @@ public class PlaceController {
 			example = "5"
 		)
 		@RequestParam(defaultValue = "5") int size) {
-		List<PartnershipResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size, lat,
+		List<PartnershipDetailResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size,
+			lat,
 			lng);
 
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACES_SUCCESS, response);
+	}
+
+	@GetMapping("/detail")
+	@Operation(summary = "장소 세부 조회")
+	public CommonResponse<PlaceDetailView> getPlaceDetails(
+		@CurrentUserId Long userId,
+		@Parameter(
+			description = "현재 위치의 위도",
+			example = "37.50415"
+		)
+		@RequestParam double lat,
+		@Parameter(
+			description = "현재 위치의 경도",
+			example = "126.9570"
+		)
+		@RequestParam double lng,
+		@RequestParam Long placeId
+	) {
+		PlaceDetailView response = partnershipPlaceService.getPlaceDetails(userId, placeId, lat, lng);
+		return CommonResponse.success(PlaceResponseCode.GET_PLACE_DETAILS_SUCCESS, response);
 	}
 
 	@GetMapping("/partnership/map")
@@ -175,7 +197,7 @@ public class PlaceController {
 
 	@GetMapping("/partnership/detail")
 	@Operation(summary = "제휴 장소 상세 조회(맵에서 핀 클릭 시)")
-	public CommonResponse<PartnershipResponse> getPartnershipPlaceDetail(
+	public CommonResponse<PartnershipDetailResponse> getPartnershipPlaceDetail(
 		@Parameter(description = "현재 위치의 위도", example = "37.50415")
 		@RequestParam double lat,
 

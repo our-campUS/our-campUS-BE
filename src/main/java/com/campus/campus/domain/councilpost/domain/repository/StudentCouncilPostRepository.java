@@ -14,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
-import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
+import com.campus.campus.domain.place.domain.entity.Place;
 
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
@@ -385,4 +385,54 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("endOfDay") LocalDateTime endOfDay,
 		Pageable pageable
 	);
+
+	@Query("""
+		    SELECT COUNT(p) > 0
+		    FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    WHERE p.place = :place
+		      AND p.startDateTime <= :now
+		      AND p.endDateTime >= :now
+		      AND (
+		           (w.councilType = :majorType AND w.major.majorId = :majorId)
+		        OR (w.councilType = :collegeType AND w.college.collegeId = :collegeId)
+		        OR (w.councilType = :schoolType AND w.school.schoolId = :schoolId)
+		      )
+		""")
+	boolean existsActiveByPlaceAndUserScope(
+		@Param("place") Place place,
+		@Param("now") LocalDateTime now,
+		@Param("majorType") CouncilType majorType,
+		@Param("majorId") Long majorId,
+		@Param("collegeType") CouncilType collegeType,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolType") CouncilType schoolType,
+		@Param("schoolId") Long schoolId
+	);
+
+	@Query("""
+		    SELECT p
+		    FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    WHERE p.place = :place
+		      AND p.startDateTime <= :now
+		      AND p.endDateTime >= :now
+		      AND (
+		           (w.councilType = :majorType AND w.major.majorId = :majorId)
+		        OR (w.councilType = :collegeType AND w.college.collegeId = :collegeId)
+		        OR (w.councilType = :schoolType AND w.school.schoolId = :schoolId)
+		      )
+		    ORDER BY p.endDateTime DESC
+		""")
+	Optional<StudentCouncilPost> findActiveByPlaceAndUserScope(
+		@Param("place") Place place,
+		@Param("now") LocalDateTime now,
+		@Param("majorType") CouncilType majorType,
+		@Param("majorId") Long majorId,
+		@Param("collegeType") CouncilType collegeType,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolType") CouncilType schoolType,
+		@Param("schoolId") Long schoolId
+	);
+
 }

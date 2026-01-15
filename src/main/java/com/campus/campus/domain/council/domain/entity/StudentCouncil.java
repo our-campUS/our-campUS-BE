@@ -21,6 +21,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -65,8 +66,19 @@ public class StudentCouncil extends BaseEntity {
 	@Column(name = "council_name")
 	private String councilName;
 
+	@Column(name = "council_nickname")
+	private String councilNickname;
+
+	@Column(name = "council_profile_image_url")
+	@Builder.Default
+	private String councilProfileImageUrl = null;
+
 	@Column(name = "election_image_url")
 	private String electionImageUrl;
+
+	@Column(name = "council_president")
+	@Builder.Default
+	private String councilPresident = null;
 
 	@Column(name = "manager_approved", nullable = false)
 	private boolean managerApproved;
@@ -86,8 +98,20 @@ public class StudentCouncil extends BaseEntity {
 		this.email = newEmail;
 	}
 
+	public void updateCouncilNickname(String nickname) {
+		this.councilNickname = nickname;
+	}
+
+	public void updateCouncilProfileImage(String newProfileImageUrl) {
+		this.councilProfileImageUrl = newProfileImageUrl;
+	}
+
 	public void generateCouncilName(String councilName) {
 		this.councilName = councilName;
+	}
+
+	public void updateCouncilPresident(String president) {
+		this.councilPresident = president;
 	}
 
 	public void managerApprove() {

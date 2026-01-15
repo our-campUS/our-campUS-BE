@@ -1,10 +1,13 @@
 package com.campus.campus.domain.place.application.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,11 +26,13 @@ import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.dto.response.PlaceDetailView;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
-import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
+import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
+import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -48,9 +53,11 @@ public class PartnershipPlaceService {
 	private final PlaceMapper placeMapper;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final ReviewService reviewService;
+	private final PlaceRepository placeRepository;
+	private final PlaceImagesRepository placeImagesRepository;
 
 	@Transactional(readOnly = true)
-	public List<PartnershipResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
+	public List<PartnershipDetailResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
 		double userLng) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
@@ -166,31 +173,133 @@ public class PartnershipPlaceService {
 			.toList();
 	}
 
-	@Transactional
-	public PartnershipResponse getPartnershipDetail(Long postId, Long userId, double userLat,
-		double userLng) {
-		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
-			.orElseThrow(PostNotFoundException::new);
+	//장소 상세 조회 : 제휴
+	private PartnershipDetailResponse getPartnershipDetailInternal(
+		StudentCouncilPost post,
+		User user,
+		double userLat,
+		double userLng
+	) {
 		Place place = post.getPlace();
 
-		if (place == null || place.getCoordinate() == null) {
-			throw new PlaceInfoNotFoundException();
-		}
+		double distance = calculateDistance(place, userLat, userLng);
+		double averageStar = calculateAverageStar(place);
 
+		return placeMapper.toPartnershipResponse(
+			user,
+			post,
+			place,
+			isLiked(place, user),
+			getImgUrls(post),
+			distance,
+			averageStar,
+			reviewService.getReviewSummaryList(place.getPlaceId()),
+			reviewService.getReviewCount(place.getPlaceId())
+		);
+	}
+
+	//장소 상세 조회 : 제휴
+	public PartnershipDetailResponse getPartnershipDetail(
+		Long postId,
+		Long userId,
+		double userLat,
+		double userLng
+	) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
-		double distanceMeter = GeoUtil.distanceMeter(
-			userLat, userLng, place.getCoordinate().latitude(), place.getCoordinate().longitude()
+		StudentCouncilPost post = studentCouncilPostRepository.findById(postId)
+			.orElseThrow(PostNotFoundException::new);
+
+		Place place = post.getPlace();
+
+		double distance = calculateDistance(place, userLat, userLng);
+		double averageStar = calculateAverageStar(place);
+
+		return placeMapper.toPartnershipResponse(
+			user,
+			post,
+			place,
+			isLiked(place, user),
+			getImgUrls(post),
+			distance,
+			averageStar,
+			reviewService.getReviewSummaryList(place.getPlaceId()),
+			reviewService.getReviewCount(place.getPlaceId())
 		);
-		double rounded = Math.round(distanceMeter * 100.0) / 100.0;
-		double averageStar = reviewService.getAverageOfStars(place.getPlaceId());
+	}
 
-		List<SimpleReviewResponse> reviews = reviewService.getReviewSummaryList(place.getPlaceId());
-		int reviewCount = reviewService.getReviewCount(place.getPlaceId());
+	//장소 상세 조회: 제휴X
+	private PlaceDetailView getNormalPlaceDetailInternal(
+		User user,
+		Place place,
+		double userLat,
+		double userLng
+	) {
+		double distance = calculateDistance(place, userLat, userLng);
+		double averageStar = calculateAverageStar(place);
 
-		return placeMapper.toPartnershipResponse(user, post, place, isLiked(place, user), getImgUrls(post), rounded,
-			averageStar, reviews, reviewCount);
+		return placeMapper.toPlaceDetailResponse(
+			user,
+			place,
+			isLiked(place, user),
+			getPlaceImgUrls(place),
+			distance,
+			averageStar,
+			reviewService.getReviewSummaryList(place.getPlaceId()),
+			reviewService.getReviewCount(place.getPlaceId())
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public PlaceDetailView getPlaceDetails(
+		Long userId,
+		Long placeId,
+		double userLat,
+		double userLng
+	) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Place place = placeRepository.findById(placeId)
+			.orElseThrow(PlaceInfoNotFoundException::new);
+
+		Optional<StudentCouncilPost> activePost =
+			studentCouncilPostRepository.findActiveByPlaceAndUserScope(
+				place,
+				LocalDateTime.now(),
+				CouncilType.MAJOR_COUNCIL,
+				user.getMajor().getMajorId(),
+				CouncilType.COLLEGE_COUNCIL,
+				user.getCollege().getCollegeId(),
+				CouncilType.SCHOOL_COUNCIL,
+				user.getSchool().getSchoolId()
+			);
+
+		if (activePost.isPresent()) {
+			StudentCouncilPost post = activePost.get();
+			return getPartnershipDetailInternal(post, user, userLat, userLng);
+		} else {
+			return getNormalPlaceDetailInternal(user, place, userLat, userLng);
+		}
+	}
+
+	private double calculateDistance(Place place, double lat, double lng) {
+		double distance = GeoUtil.distanceMeter(
+			lat,
+			lng,
+			place.getCoordinate().latitude(),
+			place.getCoordinate().longitude()
+		);
+		return Math.round(distance * 100.0) / 100.0;
+	}
+
+	private double calculateAverageStar(Place place) {
+		return BigDecimal.valueOf(
+				reviewService.getAverageOfStars(place.getPlaceId())
+			)
+			.setScale(1, RoundingMode.HALF_UP)
+			.doubleValue();
 	}
 
 	private boolean isLiked(Place place, User user) {
@@ -199,6 +308,10 @@ public class PartnershipPlaceService {
 
 	private List<String> getImgUrls(StudentCouncilPost post) {
 		return postImageRepository.findImageUrlsByPost(post);
+	}
+
+	private List<String> getPlaceImgUrls(Place place) {
+		return placeImagesRepository.findImageUrlsByPlace(place);
 	}
 
 	private void validateAcademicInfo(User user) {

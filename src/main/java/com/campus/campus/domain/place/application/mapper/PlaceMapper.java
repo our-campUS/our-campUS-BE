@@ -8,9 +8,10 @@ import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
+import com.campus.campus.domain.place.application.dto.response.PlaceDetailResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
@@ -51,9 +52,10 @@ public class PlaceMapper {
 		);
 	}
 
-	public PartnershipResponse toPartnershipResponse(User user, StudentCouncilPost post, Place place, boolean isLiked,
+	public PartnershipDetailResponse toPartnershipResponse(User user, StudentCouncilPost post, Place place,
+		boolean isLiked,
 		List<String> imgUrls, double distance, Double averageStar, List<SimpleReviewResponse> reviews, Integer size) {
-		return new PartnershipResponse(
+		return new PartnershipDetailResponse(
 			place.getPlaceId(),
 			place.getPlaceKey(),
 			place.getPlaceName(),
@@ -67,6 +69,25 @@ public class PlaceMapper {
 			post.getTitle(),
 			distance,
 			post.getEndDateTime().toLocalDate(),
+			imgUrls,
+			reviews,
+			size
+		);
+	}
+
+	public PlaceDetailResponse toPlaceDetailResponse(User user, Place place, boolean isLiked,
+		List<String> imgUrls, double distance, Double averageStar, List<SimpleReviewResponse> reviews, Integer size) {
+		return new PlaceDetailResponse(
+			place.getPlaceId(),
+			place.getPlaceKey(),
+			place.getPlaceName(),
+			place.getPlaceCategory(),
+			place.getAddress(),
+			place.getCoordinate().latitude(),
+			place.getCoordinate().longitude(),
+			isLiked,
+			averageStar,
+			distance,
 			imgUrls,
 			reviews,
 			size

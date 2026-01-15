@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
@@ -91,10 +92,11 @@ public class ReviewController {
 	@Operation(summary = "영수증 ocr을 통해 제휴 매장 이용 인증")
 	public CommonResponse<ReviewPartnerResponse> upload(
 		@RequestPart MultipartFile file,
-		@RequestParam(required = false) Long placeId,
+		@Valid @RequestBody SavedPlaceInfo placeInfo,
 		@CurrentUserId Long userId
 	) {
-		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file, userId, placeId));
+		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS,
+			ocrService.processReceipt(file, userId, placeInfo));
 	}
 
 	@GetMapping("/{reviewId}")
