@@ -69,10 +69,14 @@ public class User extends BaseEntity {
 	@JoinColumn(name = "major_id")
 	private Major major;
 
+	@Column(name = "last_profile_updated_at")
+	private LocalDateTime lastProfileUpdatedAt;
+
 	public void updateProfile(School school, College college, Major major) {
 		this.school = school;
 		this.college = college;
 		this.major = major;
+		this.lastProfileUpdatedAt = LocalDateTime.now();
 	}
 
 	public void updateCampusNickname(String campusNickname) {
@@ -89,5 +93,9 @@ public class User extends BaseEntity {
 
 	public void updateRewardNeeded(boolean rewardNeeded) {
 		this.rewardNeeded = rewardNeeded;
+	}
+
+	public void updateProfileImage(String profileImage) {
+		this.profileImage = profileImage;
 	}
 }
