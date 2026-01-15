@@ -356,4 +356,31 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("placeKeys") List<String> placeKeys,
 		@Param("now") LocalDateTime now
 	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
+	@Query("""
+		    SELECT p FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    LEFT JOIN w.school s
+		    LEFT JOIN w.college c
+		    LEFT JOIN w.major m
+		    WHERE p.category = :category
+		      AND p.startDateTime BETWEEN :startOfDay AND :endOfDay
+		      AND w.deletedAt IS NULL
+		      AND (
+		           (w.councilType = 'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
+		        OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
+		        OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
+		      )
+		    ORDER BY function('RAND')
+		""")
+	List<StudentCouncilPost> findTodayEvent(
+		@Param("schoolId") Long schoolId,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
+		@Param("category") PostCategory category,
+		@Param("startOfDay") LocalDateTime startOfDay,
+		@Param("endOfDay") LocalDateTime endOfDay,
+		Pageable pageable
+	);
 }
