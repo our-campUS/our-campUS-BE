@@ -47,7 +47,7 @@ public class UserController {
 	}
 
 
-	@PatchMapping("/change/profile-image/")
+	@PatchMapping("/change/profile/image")
 	@Operation(summary = "사용자 프로필 이미지 변경")
 	public CommonResponse<ChangeProfileImageResponse> updateProfileImage(@CurrentUserId Long userId,
 		@RequestBody @Valid ChangeProfileImageRequest changeProfileImageRequest) {
