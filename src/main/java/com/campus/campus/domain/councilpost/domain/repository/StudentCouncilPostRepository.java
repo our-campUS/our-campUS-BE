@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
@@ -282,6 +283,28 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("now") LocalDateTime now
 	);
 
+	@EntityGraph(attributePaths = {"place"})
+	@Query("""
+		    SELECT scp
+		    FROM StudentCouncilPost scp
+		    JOIN scp.writer sc
+		    LEFT JOIN Review r
+		           ON r.place = scp.place
+		          AND r.createdAt >= :from
+		    WHERE scp.startDateTime <= :now
+		      AND scp.endDateTime >= :now
+		      AND (
+		             (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.MAJOR_COUNCIL
+		                  AND sc.major.majorId = :majorId)
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.COLLEGE_COUNCIL
+		                  AND sc.college.collegeId = :collegeId)
+		          OR (sc.councilType = com.campus.campus.domain.council.domain.entity.CouncilType.SCHOOL_COUNCIL
+		                  AND sc.school.schoolId = :schoolId)
+		      )
+			AND sc.deletedAt IS NULL
+		    GROUP BY scp
+		    ORDER BY COUNT(r.id) DESC
+		""")
 	@EntityGraph(attributePaths = {"places"})
 	@Query(value = """
 		SELECT scp.*
@@ -313,7 +336,36 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("collegeType") CouncilType collegeType,
 		@Param("schoolType") CouncilType schoolType,
 		@Param("from") LocalDateTime from,
-		@Param("now") LocalDateTime now
+		@Param("now") LocalDateTime now,
+		Pageable pageable
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		JOIN p.place pl
+		LEFT JOIN w.school s
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
+		WHERE p.category = 'PARTNERSHIP'
+		  AND p.thumbnailIcon = :icon
+		  AND :now BETWEEN p.startDateTime AND p.endDateTime
+		  AND w.deletedAt IS NULL
+		  AND (
+		       (w.councilType = 'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
+		    OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
+		    OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
+		  )
+		ORDER BY p.id DESC
+		""")
+	List<StudentCouncilPost> findRandomPartnershipPlace(
+		@Param("schoolId") Long schoolId,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
+		@Param("icon") ThumbnailIcon icon,
+		@Param("now") LocalDateTime now,
+		Pageable pageable
 	);
 
 	@Query("""

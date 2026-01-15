@@ -10,7 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
+import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.domain.entity.Review;
+import com.campus.campus.domain.user.domain.entity.User;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
@@ -33,6 +35,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	);
 
 	@Query("""
+		    SELECT r.place.placeKey, AVG(r.star)
+		    FROM Review r
+		    WHERE r.place.placeKey IN :placeKeys
+		    GROUP BY r.place.placeKey
+		""")
+	List<Object[]> findAverageStarsByPlaceKeys(@Param("placeKeys") List<String> placeKeys);
+
+	@Query("""
 			SELECT new com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow(
 				r.place.placeId,
 				AVG(r.star)
@@ -47,7 +57,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 	long countByPlace_PlaceId(long placeId);
 
-	long countByPlace_PlaceIdAndUser_Id(long placeId, long userId);
+	long countByPlaceAndUser(Place place, User user);
 
 	long countByPlace_PlaceIdAndUser_Major_MajorId(long placeId, long majorId);
 

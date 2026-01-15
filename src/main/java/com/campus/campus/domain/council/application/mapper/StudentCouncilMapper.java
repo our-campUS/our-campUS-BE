@@ -3,8 +3,10 @@ package com.campus.campus.domain.council.application.mapper;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilChangeProfileImageResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
@@ -15,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class StudentCouncilLoginMapper {
+public class StudentCouncilMapper {
 	private final SecurityConfig securityConfig;
 
 	public StudentCouncil createStudentCouncil(StudentCouncilSignUpRequest studentCouncilSignUpRequest, School school,
@@ -47,13 +49,32 @@ public class StudentCouncilLoginMapper {
 			studentCouncil.getSchool().getSchoolName(),
 			studentCouncil.getCollege() != null ? studentCouncil.getCollege().getCollegeName() : null,
 			studentCouncil.getMajor() != null ? studentCouncil.getMajor().getMajorName() : null,
-			studentCouncil.getCouncilName()
+			studentCouncil.getCouncilName(),
+			studentCouncil.getCouncilNickname(),
+			studentCouncil.getCouncilProfileImageUrl(),
+			studentCouncil.getCouncilPresident()
 		);
 	}
 
 	public StudentCouncilFindIdResponse toStudentCouncilFindIdResponse(String loginId) {
 		return new StudentCouncilFindIdResponse(
 			loginId
+		);
+	}
+
+	public StudentCouncilNicknameResponse toStudentCouncilNicknameResponse(StudentCouncil studentCouncil) {
+		return new StudentCouncilNicknameResponse(
+			studentCouncil.getCouncilNickname(),
+			studentCouncil.getCouncilName()
+		);
+	}
+
+	public StudentCouncilChangeProfileImageResponse toStudentCouncilChangeProfileImageResponse(
+		StudentCouncil studentCouncil) {
+		return new StudentCouncilChangeProfileImageResponse(
+			studentCouncil.getId(),
+			studentCouncil.getCouncilName(),
+			studentCouncil.getCouncilProfileImageUrl()
 		);
 	}
 }

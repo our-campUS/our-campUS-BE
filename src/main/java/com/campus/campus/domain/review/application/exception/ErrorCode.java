@@ -18,6 +18,7 @@ public enum ErrorCode implements ErrorCodeInterface {
 	RECEIPT_FILE_TYPE_ERROR(2704, HttpStatus.UNPROCESSABLE_ENTITY, "지원하지 않는 이미지 형식입니다."),
 	NOT_PARTNERSHIP_RECEIPT_ERROR(2705, HttpStatus.UNPROCESSABLE_ENTITY, "영수증과 일치하는 제휴 정보를 찾을 수 없어요.");
 
+
 	private final int code;
 	private final HttpStatus status;
 	private final String message;

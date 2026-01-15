@@ -15,6 +15,7 @@ import com.campus.campus.domain.review.application.dto.response.ReviewCreateResp
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
@@ -32,7 +33,6 @@ public class ReviewMapper {
 			.content(request.content())
 			.star(request.star())
 			.place(place)
-			.isVerified(request.isVerified())
 			.build();
 	}
 
@@ -74,6 +74,19 @@ public class ReviewMapper {
 			.build();
 	}
 
+	public WriteReviewResponse toWriteReviewResponse(Review review, String imageUrl) {
+		return WriteReviewResponse.builder()
+			.id(review.getId())
+			.userId(review.getUser().getId())
+			.userName(review.getUser().getNickname())
+			.createDate(review.getCreatedAt().toLocalDate())
+			.placeId(review.getPlace().getPlaceId())
+			.content(review.getContent())
+			.star(review.getStar())
+			.imageUrl(imageUrl)
+			.build();
+	}
+
 	public CursorPageReviewResponse<ReviewResponse> toCursorReviewResponse(List<ReviewResponse> items, Review last,
 		boolean hasNext) {
 		return CursorPageReviewResponse.<ReviewResponse>builder()
@@ -84,12 +97,12 @@ public class ReviewMapper {
 			.build();
 	}
 
-	public ReviewCreateResult toReviewCreateResult(boolean isFirstReviewOfPlace, long userReviewCountOfPlace) {
+	public ReviewCreateResult toReviewCreateResult(boolean isFirstReviewOfPlace, long userReviewCountOfPlace,
+		int numberOfUserStamp) {
 		return ReviewCreateResult.builder()
 			.isFirstReviewOfPlace(isFirstReviewOfPlace)
 			.userReviewCountOfPlace((int)userReviewCountOfPlace)
-			//스탬프 추가 예정
-			.message(isFirstReviewOfPlace ? "첫번째 리뷰 작성 완료!" : null)
+			.numberOfUserStamp(numberOfUserStamp)
 			.build();
 	}
 
@@ -105,7 +118,7 @@ public class ReviewMapper {
 		);
 	}
 
-	public ReviewCreateResponse toReviewCreateResponse(ReviewResponse response, ReviewCreateResult createResult,
+	public ReviewCreateResponse toReviewCreateResponse(WriteReviewResponse response, ReviewCreateResult createResult,
 		ReviewRankingResponse rankingResponse) {
 		return ReviewCreateResponse.builder()
 			.review(response)

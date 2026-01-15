@@ -1,6 +1,7 @@
 package com.campus.campus.domain.councilpost.application.mapper;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,7 +31,11 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class StudentCouncilPostMapper {
+	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
 	public PostListItemResponse toPostListItemResponse(StudentCouncilPost post, boolean isLiked) {
+		LocalDateTime now = LocalDateTime.now(KST);
+
 		return new PostListItemResponse(
 			post.getId(),
 			post.getCategory(),
@@ -40,7 +45,8 @@ public class StudentCouncilPostMapper {
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl(),
 			post.getThumbnailIcon(),
-			isLiked
+			isLiked,
+			post.isClosed(now)
 		);
 	}
 
@@ -133,7 +139,9 @@ public class StudentCouncilPostMapper {
 
 	public GetPostForUserResponse toGetPostForUserResponse(StudentCouncilPost post, List<String> images,
 		Long currentUserId, boolean isLiked) {
+		LocalDateTime now = LocalDateTime.now(KST);
 		var writer = post.getWriter();
+
 		var builder = GetPostForUserResponse.builder()
 			.id(post.getId())
 			.writerId(writer.getId())
@@ -146,6 +154,7 @@ public class StudentCouncilPostMapper {
 			.thumbnailImageUrl(post.getThumbnailImageUrl())
 			.thumbnailIcon(post.getThumbnailIcon())
 			.isLiked(isLiked)
+			.isEnded(post.isClosed(now))
 			.images(images != null ? images : Collections.emptyList());
 
 		if (post.isEvent()) {

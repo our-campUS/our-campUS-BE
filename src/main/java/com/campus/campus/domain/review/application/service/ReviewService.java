@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
-import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
@@ -34,6 +34,7 @@ import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
 import com.campus.campus.domain.review.application.exception.NotPartnershipReceiptException;
+import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -44,6 +45,8 @@ import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
 import com.campus.campus.domain.school.domain.entity.School;
+import com.campus.campus.domain.stamp.application.service.StampService;
+import com.campus.campus.domain.stamp.domain.repository.StampRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
@@ -65,6 +68,8 @@ public class ReviewService {
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final PlaceMapper placeMapper;
+	private final StampService stampService;
+	private final StampRepository stampRepository;
 
 	@Transactional
 	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
@@ -75,7 +80,6 @@ public class ReviewService {
 			throw new PostImageLimitExceededException();
 		}
 
-		//place 객체 생성
 		Place place = placeService.findOrCreatePlace(request.place());
 
 		Review review = reviewMapper.createReview(request, user, place);
@@ -87,13 +91,18 @@ public class ReviewService {
 			}
 		}
 
-		List<String> imageUrls = reviewImageRepository
-			.findAllByReviewOrderByIdAsc(review)
-			.stream()
-			.map(ReviewImage::getImageUrl)
-			.toList();
+		// isOcrVerificationSuccess는 ocr이 성공했다고 가정하고 구현했습니다. 이는 ocr을 구현하면서 수정해주시면 됩니다.
+		boolean isOcrVerificationSuccess = true;
+		if (isOcrVerificationSuccess) {
+			review.verify();
+			stampService.grantStampForReview(user, review);
+		}
 
-		ReviewResponse response = reviewMapper.toReviewResponse(review, imageUrls);
+		String imageUrl =
+			(request.imageUrls() == null || request.imageUrls().isEmpty())
+				? null : request.imageUrls().getFirst();
+
+		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, imageUrl);
 		ReviewCreateResult createResult = getCreateResult(place, user);
 		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
 
@@ -126,7 +135,7 @@ public class ReviewService {
 
 		List<ReviewImage> reviewImages = reviewImageRepository.findAllByReview(review);
 
-		List<String> deleted = new ArrayList<>();
+		Set<String> deleted = new HashSet<>();
 		reviewImages.stream()
 			.map(ReviewImage::getImageUrl)
 			.forEach(deleted::add);
@@ -137,14 +146,14 @@ public class ReviewService {
 		for (String imageUrl : deleted) {
 			try {
 				presignedUrlService.deleteImage(imageUrl);
-			} catch (PostOciImageDeleteFailedException e) {
+			} catch (Exception e) {
 				log.warn("OCI 파일 삭제 실패: {}", imageUrl, e);
 			}
 		}
 	}
 
 	@Transactional
-	public ReviewResponse update(Long userId, Long reviewId, ReviewRequest request) {
+	public WriteReviewResponse update(Long userId, Long reviewId, ReviewRequest request) {
 
 		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
@@ -172,13 +181,11 @@ public class ReviewService {
 
 		cleanupUnusedImages(oldImages, request);
 
-		List<String> imageUrls = reviewImageRepository
-			.findAllByReview(review)
-			.stream()
-			.map(ReviewImage::getImageUrl)
-			.toList();
+		String imageUrl =
+			(request.imageUrls() == null || request.imageUrls().isEmpty())
+				? null : request.imageUrls().getFirst();
 
-		return reviewMapper.toReviewResponse(review, imageUrls);
+		return reviewMapper.toWriteReviewResponse(review, imageUrl);
 	}
 
 	@Transactional(readOnly = true)
@@ -259,7 +266,7 @@ public class ReviewService {
 			)
 			.toList();
 
-		Review last = reviews.get(reviews.size() - 1);
+		Review last = reviews.getLast();
 
 		return reviewMapper.toCursorReviewResponse(items, last, hasNext);
 
@@ -348,7 +355,8 @@ public class ReviewService {
 				CouncilType.COLLEGE_COUNCIL,
 				CouncilType.SCHOOL_COUNCIL,
 				from,
-				now
+				now,
+				PageRequest.of(0, 3)
 			);
 
 		log.info("찾은 결과:{}", partnerships.stream().toList());
@@ -365,7 +373,7 @@ public class ReviewService {
 	//이미지 삭제
 	private void cleanupUnusedImages(List<ReviewImage> oldImages, ReviewRequest request) {
 		List<String> newUrls = request.imageUrls() == null ? List.of() : request.imageUrls();
-		List<String> deleteTargets = new ArrayList<>();
+		Set<String> deleteTargets = new HashSet<>();
 
 		// 본문 이미지 중 제거된 이미지
 		oldImages.stream()
@@ -388,15 +396,13 @@ public class ReviewService {
 	}
 
 	private ReviewCreateResult getCreateResult(Place place, User user) {
-		//해당 장소 리뷰 개수
 		long totalReviewCountOfPlace = reviewRepository.countByPlace_PlaceId(place.getPlaceId());
 
-		//해당 장소에서 유저가 쓴 리뷰가 몇번째인지
-		long userReviewCountOfPlace = reviewRepository.countByPlace_PlaceIdAndUser_Id(place.getPlaceId(),
-			user.getId());
+		long count = reviewRepository.countByPlaceAndUser(place, user);
 		boolean isFirstReviewOfPlace = totalReviewCountOfPlace == 1;
+		int NumberOfStamp = stampRepository.countByUser(user);
 
-		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, userReviewCountOfPlace);
+		return reviewMapper.toReviewCreateResult(isFirstReviewOfPlace, count, NumberOfStamp);
 
 	}
 

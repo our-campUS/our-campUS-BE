@@ -15,7 +15,7 @@ public record PartnershipResponse(
 	Double longitude,
 	String tag, //(ex.) 총학생회, 사회과학대학, IT공학과
 	boolean isLiked,
-	double star, //리뷰 평점
+	Double star, //리뷰 평점
 	String partnerTitle, //제휴 제목
 	double distance, //거리(m)
 	LocalDate endDate, //제휴 끝나는 시점
