@@ -12,7 +12,9 @@ import com.campus.campus.domain.school.domain.entity.School;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
 import com.campus.campus.domain.user.application.dto.request.CampusNicknameUpdateRequest;
+import com.campus.campus.domain.user.application.dto.request.ChangeProfileImageRequest;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
+import com.campus.campus.domain.user.application.dto.response.ChangeProfileImageResponse;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.application.exception.NicknameAlreadyExistsException;
@@ -69,6 +71,17 @@ public class UserService {
 
 		user.updateCampusNickname(nicknameUpdateRequest.campusNickname());
 		userRepository.save(user);
+	}
+
+	@Transactional
+	public ChangeProfileImageResponse updateProfileImage(Long userId, ChangeProfileImageRequest profileImageRequest) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		user.updateProfileImage(profileImageRequest.newProfileImage());
+		userRepository.save(user);
+
+		return userMapper.toChangeProfileImageResponse(user);
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {

@@ -90,4 +90,8 @@ public class User extends BaseEntity {
 	public void updateRewardNeeded(boolean rewardNeeded) {
 		this.rewardNeeded = rewardNeeded;
 	}
+
+	public void updateProfileImage(String profileImage) {
+		this.profileImage = profileImage;
+	}
 }
