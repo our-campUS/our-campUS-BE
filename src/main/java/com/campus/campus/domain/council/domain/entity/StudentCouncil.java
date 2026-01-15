@@ -76,6 +76,10 @@ public class StudentCouncil extends BaseEntity {
 	@Column(name = "election_image_url")
 	private String electionImageUrl;
 
+	@Column(name = "council_president")
+	@Builder.Default
+	private String councilPresident = null;
+
 	@Column(name = "manager_approved", nullable = false)
 	private boolean managerApproved;
 
@@ -104,6 +108,10 @@ public class StudentCouncil extends BaseEntity {
 
 	public void generateCouncilName(String councilName) {
 		this.councilName = councilName;
+	}
+
+	public void updateCouncilPresident(String president) {
+		this.councilPresident = president;
 	}
 
 	public void managerApprove() {

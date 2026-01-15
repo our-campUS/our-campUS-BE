@@ -51,7 +51,8 @@ public class StudentCouncilMapper {
 			studentCouncil.getMajor() != null ? studentCouncil.getMajor().getMajorName() : null,
 			studentCouncil.getCouncilName(),
 			studentCouncil.getCouncilNickname(),
-			studentCouncil.getCouncilProfileImageUrl()
+			studentCouncil.getCouncilProfileImageUrl(),
+			studentCouncil.getCouncilPresident()
 		);
 	}
 
