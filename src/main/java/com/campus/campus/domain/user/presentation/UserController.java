@@ -7,7 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.user.application.dto.request.CampusNicknameUpdateRequest;
+import com.campus.campus.domain.user.application.dto.request.ChangeProfileImageRequest;
+import com.campus.campus.domain.user.application.dto.request.ChangeUserAcademicRequest;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
+import com.campus.campus.domain.user.application.dto.response.ChangeProfileImageResponse;
+import com.campus.campus.domain.user.application.dto.response.ChangeUserAcademicResponse;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.application.service.UserService;
@@ -40,6 +44,25 @@ public class UserController {
 		userService.updateCampusNickname(userId, nicknameUpdateRequest);
 
 		return CommonResponse.success(UserResponseCode.NICKNAME_UPDATE_SUCCESS);
+	}
+
+
+	@PatchMapping("/change/profile/image")
+	@Operation(summary = "사용자 프로필 이미지 변경")
+	public CommonResponse<ChangeProfileImageResponse> updateProfileImage(@CurrentUserId Long userId,
+		@RequestBody @Valid ChangeProfileImageRequest changeProfileImageRequest) {
+		ChangeProfileImageResponse response = userService.updateProfileImage(userId, changeProfileImageRequest);
+
+		return CommonResponse.success(UserResponseCode.PROFILE_IMAGE_UPDATE_SUCCESS, response);
+	}
+
+	@PatchMapping("change/profile/academic")
+	@Operation(summary = "사용자 학적 정보 수정 (3개월 1회 제한)")
+	public CommonResponse<ChangeUserAcademicResponse> updateAcademicInfo(@CurrentUserId Long userId,
+		@RequestBody @Valid ChangeUserAcademicRequest changeUserAcademicRequest) {
+		ChangeUserAcademicResponse response = userService.updateUserAcademic(userId, changeUserAcademicRequest);
+
+		return CommonResponse.success(UserResponseCode.ACADEMIC_INFO_UPDATE_SUCCESS, response);
 	}
 
 	@GetMapping

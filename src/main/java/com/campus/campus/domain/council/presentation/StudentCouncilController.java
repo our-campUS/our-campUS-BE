@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeEmailRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangePasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeProfileImageRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilNicknameRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilChangeProfileImageResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
 import com.campus.campus.domain.council.application.service.CouncilService;
 import com.campus.campus.global.annotation.CurrentCouncilId;
@@ -51,5 +53,16 @@ public class StudentCouncilController {
 			studentCouncilNicknameRequest);
 
 		return CommonResponse.success(StudentCouncilResponseCode.CHANGE_NICKNAME_SUCCESS, response);
+	}
+
+	@PatchMapping("/change/image")
+	@Operation(summary = "학생회 프로필 이미지 변경")
+	public CommonResponse<StudentCouncilChangeProfileImageResponse> changeProfileImage(
+		@CurrentCouncilId Long councilId,
+		@Valid @RequestBody StudentCouncilChangeProfileImageRequest studentCouncilChangeProfileImageRequest) {
+		StudentCouncilChangeProfileImageResponse response = councilService.changeCouncilProfileImage(councilId,
+			studentCouncilChangeProfileImageRequest);
+
+		return CommonResponse.success(StudentCouncilResponseCode.CHANGE_PROFILE_IMAGE_SUCCESS, response);
 	}
 }
