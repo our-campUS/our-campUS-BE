@@ -101,6 +101,17 @@ public class NotificationService {
 		notificationRepository.saveAll(notifications);
 	}
 
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void saveRewardGrantedNotification(Long userId, String title, String body) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Notification notification = notificationMapper.createNotification(user, NotificationType.REWARD_GRANTED, title,
+			body, null);
+
+		notificationRepository.save(notification);
+	}
+
 	@Transactional(readOnly = true)
 	public boolean hasUnread(Long userId) {
 		return notificationRepository.existsByUser_IdAndIsReadFalse(userId);
