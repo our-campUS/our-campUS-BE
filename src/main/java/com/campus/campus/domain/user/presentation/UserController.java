@@ -56,7 +56,7 @@ public class UserController {
 		return CommonResponse.success(UserResponseCode.PROFILE_IMAGE_UPDATE_SUCCESS, response);
 	}
 
-	@PatchMapping("/profile/academic")
+	@PatchMapping("change/profile/academic")
 	@Operation(summary = "사용자 학적 정보 수정 (3개월 1회 제한)")
 	public CommonResponse<ChangeUserAcademicResponse> updateAcademicInfo(@CurrentUserId Long userId,
 		@RequestBody @Valid ChangeUserAcademicRequest changeUserAcademicRequest) {
