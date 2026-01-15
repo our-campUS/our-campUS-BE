@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
+import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 
 public interface StudentCouncilPostRepository extends JpaRepository<StudentCouncilPost, Long> {
 
@@ -343,4 +344,45 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("schoolType") CouncilType schoolType
 	);
 
+	@Query("""
+		    SELECT p.place.placeKey, w.councilName, p.title
+		    FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    JOIN p.place pl
+		    WHERE pl.placeKey IN :placeKeys
+		      AND p.category = 'PARTNERSHIP'
+		      AND :now BETWEEN p.startDateTime AND p.endDateTime
+		      AND w.deletedAt IS NULL
+		""")
+	List<Object[]> findActivePartnershipsByPlaceKeys(
+		@Param("placeKeys") List<String> placeKeys,
+		@Param("now") LocalDateTime now
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
+	@Query("""
+		    SELECT p FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    LEFT JOIN w.school s
+		    LEFT JOIN w.college c
+		    LEFT JOIN w.major m
+		    WHERE p.category = :category
+		      AND p.startDateTime BETWEEN :startOfDay AND :endOfDay
+		      AND w.deletedAt IS NULL
+		      AND (
+		           (w.councilType = 'SCHOOL_COUNCIL' AND s.schoolId = :schoolId)
+		        OR (w.councilType = 'COLLEGE_COUNCIL' AND c.collegeId = :collegeId)
+		        OR (w.councilType = 'MAJOR_COUNCIL' AND m.majorId = :majorId)
+		      )
+		    ORDER BY function('RAND')
+		""")
+	List<StudentCouncilPost> findTodayEvent(
+		@Param("schoolId") Long schoolId,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
+		@Param("category") PostCategory category,
+		@Param("startOfDay") LocalDateTime startOfDay,
+		@Param("endOfDay") LocalDateTime endOfDay,
+		Pageable pageable
+	);
 }

@@ -1,6 +1,7 @@
 package com.campus.campus.domain.councilpost.application.service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPos
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.TodayEventResponse;
 import com.campus.campus.domain.councilpost.application.exception.CollegeNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.MajorNotSetException;
 import com.campus.campus.domain.councilpost.application.exception.PostNotFoundException;
@@ -260,6 +262,36 @@ public class StudentCouncilPostForUserService {
 		return partnerships.stream()
 			.map(studentCouncilPostMapper::toGetActivePartnershipListForUserResponse)
 			.toList();
+	}
+
+	public TodayEventResponse findTodayEvent(Long userId) {
+		User user = userRepository.findByIdWithAcademicInfo(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (user.getSchool() == null) {
+			return null;
+		}
+
+		Long schoolId = user.getSchool().getSchoolId();
+		Long collegeId = user.getCollege() != null ? user.getCollege().getCollegeId() : null;
+		Long majorId = user.getMajor() != null ? user.getMajor().getMajorId() : null;
+
+		LocalDateTime now = LocalDateTime.now(KST);
+		LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+		LocalDateTime endOfDay = now.toLocalDate().atTime(LocalTime.MAX);
+
+		List<StudentCouncilPost> events = studentCouncilPostRepository.findTodayEvent(
+			schoolId, collegeId, majorId,
+			PostCategory.EVENT,
+			startOfDay, endOfDay,
+			PageRequest.of(0, 1)
+		);
+
+		if (events.isEmpty()) {
+			return null;
+		}
+
+		return studentCouncilPostMapper.toTodayRandomEventResponse(events.getFirst());
 	}
 
 	private Page<PostListItemResponse> mapPostsWithLikes(Page<StudentCouncilPost> posts, Long userId) {

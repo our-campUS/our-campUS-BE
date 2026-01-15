@@ -17,6 +17,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPos
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.TodayEventResponse;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostForUserService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -211,5 +212,13 @@ public class StudentCouncilPostForUserController {
 			userId);
 
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
+	}
+
+	@GetMapping("/events/today")
+	@Operation(summary = "오늘의 행사 조회")
+	public CommonResponse<TodayEventResponse> getTodayEvent(@CurrentUserId Long userId) {
+		TodayEventResponse response = postService.findTodayEvent(userId);
+
+		return CommonResponse.success(StudentCouncilPostResponseCode.POST_READ_SUCCESS, response);
 	}
 }

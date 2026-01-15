@@ -18,6 +18,7 @@ import com.campus.campus.domain.councilpost.application.dto.response.GetPostResp
 import com.campus.campus.domain.councilpost.application.dto.response.GetUpcomingEventListForCouncilResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.TodayEventResponse;
 import com.campus.campus.domain.councilpost.domain.entity.LikePost;
 import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
@@ -174,6 +175,16 @@ public class StudentCouncilPostMapper {
 			post.getDetailedLocation(),
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
 			post.getThumbnailImageUrl()
+		);
+	}
+
+	public TodayEventResponse toTodayRandomEventResponse(StudentCouncilPost post) {
+		return new TodayEventResponse(
+			post.getId(),
+			post.getTitle(),
+			post.getContent(),
+			post.getPlace() != null ? post.getPlace().getPlaceName() : null,
+			post.getStartDateTime()
 		);
 	}
 
