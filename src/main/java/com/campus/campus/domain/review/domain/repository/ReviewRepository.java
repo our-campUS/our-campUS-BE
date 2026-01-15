@@ -55,7 +55,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 	long countByPlace_PlaceIdAndUser_School_SchoolId(Long placeId, long schoolId);
 
-	List<Review> findAllByPlaceId(long placeId);
+	List<Review> findALlByPlace_PlaceId(long placeId);
 
 	List<Review> findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(Long placeId);
 }

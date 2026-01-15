@@ -1,7 +1,7 @@
 package com.campus.campus.domain.review.application.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.application.exception.PostOciImageDeleteFailedException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
@@ -273,14 +274,13 @@ public class ReviewService {
 		Long schoolId = user.getSchool().getSchoolId();
 
 		//OCR 리턴 타입보고 변경해야 함
-		DateTimeFormatter formatter =
-			DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
-		LocalDateTime paymentDateTime =
-			LocalDateTime.parse(result.paymentDate(), formatter);
+		LocalDate paymentDateTime = result.paymentDate();
+		LocalDateTime time = paymentDateTime.atStartOfDay(); //시간은 우선 임의로
 
 		//제휴기간 내에 결제 했는지 확인
 		StudentCouncilPost post = studentCouncilPostRepository.findValidPartnershipForUserScope(
-			placeId, paymentDateTime, majorId, collegeId, schoolId
+			placeId, time, majorId, collegeId, schoolId, CouncilType.MAJOR_COUNCIL,
+			CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL
 		).orElseThrow(NotPartnershipReceiptException::new);
 
 		//review isVerified 필드 true로 변경
@@ -291,7 +291,7 @@ public class ReviewService {
 
 	@Transactional(readOnly = true)
 	public double getAverageOfStars(Long placeId) {
-		List<Review> reviews = reviewRepository.findAllByPlaceId(placeId);
+		List<Review> reviews = reviewRepository.findALlByPlace_PlaceId(placeId);
 		double averageStar = reviews.stream()
 			.mapToDouble(Review::getStar)
 			.average()
@@ -301,7 +301,7 @@ public class ReviewService {
 
 	@Transactional(readOnly = true)
 	public int getReviewCount(Long placeId) {
-		List<Review> reviews = reviewRepository.findAllByPlaceId(placeId);
+		List<Review> reviews = reviewRepository.findALlByPlace_PlaceId(placeId);
 		return reviews.size();
 	}
 
@@ -344,6 +344,9 @@ public class ReviewService {
 				user.getMajor().getMajorId(),
 				user.getCollege().getCollegeId(),
 				user.getSchool().getSchoolId(),
+				CouncilType.MAJOR_COUNCIL,
+				CouncilType.COLLEGE_COUNCIL,
+				CouncilType.SCHOOL_COUNCIL,
 				from,
 				now
 			);
