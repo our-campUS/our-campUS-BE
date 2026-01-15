@@ -41,7 +41,7 @@ public class NotificationService {
 		Long cursorId,
 		int limit
 	) {
-		User user = userRepository.findById(userId)
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
 		int pageSize = Math.min(Math.max(limit, 1), 50);
@@ -70,7 +70,7 @@ public class NotificationService {
 
 	@Transactional
 	public void markAsRead(Long userId, Long notificationId) {
-		User user = userRepository.findById(userId)
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
 		Notification notification = notificationRepository.findById(notificationId)
@@ -84,7 +84,7 @@ public class NotificationService {
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void saveCouncilPostCreated(CouncilPostCreatedEvent event, String title, String body) {
+	public void savePostCreatedNotification(CouncilPostCreatedEvent event, String title, String body) {
 
 		List<User> targetUsers = findUsersByTopic(event.topic());
 

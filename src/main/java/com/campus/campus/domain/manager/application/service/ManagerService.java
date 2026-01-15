@@ -82,6 +82,7 @@ public class ManagerService {
 
 		if (certifyResult) {
 			studentCouncil.managerApprove();
+			studentCouncil.updateCouncilPresident(councilApproveOrDenyRequest.councilPresident());
 			studentCouncilRepository.save(studentCouncil);
 
 			sendCouncilApprovedMail(studentCouncil.getEmail());
@@ -89,7 +90,8 @@ public class ManagerService {
 			sendCouncilDeniedMail(studentCouncil.getEmail());
 		}
 
-		return managerMapper.toCouncilApproveOrDenyResponse(studentCouncil.getId(), certifyResult);
+		return managerMapper.toCouncilApproveOrDenyResponse(studentCouncil.getId(), certifyResult,
+			studentCouncil.getCouncilPresident());
 	}
 
 	public List<CertifyRequestCouncilListResponse> getCertifyRequestCouncils() {
