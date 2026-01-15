@@ -50,7 +50,8 @@ public class StudentCouncilMapper {
 			studentCouncil.getCollege() != null ? studentCouncil.getCollege().getCollegeName() : null,
 			studentCouncil.getMajor() != null ? studentCouncil.getMajor().getMajorName() : null,
 			studentCouncil.getCouncilName(),
-			studentCouncil.getCouncilNickname()
+			studentCouncil.getCouncilNickname(),
+			studentCouncil.getCouncilProfileImageUrl()
 		);
 	}
 

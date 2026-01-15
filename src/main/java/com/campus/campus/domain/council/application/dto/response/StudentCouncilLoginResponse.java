@@ -38,6 +38,9 @@ public record StudentCouncilLoginResponse(
 	String councilName,
 
 	@Schema(description = "학생회 닉네임", example = "CUBE")
-	String councilNickname
+	String councilNickname,
+
+	@Schema(description = "학생회 프로필 이미지 url", example = "https://www.example.com.png")
+	String councilProfileImageUrl
 ) {
 }
