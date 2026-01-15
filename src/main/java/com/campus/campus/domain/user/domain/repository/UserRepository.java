@@ -32,14 +32,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
        AND u.deletedAt IS NULL
        """)
 	Optional<User> findByIdWithAcademicInfo(@Param("userId") Long userId);
-
-	@Query("""
-		SELECT u, COUNT(s)
-		FROM User u
-		LEFT JOIN Stamp s ON s.user = u
-		WHERE u.rewardNeeded = true 
-		  AND u.deletedAt IS NULL
-		GROUP BY u
-		""")
-	List<Object[]> findRewardNeededUsersWithStampCount();
 }

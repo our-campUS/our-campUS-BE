@@ -1,7 +1,5 @@
 package com.campus.campus.domain.user.application.service;
 
-import java.time.LocalDateTime;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,14 +12,9 @@ import com.campus.campus.domain.school.domain.entity.School;
 import com.campus.campus.domain.school.domain.repository.MajorRepository;
 import com.campus.campus.domain.school.domain.repository.SchoolRepository;
 import com.campus.campus.domain.user.application.dto.request.CampusNicknameUpdateRequest;
-import com.campus.campus.domain.user.application.dto.request.ChangeProfileImageRequest;
-import com.campus.campus.domain.user.application.dto.request.ChangeUserAcademicRequest;
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
-import com.campus.campus.domain.user.application.dto.response.ChangeProfileImageResponse;
-import com.campus.campus.domain.user.application.dto.response.ChangeUserAcademicResponse;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
-import com.campus.campus.domain.user.application.exception.AcademicInfoUpdateRestrictionException;
 import com.campus.campus.domain.user.application.exception.NicknameAlreadyExistsException;
 import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -76,45 +69,6 @@ public class UserService {
 
 		user.updateCampusNickname(nicknameUpdateRequest.campusNickname());
 		userRepository.save(user);
-	}
-
-	@Transactional
-	public ChangeProfileImageResponse updateProfileImage(Long userId, ChangeProfileImageRequest profileImageRequest) {
-		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-			.orElseThrow(UserNotFoundException::new);
-
-		user.updateProfileImage(profileImageRequest.newProfileImage());
-		userRepository.save(user);
-
-		return userMapper.toChangeProfileImageResponse(user);
-	}
-
-	@Transactional
-	public ChangeUserAcademicResponse updateUserAcademic(Long userId, ChangeUserAcademicRequest userAcademicRequest) {
-		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-			.orElseThrow(UserNotFoundException::new);
-
-		if (user.getLastProfileUpdatedAt() != null) {
-			LocalDateTime nextAvailableDate = user.getLastProfileUpdatedAt().plusMonths(3);
-			if (LocalDateTime.now().isBefore(nextAvailableDate)) {
-				throw new AcademicInfoUpdateRestrictionException();
-			}
-		}
-
-		School school = schoolRepository.findById(userAcademicRequest.schoolId())
-			.orElseThrow(SchoolNotFoundException::new);
-		Major major = majorRepository.findById(userAcademicRequest.majorId())
-			.orElseThrow(MajorNotFoundException::new);
-
-		if (!major.getSchool().getSchoolId().equals(school.getSchoolId())) {
-			throw new SchoolMajorNotSameException();
-		}
-
-		College college = major.getCollege();
-		user.updateProfile(school, college, major);
-		userRepository.save(user);
-
-		return userMapper.toChangeUserAcademicResponse(user);
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {

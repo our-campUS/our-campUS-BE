@@ -13,7 +13,7 @@ public record ReviewResponse(
 	LocalDate createDate,
 	Long placeId,
 	String content,
-	Double star,
+	double star,
 	List<String> imageUrls
 ) {
 }

@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotNull;
 public record CouncilApproveOrDenyRequest(
 	@NotNull
 	@Schema(description = "인증 결과", example = "true")
-	boolean certifyResult,
-
-	@Schema(description = "학생회 대표자 이름", example = "한승현")
-	String councilPresident
+	boolean certifyResult
 ) {
 }

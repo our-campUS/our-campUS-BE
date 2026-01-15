@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record ReviewCreateResponse(
-	WriteReviewResponse review,
+	ReviewResponse review,
 	ReviewCreateResult result,
 	ReviewRankingResponse ranking
 

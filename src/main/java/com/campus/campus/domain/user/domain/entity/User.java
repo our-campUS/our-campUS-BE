@@ -18,7 +18,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -50,10 +49,6 @@ public class User extends BaseEntity {
 	@Column(name = "campus_nickname")
 	private String campusNickname;
 
-	@Column(name = "reward_needed")
-	@Builder.Default
-	private boolean rewardNeeded = false;
-
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
@@ -69,14 +64,10 @@ public class User extends BaseEntity {
 	@JoinColumn(name = "major_id")
 	private Major major;
 
-	@Column(name = "last_profile_updated_at")
-	private LocalDateTime lastProfileUpdatedAt;
-
 	public void updateProfile(School school, College college, Major major) {
 		this.school = school;
 		this.college = college;
 		this.major = major;
-		this.lastProfileUpdatedAt = LocalDateTime.now();
 	}
 
 	public void updateCampusNickname(String campusNickname) {
@@ -89,13 +80,5 @@ public class User extends BaseEntity {
 
 	public boolean isProfileNotCompleted() {
 		return this.school == null || this.major == null;
-	}
-
-	public void updateRewardNeeded(boolean rewardNeeded) {
-		this.rewardNeeded = rewardNeeded;
-	}
-
-	public void updateProfileImage(String profileImage) {
-		this.profileImage = profileImage;
 	}
 }

@@ -5,16 +5,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeEmailRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangePasswordRequest;
-import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeProfileImageRequest;
-import com.campus.campus.domain.council.application.dto.request.StudentCouncilNicknameRequest;
-import com.campus.campus.domain.council.application.dto.response.StudentCouncilChangeProfileImageResponse;
-import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.NewPasswordConfirmNotMatchException;
 import com.campus.campus.domain.council.application.exception.NewPasswordIsCurrentPasswordException;
 import com.campus.campus.domain.council.application.exception.PasswordNotCorrectException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
-import com.campus.campus.domain.council.application.mapper.StudentCouncilMapper;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
@@ -33,7 +28,6 @@ public class CouncilService {
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final EmailVerificationRepository emailVerificationRepository;
 	private final SecurityConfig securityConfig;
-	private final StudentCouncilMapper studentCouncilMapper;
 
 	@Transactional
 	public void changeEmail(Long councilId, StudentCouncilChangeEmailRequest studentCouncilChangeEmailRequest) {
@@ -80,32 +74,6 @@ public class CouncilService {
 		studentCouncil.changePassword(newPassword);
 
 		studentCouncilRepository.save(studentCouncil);
-	}
-
-	@Transactional
-	public StudentCouncilNicknameResponse changeCouncilNickname(Long councilId,
-		StudentCouncilNicknameRequest studentCouncilNicknameRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
-			.orElseThrow(StudentCouncilNotFoundException::new);
-
-		studentCouncil.updateCouncilNickname(studentCouncilNicknameRequest.councilNickname());
-		studentCouncilRepository.save(studentCouncil);
-
-		return studentCouncilMapper.toStudentCouncilNicknameResponse(studentCouncil);
-	}
-
-	@Transactional
-	public StudentCouncilChangeProfileImageResponse changeCouncilProfileImage(Long councilId,
-		StudentCouncilChangeProfileImageRequest studentCouncilChangeProfileImageRequest) {
-		StudentCouncil studentCouncil = studentCouncilRepository
-			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
-			.orElseThrow(StudentCouncilNotFoundException::new);
-
-		studentCouncil.updateCouncilProfileImage(studentCouncilChangeProfileImageRequest.councilProfileImageUrl());
-		studentCouncilRepository.save(studentCouncil);
-
-		return studentCouncilMapper.toStudentCouncilChangeProfileImageResponse(studentCouncil);
 	}
 
 	private EmailVerification getVerifiedChangeEmail(Long councilId, String email) {

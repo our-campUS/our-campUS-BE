@@ -32,8 +32,6 @@ public record GetPostForUserResponse(
 
 	boolean isLiked,
 
-	boolean isEnded,
-
 	List<String> images
 ) {
 }

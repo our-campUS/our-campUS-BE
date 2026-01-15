@@ -6,6 +6,7 @@ import com.campus.campus.domain.place.domain.entity.Coordinate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record SavedPlaceInfo(
 
@@ -32,6 +33,7 @@ public record SavedPlaceInfo(
 	String telephone,
 
 	@Schema(description = "위도/경도")
+	@NotNull
 	Coordinate coordinate,
 
 	@Schema(description = "이미지 url")
