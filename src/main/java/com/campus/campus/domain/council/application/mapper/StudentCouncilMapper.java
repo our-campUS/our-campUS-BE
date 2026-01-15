@@ -3,6 +3,7 @@ package com.campus.campus.domain.council.application.mapper;
 import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilSignUpRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilChangeProfileImageResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
@@ -49,7 +50,8 @@ public class StudentCouncilMapper {
 			studentCouncil.getCollege() != null ? studentCouncil.getCollege().getCollegeName() : null,
 			studentCouncil.getMajor() != null ? studentCouncil.getMajor().getMajorName() : null,
 			studentCouncil.getCouncilName(),
-			studentCouncil.getCouncilNickname()
+			studentCouncil.getCouncilNickname(),
+			studentCouncil.getCouncilProfileImageUrl()
 		);
 	}
 
@@ -63,6 +65,15 @@ public class StudentCouncilMapper {
 		return new StudentCouncilNicknameResponse(
 			studentCouncil.getCouncilNickname(),
 			studentCouncil.getCouncilName()
+		);
+	}
+
+	public StudentCouncilChangeProfileImageResponse toStudentCouncilChangeProfileImageResponse(
+		StudentCouncil studentCouncil) {
+		return new StudentCouncilChangeProfileImageResponse(
+			studentCouncil.getId(),
+			studentCouncil.getCouncilName(),
+			studentCouncil.getCouncilProfileImageUrl()
 		);
 	}
 }
