@@ -7,6 +7,9 @@ public record CouncilApproveOrDenyResponse(
 	Long councilId,
 
 	@Schema(description = "인증 결과", example = "true")
-	boolean certifyResult
+	boolean certifyResult,
+
+	@Schema(description = "학생회 대표자 이름", example = "한승현")
+	String councilPresident
 ) {
 }
