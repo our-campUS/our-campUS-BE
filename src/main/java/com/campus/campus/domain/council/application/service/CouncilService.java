@@ -5,7 +5,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeEmailRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangePasswordRequest;
+import com.campus.campus.domain.council.application.dto.request.StudentCouncilChangeProfileImageRequest;
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilNicknameRequest;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilChangeProfileImageResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.NewPasswordConfirmNotMatchException;
@@ -91,6 +93,19 @@ public class CouncilService {
 		studentCouncilRepository.save(studentCouncil);
 
 		return studentCouncilMapper.toStudentCouncilNicknameResponse(studentCouncil);
+	}
+
+	@Transactional
+	public StudentCouncilChangeProfileImageResponse changeCouncilProfileImage(Long councilId,
+		StudentCouncilChangeProfileImageRequest studentCouncilChangeProfileImageRequest) {
+		StudentCouncil studentCouncil = studentCouncilRepository
+			.findByIdAndManagerApprovedIsTrueAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		studentCouncil.updateCouncilProfileImage(studentCouncilChangeProfileImageRequest.councilProfileImageUrl());
+		studentCouncilRepository.save(studentCouncil);
+
+		return studentCouncilMapper.toStudentCouncilChangeProfileImageResponse(studentCouncil);
 	}
 
 	private EmailVerification getVerifiedChangeEmail(Long councilId, String email) {

@@ -27,10 +27,12 @@ public class ManagerMapper {
 		);
 	}
 
-	public CouncilApproveOrDenyResponse toCouncilApproveOrDenyResponse(Long councilId, boolean certifyResult) {
+	public CouncilApproveOrDenyResponse toCouncilApproveOrDenyResponse(Long councilId, boolean certifyResult,
+		String councilPresident) {
 		return new CouncilApproveOrDenyResponse(
 			councilId,
-			certifyResult
+			certifyResult,
+			councilPresident
 		);
 	}
 
