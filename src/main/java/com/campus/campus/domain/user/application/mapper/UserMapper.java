@@ -51,7 +51,7 @@ public class UserMapper {
 	public ChangeUserAcademicResponse toChangeUserAcademicResponse(User user) {
 		return new ChangeUserAcademicResponse(
 			user.getId(),
-			user.getCampusNickname(),
+			user.getCampusNickname() == null ? user.getNickname() : user.getCampusNickname(),
 			user.getSchool().getSchoolName(),
 			user.getMajor().getCollege().getCollegeName(),
 			user.getMajor().getMajorName(),
