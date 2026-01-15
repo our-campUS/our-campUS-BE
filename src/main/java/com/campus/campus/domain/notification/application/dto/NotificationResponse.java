@@ -24,6 +24,6 @@ public record NotificationResponse(
 	boolean isRead,
 
 	@Schema(description = "생성 시각 (상대 시간)", example = "5분 전")
-	String createdAt
+	String createTimeBeforeNow
 ) {
 }
