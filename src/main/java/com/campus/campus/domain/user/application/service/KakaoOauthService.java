@@ -16,6 +16,7 @@ import com.campus.campus.domain.user.application.exception.UserSignupForbiddenEx
 import com.campus.campus.domain.user.application.mapper.UserMapper;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.auth.application.dto.KakaoTokenResponse;
 import com.campus.campus.global.auth.application.dto.KakaoUserResponse;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
@@ -45,8 +46,9 @@ public class KakaoOauthService {
 	private long refreshTokenExpirationSeconds;
 
 	@Transactional
-	public OauthLoginResponse login(String kakaoAccessToken) {
-		KakaoUserResponse kakaoUser = getUserInfo(kakaoAccessToken);
+	public OauthLoginResponse login(String authorizationCode) {
+		KakaoTokenResponse kakaoToken = getToken(authorizationCode);
+		KakaoUserResponse kakaoUser = getUserInfo(kakaoToken.accessToken());
 
 		User user = findOrCreateUser(kakaoUser);
 
@@ -57,6 +59,28 @@ public class KakaoOauthService {
 			refreshTokenExpirationSeconds);
 
 		return loginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
+	}
+
+	private KakaoTokenResponse getToken(String authorizationCode) {
+		RestClient client = RestClient.create();
+
+		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+		body.add("grant_type", "authorization_code");
+		body.add("client_id", kakaoOauthProperty.getClientId());
+		body.add("redirect_uri", kakaoOauthProperty.getRedirectUri());
+		body.add("code", authorizationCode);
+
+		if (kakaoOauthProperty.getClientSecret() != null &&
+			!kakaoOauthProperty.getClientSecret().isBlank()) {
+			body.add("client_secret", kakaoOauthProperty.getClientSecret());
+		}
+
+		return client.post()
+			.uri(KAUTH_BASE_URL + "/oauth/token")
+			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+			.body(body)
+			.retrieve()
+			.body(KakaoTokenResponse.class);
 	}
 
 	@Transactional

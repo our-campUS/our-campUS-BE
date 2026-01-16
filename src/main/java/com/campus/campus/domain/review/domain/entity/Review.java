@@ -4,6 +4,7 @@ import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.global.entity.BaseEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -46,6 +48,13 @@ public class Review extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "place_id", nullable = false)
 	private Place place;
+
+	@OneToOne(
+		mappedBy = "review",
+		cascade = CascadeType.ALL,
+		orphanRemoval = true
+	)
+	private Receipt receipt;
 
 	public void update(
 		String content,

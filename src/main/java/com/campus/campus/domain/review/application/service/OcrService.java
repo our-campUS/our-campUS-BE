@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.campus.campus.domain.councilpost.application.exception.PlaceInfoNotFoundException;
-import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
@@ -59,8 +58,22 @@ public class OcrService {
 		ReceiptResultDto result = extractReceiptResult(ocrResponse);
 		log.info("영수증 ocr 인식 결과:{}", result);
 
+		//영수증 중복 사용 여부 검증
+		// boolean isDuplicateReceipt = checkIfDuplicate(result);
+		// if (!isDuplicateReceipt) {
+		// 	throw new DuplicateReceiptException();
+		// }
 		return reviewService.findPartnership(place.getPlaceId(), result, userId);
 	}
+
+	// private boolean checkIfDuplicate(ReceiptResultDto result) {
+	// 	//승인 번호, 사업자 번호 추출
+	//
+	// }
+	//
+	// private void createReceipt(ReceiptResultDto result) {
+	//
+	// }
 
 	private ReceiptOcrResponse parse(String json) {
 		try {
