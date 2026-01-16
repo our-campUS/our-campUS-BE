@@ -30,6 +30,10 @@ spring:
       host: ENC(wMI0GBAvI1WHsnAjmwy3xA==)
       port: 6379
       password: ENC(Ix+lo7WCNZdyhr3vfXPd3A==)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 oauth:
   kakao:
