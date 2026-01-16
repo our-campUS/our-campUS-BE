@@ -186,6 +186,20 @@ public class PlaceService {
 			});
 	}
 
+	public Place createPlace(SavedPlaceInfo place) {
+		try {
+			Place newPlace = placeRepository.save(placeMapper.createPlace(place));
+
+			migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
+
+			return newPlace;
+		} catch (DataIntegrityViolationException e) {
+			log.info("해당 키에 대한 장소 동시 생성이 감지되었습니다.: {}", place.placeKey());
+			return placeRepository.findByPlaceKey(place.placeKey())
+				.orElseThrow(PlaceCreationException::new);
+		}
+	}
+
 	//제휴 신청
 	@Transactional
 	public void suggestPartnership(Long userId, SavedPlaceInfo placeInfo) {

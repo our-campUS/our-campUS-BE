@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.place.domain.entity.Place;
-import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.RankingScope;
@@ -31,7 +32,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReviewMapper {
 
-	public Review createReview(ReviewRequest request, User user, Place place) {
+	public Review createPlaceReview(PlaceReviewRequest request, User user, Place place) {
+		return Review.builder()
+			.user(user)
+			.content(request.content())
+			.star(request.star())
+			.place(place)
+			.build();
+	}
+
+	public Review createPartnershipReview(PartnershipReviewRequest request, User user, Place place) {
 		return Review.builder()
 			.user(user)
 			.content(request.content())
