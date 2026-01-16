@@ -86,7 +86,7 @@ public class ReviewService {
 			throw new PostImageLimitExceededException();
 		}
 
-		Place place = placeService.createPlace(request.place());
+		Place place = placeService.findOrCreatePlace(request.place());
 
 		Review review = reviewMapper.createPlaceReview(request, user, place);
 		reviewRepository.save(review);
