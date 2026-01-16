@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,11 +21,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "reviews")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Table(
+	name = "reviews",
+	uniqueConstraints = {
+		@UniqueConstraint(
+			name = "uk_review_receipt",
+			columnNames = {"business_number", "confirm_number"}
+		)
+	}
+)
 public class Review extends BaseEntity {
 
 	@Id
@@ -50,6 +59,10 @@ public class Review extends BaseEntity {
 	//승인 번호
 	@Column(name = "confirm_number", nullable = false)
 	private String confirmNumber;
+
+	//사업자 번호
+	@Column(name = "business_number", nullable = false)
+	private String businessNumber;
 
 	public void update(
 		String content,

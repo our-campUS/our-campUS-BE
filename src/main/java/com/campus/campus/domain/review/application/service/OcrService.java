@@ -62,21 +62,23 @@ public class OcrService {
 		log.info("영수증 ocr 인식 결과:{}", result);
 
 		//영수증 중복 사용 여부 검증
-		if (!isDuplicateReceipt(result)) {
-			throw new DuplicateReceiptException();
-		}
+		isDuplicateReceipt(result)
+			.filter(Boolean::booleanValue)
+			.ifPresent(v -> {
+				throw new DuplicateReceiptException();
+			});
 
 		return reviewService.findPartnership(place.getPlaceId(), result, userId);
 	}
 
-	private boolean isDuplicateReceipt(ReceiptResultDto result) {
-		if (result.confirmNum() == null) {
-			return false;
+	private Optional<Boolean> isDuplicateReceipt(ReceiptResultDto result) {
+		if (result.confirmNum() == null || result.bizNum() == null) {
+			return Optional.empty(); // 중복 여부 판단 불가 → 중복 아님으로 처리
 		}
 
-		return reviewRepository.existsByConfirmNumber(
-			result.confirmNum()
-		);
+		return Optional.of(reviewRepository.existsByConfirmNumberAndBusinessNumber(
+			result.confirmNum(), result.bizNum()
+		));
 	}
 
 	private ReceiptOcrResponse parse(String json) {
@@ -157,7 +159,17 @@ public class OcrService {
 				return new ReceiptOcrFailedException();
 			});
 
-		return reviewMapper.toReceiptResultDto(confirmNum, storeName, totalPrice, paymentDate, items);
+		//비즈니스 번호
+		String bizNum = Optional.ofNullable(receipt.storeInfo())
+			.map(ReceiptOcrResponse.StoreInfo::bizNum)
+			.map(ReceiptOcrResponse.TextField::text)
+			.orElseThrow(() -> {
+				log.warn("[OCR FAILED] confirmNum missing, paymentInfo={}",
+					receipt.storeInfo());
+				return new ReceiptOcrFailedException();
+			});
+
+		return reviewMapper.toReceiptResultDto(confirmNum, bizNum, storeName, totalPrice, paymentDate, items);
 	}
 
 	private LocalDate parseDate(String text) {

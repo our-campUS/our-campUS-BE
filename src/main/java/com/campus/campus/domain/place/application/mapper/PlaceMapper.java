@@ -120,7 +120,7 @@ public class PlaceMapper {
 	}
 
 	public ReviewPartnerResponse toReviewPartnerResponse(StudentCouncilPost post, Place place, double averageStar,
-		String tag, boolean isLiked, LocalDate paymentDate, String confirmNum) {
+		String tag, boolean isLiked, LocalDate paymentDate, String confirmNum, String bizNum) {
 		return new ReviewPartnerResponse(
 			place.getPlaceName(),
 			place.getPlaceCategory(),
@@ -130,7 +130,8 @@ public class PlaceMapper {
 			tag,
 			isLiked,
 			paymentDate,
-			confirmNum
+			confirmNum,
+			bizNum
 		);
 	}
 

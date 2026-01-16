@@ -71,5 +71,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 	List<Review> findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(Long placeId);
 
-	boolean existsByConfirmNumber(String confirmNumber);
+	boolean existsByConfirmNumberAndBusinessNumber(String confirmNumber, String businessNumber);
 }

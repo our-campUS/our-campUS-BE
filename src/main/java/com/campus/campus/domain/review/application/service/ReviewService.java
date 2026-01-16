@@ -321,6 +321,7 @@ public class ReviewService {
 		LocalDate paymentDate = result.paymentDate();
 		LocalDateTime time = paymentDate.atStartOfDay(); //시간은 우선 임의로
 		String confirmNum = result.confirmNum();
+		String bizNum = result.bizNum();
 
 		//제휴기간 내에 결제 했는지 확인
 		StudentCouncilPost post = studentCouncilPostRepository.findValidPartnershipForUserScope(
@@ -333,7 +334,7 @@ public class ReviewService {
 
 		boolean isLiked = likedPlacesRepository.existsByUserAndPlace(user, place);
 		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar, writer, isLiked, paymentDate,
-			confirmNum);
+			confirmNum, bizNum);
 	}
 
 	public double getAverageOfStars(Long placeId) {

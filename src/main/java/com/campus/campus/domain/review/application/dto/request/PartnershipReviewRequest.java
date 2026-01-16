@@ -33,6 +33,14 @@ public record PartnershipReviewRequest(
 		description = "영수증 OCR 결과에서 추론한 승인 번호입니다. OCR 인식 결과에 따라 값이 없을 수 있습니다.",
 		example = "873492"
 	)
-	String confirmNum
+	String confirmNum,
+
+	@Nullable
+	@Schema(
+		description = "영수증 OCR 결과에서 추론한 사업자등록번호입니다. OCR 인식 결과에 따라 값이 없을 수 있습니다.",
+		example = "123-45-67890"
+	)
+	String bizNum
+
 ) {
 }

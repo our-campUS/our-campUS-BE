@@ -49,14 +49,16 @@ public class ReviewMapper {
 			.isVerified(request.isVerified())
 			.place(place)
 			.confirmNumber(request.confirmNum())
+			.businessNumber(request.bizNum())
 			.build();
 	}
 
 	public ReceiptResultDto toReceiptResultDto(
-		String confirmNum, String storeName, String totalPrice, LocalDate paymentDate, List<ReceiptItemDto> items
+		String confirmNum, String bizNum, String storeName, String totalPrice, LocalDate paymentDate,
+		List<ReceiptItemDto> items
 	) {
 		return new ReceiptResultDto(
-			confirmNum, storeName, totalPrice, paymentDate, items
+			confirmNum, bizNum, storeName, totalPrice, paymentDate, items
 		);
 	}
 

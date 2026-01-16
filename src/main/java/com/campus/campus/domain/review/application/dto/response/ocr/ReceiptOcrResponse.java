@@ -25,7 +25,8 @@ public record ReceiptOcrResponse(
 	}
 
 	public record StoreInfo(
-		TextField name
+		TextField name,
+		TextField bizNum
 	) {
 	}
 
