@@ -148,7 +148,7 @@ public class PlaceService {
 			.collect(Collectors.groupingBy(
 				obj -> (String)obj[0],
 				Collectors.mapping(
-					obj -> new SearchPartnershipInfoResponse((String)obj[1], (String)obj[2]),
+					obj -> new SearchPartnershipInfoResponse((Long)obj[3], (String)obj[1], (String)obj[2]),
 					Collectors.toList()
 				)
 			));

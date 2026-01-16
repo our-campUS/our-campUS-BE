@@ -372,7 +372,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	);
 
 	@Query("""
-		    SELECT p.place.placeKey, w.councilName, p.title
+		    SELECT p.place.placeKey, w.councilName, p.title, p.id
 		    FROM StudentCouncilPost p
 		    JOIN p.writer w
 		    JOIN p.place pl
