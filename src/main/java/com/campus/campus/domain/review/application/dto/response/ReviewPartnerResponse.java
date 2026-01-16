@@ -1,5 +1,7 @@
 package com.campus.campus.domain.review.application.dto.response;
 
+import java.time.LocalDate;
+
 public record ReviewPartnerResponse(
 	String placeName,
 	String placeCategory,
@@ -7,6 +9,7 @@ public record ReviewPartnerResponse(
 	double star,
 	String title,
 	String tag,
-	boolean isLiked
+	boolean isLiked,
+	LocalDate paymentDate
 ) {
 }

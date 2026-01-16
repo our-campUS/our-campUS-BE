@@ -285,8 +285,8 @@ public class ReviewService {
 		Long collegeId = user.getCollege().getCollegeId();
 		Long schoolId = user.getSchool().getSchoolId();
 
-		LocalDate paymentDateTime = result.paymentDate();
-		LocalDateTime time = paymentDateTime.atStartOfDay(); //시간은 우선 임의로
+		LocalDate paymentDate = result.paymentDate();
+		LocalDateTime time = paymentDate.atStartOfDay(); //시간은 우선 임의로
 
 		//제휴기간 내에 결제 했는지 확인
 		StudentCouncilPost post = studentCouncilPostRepository.findValidPartnershipForUserScope(
@@ -298,7 +298,7 @@ public class ReviewService {
 		String writer = post.getWriter().getCouncilName();
 
 		boolean isLiked = likedPlacesRepository.existsByUserAndPlace(user, place);
-		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar, writer, isLiked);
+		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar, writer, isLiked, paymentDate);
 	}
 
 	public double getAverageOfStars(Long placeId) {

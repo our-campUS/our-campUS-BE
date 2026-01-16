@@ -1,5 +1,6 @@
 package com.campus.campus.domain.place.application.mapper;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -119,7 +120,7 @@ public class PlaceMapper {
 	}
 
 	public ReviewPartnerResponse toReviewPartnerResponse(StudentCouncilPost post, Place place, double averageStar,
-		String tag, boolean isLiked) {
+		String tag, boolean isLiked, LocalDate paymentDate) {
 		return new ReviewPartnerResponse(
 			place.getPlaceName(),
 			place.getPlaceCategory(),
@@ -127,7 +128,8 @@ public class PlaceMapper {
 			averageStar, //리뷰 별점
 			post.getTitle(),
 			tag,
-			isLiked
+			isLiked,
+			paymentDate
 		);
 	}
 
