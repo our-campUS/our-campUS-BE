@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -70,4 +71,13 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	long countByPlace_PlaceIdAndUser_School_SchoolId(Long placeId, long schoolId);
 
 	List<Review> findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(Long placeId);
+
+	@Query(value = """
+        SELECT r FROM Review r
+        JOIN FETCH r.place
+        WHERE r.user.id = :userId
+        ORDER BY r.createdAt DESC
+        """,
+		countQuery = "SELECT count(r) FROM Review r WHERE r.user.id = :userId")
+	Page<Review> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
 }

@@ -11,6 +11,7 @@ import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
 import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.MyReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.RankingScope;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
@@ -182,4 +183,15 @@ public class ReviewMapper {
 			.build();
 	}
 
+	public MyReviewResponse toMyReviewResponse(Review review, List<String> imageUrls) {
+		return new MyReviewResponse(
+			review.getId(),
+			review.getPlace().getPlaceId(),
+			review.getPlace().getPlaceName(),
+			review.getStar(),
+			review.getContent(),
+			imageUrls != null ? imageUrls : Collections.emptyList(),
+			review.getCreatedAt()
+		);
+	}
 }
