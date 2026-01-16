@@ -31,7 +31,13 @@ public record ReceiptOcrResponse(
 
 	public record PaymentInfo(
 		TextField date,
-		TotalPrice totalPrice
+		TotalPrice totalPrice,
+		ConfirmNum confirmNum //승인 번호
+	) {
+	}
+
+	public record ConfirmNum(
+		TextField text
 	) {
 	}
 

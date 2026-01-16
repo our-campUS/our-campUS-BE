@@ -17,6 +17,7 @@ import com.campus.campus.domain.review.application.dto.response.ReviewPartnerRes
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptItemDto;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptOcrResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
+import com.campus.campus.domain.review.application.exception.DuplicateReceiptException;
 import com.campus.campus.domain.review.application.exception.ReceiptDateParseException;
 import com.campus.campus.domain.review.application.exception.ReceiptFileConvertException;
 import com.campus.campus.domain.review.application.exception.ReceiptOcrFailedException;
@@ -59,21 +60,21 @@ public class OcrService {
 		log.info("영수증 ocr 인식 결과:{}", result);
 
 		//영수증 중복 사용 여부 검증
-		// boolean isDuplicateReceipt = checkIfDuplicate(result);
-		// if (!isDuplicateReceipt) {
-		// 	throw new DuplicateReceiptException();
-		// }
+		boolean isDuplicateReceipt = checkIfDuplicate(result);
+		if (!isDuplicateReceipt) {
+			throw new DuplicateReceiptException();
+		}
 		return reviewService.findPartnership(place.getPlaceId(), result, userId);
 	}
 
-	// private boolean checkIfDuplicate(ReceiptResultDto result) {
-	// 	//승인 번호, 사업자 번호 추출
-	//
-	// }
-	//
-	// private void createReceipt(ReceiptResultDto result) {
-	//
-	// }
+	private boolean checkIfDuplicate(ReceiptResultDto result) {
+		//승인 번호 추출
+
+	}
+
+	private void createReceipt(ReceiptResultDto result) {
+
+	}
 
 	private ReceiptOcrResponse parse(String json) {
 		try {
@@ -141,6 +142,16 @@ public class OcrService {
 			.map(reviewMapper::toDto)
 			.toList();
 		log.info("[OCR ITEMS] count={}", items.size());
+
+		//승인 번호
+		String confirmNum = Optional.ofNullable(receipt.paymentInfo().confirmNum())
+			// .map(ReceiptOcrResponse.PaymentInfo::confirmNum)
+			.map(ReceiptOcrResponse.TextField::text)
+			.orElseThrow(() -> {
+				log.warn("[OCR FAILED] confirmNum missing, paymentInfo={}",
+					receipt.paymentInfo());
+				return new ReceiptOcrFailedException();
+			});
 
 		return reviewMapper.toReceiptResultDto(storeName, totalPrice, paymentDate, items);
 	}

@@ -33,9 +33,11 @@ public class Receipt extends BaseEntity {
 	@JoinColumn(name = "review_id", nullable = false)
 	private Review review;
 
+	//사업자 번호
 	@Column(name = "business_number", nullable = false)
 	private String businessNumber;
 
+	//승인 번호
 	@Column(name = "approval_number", nullable = false)
 	private String approvalNumber;
 
