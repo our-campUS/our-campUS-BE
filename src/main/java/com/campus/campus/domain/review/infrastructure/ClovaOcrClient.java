@@ -7,12 +7,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import com.campus.campus.domain.review.application.exception.ReceiptImageFormatException;
 
@@ -22,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ClovaOcrClient {
 
-	private final RestTemplate restTemplate;
+	private final RestClient clovaOcrRestClient;
 
 	@Value("${clova.ocr.invoke-url}")
 	private String invokeUrl;
@@ -48,17 +45,13 @@ public class ClovaOcrClient {
 		body.put("timestamp", System.currentTimeMillis());
 		body.put("images", List.of(image));
 
-		//header
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("X-OCR-SECRET", secretKey);
-		headers.setContentType(MediaType.APPLICATION_JSON);
-
-		HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-		//호출
-		ResponseEntity<String> response =
-			restTemplate.postForEntity(invokeUrl, request, String.class);
-		return response.getBody();
+		return clovaOcrRestClient.post()
+			.uri(invokeUrl)
+			.header("X-OCR-SECRET", secretKey)
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(body)
+			.retrieve() // 응답 받기 시작
+			.body(String.class);
 	}
 
 	private String extractFormat(String originalFilename) {
@@ -78,5 +71,4 @@ public class ClovaOcrClient {
 
 		throw new ReceiptImageFormatException();
 	}
-
 }
