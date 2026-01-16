@@ -169,7 +169,7 @@ public class ReviewMapper {
 	}
 
 	public PlaceReviewRankResponse toTopPartnershipResponse(
-		StudentCouncilPost post
+		StudentCouncilPost post, double distance
 	) {
 		return PlaceReviewRankResponse.builder()
 			.placeId(post.getPlace().getPlaceId())
@@ -177,7 +177,7 @@ public class ReviewMapper {
 			.category(post.getPlace().getPlaceCategory())
 			.partnership(post.getTitle())
 			.thumbnailUrl(post.getThumbnailImageUrl())
-			// .reviewCount(projection.getReviewCount())
+			.distance(distance)
 			.build();
 	}
 

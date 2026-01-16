@@ -54,6 +54,7 @@ import com.campus.campus.domain.user.application.exception.UserNotFoundException
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
+import com.campus.campus.global.util.geocoder.GeoUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -353,7 +354,7 @@ public class ReviewService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<PlaceReviewRankResponse> readPopularPartnerships(Long userId) {
+	public List<PlaceReviewRankResponse> readPopularPartnerships(Long userId, double lat, double lng) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
@@ -378,7 +379,16 @@ public class ReviewService {
 		}
 
 		return partnerships.stream()
-			.map(reviewMapper::toTopPartnershipResponse)
+			.map(post->{
+				double distance = GeoUtil.distanceMeter(
+					lat, lng,
+					post.getPlace().getCoordinate().latitude(),
+					post.getPlace().getCoordinate().longitude()
+				);
+				double roundedDistance = Math.round(distance * 100.0) / 100.0;
+
+				return reviewMapper.toTopPartnershipResponse(post, roundedDistance);
+			})
 			.toList();
 	}
 

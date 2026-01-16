@@ -8,7 +8,7 @@ public record PlaceReviewRankResponse(
 	String placeName,
 	String category,
 	String partnership,
-	String thumbnailUrl
-	// double distance
+	String thumbnailUrl,
+	double distance
 ) {
 }

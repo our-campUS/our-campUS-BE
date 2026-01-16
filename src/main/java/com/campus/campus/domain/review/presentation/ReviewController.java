@@ -171,9 +171,10 @@ public class ReviewController {
 	@GetMapping("/partnership-list")
 	@Operation(summary = "제휴 매장 둘러보기", description = "최근 한달 간 제휴 이용수가 많았던 매장")
 	public CommonResponse<List<PlaceReviewRankResponse>> readAllPartnerships(
-		@CurrentUserId Long userId
+		@CurrentUserId Long userId,
+		@RequestParam double lat, @RequestParam double lng
 	) {
-		List<PlaceReviewRankResponse> response = reviewService.readPopularPartnerships(userId);
+		List<PlaceReviewRankResponse> response = reviewService.readPopularPartnerships(userId, lat, lng);
 		return CommonResponse.success(ReviewResponseCode.GET_RANK_SUCCESS, response);
 	}
 }
