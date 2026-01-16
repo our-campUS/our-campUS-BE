@@ -78,6 +78,7 @@ public class PlaceMapper {
 		boolean isLiked,
 		List<String> imgUrls, double distance, Double averageStar, List<SimpleReviewResponse> reviews, Integer size) {
 		return new PartnershipDetailResponse(
+			true,
 			place.getPlaceId(),
 			place.getPlaceKey(),
 			place.getPlaceName(),
@@ -97,9 +98,10 @@ public class PlaceMapper {
 		);
 	}
 
-	public PlaceDetailResponse toPlaceDetailResponse(User user, Place place, boolean isLiked,
+	public PlaceDetailResponse toPlaceDetailResponse(Place place, boolean isLiked,
 		List<String> imgUrls, double distance, Double averageStar, List<SimpleReviewResponse> reviews, Integer size) {
 		return new PlaceDetailResponse(
+			false,
 			place.getPlaceId(),
 			place.getPlaceKey(),
 			place.getPlaceName(),

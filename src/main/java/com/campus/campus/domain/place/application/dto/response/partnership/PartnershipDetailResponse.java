@@ -7,6 +7,7 @@ import com.campus.campus.domain.place.application.dto.response.PlaceDetailView;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 
 public record PartnershipDetailResponse(
+	boolean isPartnership,
 	Long placeId,
 	String placeKey,
 	String name,

@@ -5,6 +5,7 @@ import java.util.List;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 
 public record PlaceDetailResponse(
+	boolean isPartnership,
 	Long placeId,
 	String placeKey,
 	String name,

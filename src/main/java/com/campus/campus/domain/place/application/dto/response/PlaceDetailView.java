@@ -2,6 +2,8 @@ package com.campus.campus.domain.place.application.dto.response;
 
 public interface PlaceDetailView {
 
+	boolean isPartnership();
+
 	Long placeId();
 
 	String placeKey();

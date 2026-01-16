@@ -90,9 +90,22 @@ public class ReviewController {
 		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
 	}
 
-	@PostMapping(value = "/receipt-ocr", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	@Operation(summary = "영수증 ocr을 통해 제휴 매장 이용 인증",
-		description = "위 api 에러 없이 끝낸 후에 리뷰 작성 api 호출. 이때, isVerified=True라는 필드를 주면됩니다. ")
+	@PostMapping(
+		value = "/receipt-ocr",
+		consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+	)
+	@Operation(
+		summary = "영수증 OCR을 통한 제휴 매장 이용 인증",
+		description = """
+			제휴 매장 리뷰 작성 전, 영수증 OCR을 통해 이용 여부를 인증하는 API입니다.
+			
+			- 제휴 매장 리뷰 작성 시 반드시 먼저 호출해야 합니다.
+			- OCR 인증이 성공적으로 완료된 후 리뷰 작성 API를 호출해주세요.
+			- 리뷰 작성 시 isVerified = true 값을 함께 전달해야 합니다.
+			- 제휴 매장이 아닌 경우에는 본 API를 호출하지 않고,
+			  리뷰 작성 API를 바로 호출하시면 됩니다.
+			"""
+	)
 	public CommonResponse<ReviewPartnerResponse> upload(
 		@RequestPart("file") MultipartFile file,
 		@RequestPart("request") SavedPlaceInfo placeInfo,

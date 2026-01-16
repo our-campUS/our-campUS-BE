@@ -240,7 +240,6 @@ public class PartnershipPlaceService {
 		double averageStar = calculateAverageStar(place);
 
 		return placeMapper.toPlaceDetailResponse(
-			user,
 			place,
 			isLiked(place, user),
 			getPlaceImgUrls(place),
