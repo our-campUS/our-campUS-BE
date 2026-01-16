@@ -396,7 +396,7 @@ public class ReviewService {
 
 	@Transactional(readOnly = true)
 	public Page<MyReviewResponse> findMyReviews(Long userId, int page, int size) {
-		userRepository.findById(userId)
+		userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
