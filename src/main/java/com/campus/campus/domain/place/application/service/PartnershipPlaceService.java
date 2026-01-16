@@ -141,7 +141,7 @@ public class PartnershipPlaceService {
 					rounded,
 					averageStar,
 					null,
-					null
+					size
 				);
 			})
 			.toList();
