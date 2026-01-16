@@ -340,19 +340,19 @@ public class PlaceService {
 		List<StudentCouncil> councils = new ArrayList<>();
 
 		if (user.getMajor() != null) {
-			studentCouncilRepository.findByMajor_MajorId(
+			studentCouncilRepository.findByMajor_MajorIdAndDeletedAtIsNull(
 				user.getMajor().getMajorId()
 			).ifPresent(councils::add);
 		}
 
 		if (user.getCollege() != null) {
-			studentCouncilRepository.findByCollege_CollegeId(
+			studentCouncilRepository.findByCollege_CollegeIdAndDeletedAtIsNull(
 				user.getCollege().getCollegeId()
 			).ifPresent(councils::add);
 		}
 
 		if (user.getSchool() != null) {
-			studentCouncilRepository.findBySchool_SchoolId(
+			studentCouncilRepository.findBySchool_SchoolIdAndDeletedAtIsNull(
 				user.getSchool().getSchoolId()
 			).ifPresent(councils::add);
 		}

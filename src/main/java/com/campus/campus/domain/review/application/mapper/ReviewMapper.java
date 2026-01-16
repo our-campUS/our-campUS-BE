@@ -1,5 +1,6 @@
 package com.campus.campus.domain.review.application.mapper;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,6 +18,9 @@ import com.campus.campus.domain.review.application.dto.response.ReviewRankingRes
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptItemDto;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptOcrResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -35,6 +39,32 @@ public class ReviewMapper {
 			.isVerified(request.isVerified())
 			.place(place)
 			.build();
+	}
+
+	public ReceiptResultDto toReceiptResultDto(
+		String storeName, String totalPrice, LocalDate paymentDate, List<ReceiptItemDto> items
+	) {
+		return new ReceiptResultDto(
+			storeName, totalPrice, paymentDate, items
+		);
+	}
+
+	public ReceiptItemDto toDto(ReceiptOcrResponse.ReceiptOcrItem item) {
+		return new ReceiptItemDto(
+			safeText(item.name()),
+			extractPriceText(item.price())
+		);
+	}
+
+	private String safeText(ReceiptOcrResponse.TextField field) {
+		return field != null ? field.text() : null;
+	}
+
+	private String extractPriceText(ReceiptOcrResponse.PriceInfo priceInfo) {
+		if (priceInfo == null) {
+			return null;
+		}
+		return safeText(priceInfo.price());
 	}
 
 	public CursorPageReviewResponse<ReviewResponse> toEmptyCursorReviewResponse() {

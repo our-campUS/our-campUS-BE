@@ -5,6 +5,8 @@ public record ReviewPartnerResponse(
 	String placeCategory,
 	String council,
 	double star,
-	String title
+	String title,
+	String tag,
+	boolean isLiked
 ) {
 }

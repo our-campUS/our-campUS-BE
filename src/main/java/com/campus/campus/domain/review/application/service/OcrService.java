@@ -14,18 +14,13 @@ import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
-import com.campus.campus.domain.review.application.dto.response.ocr.PaymentInfo;
-import com.campus.campus.domain.review.application.dto.response.ocr.PriceInfo;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptItemDto;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptOcrResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
-import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptWrapper;
-import com.campus.campus.domain.review.application.dto.response.ocr.StoreInfo;
-import com.campus.campus.domain.review.application.dto.response.ocr.TextField;
-import com.campus.campus.domain.review.application.dto.response.ocr.TotalPrice;
 import com.campus.campus.domain.review.application.exception.ReceiptDateParseException;
 import com.campus.campus.domain.review.application.exception.ReceiptFileConvertException;
 import com.campus.campus.domain.review.application.exception.ReceiptOcrFailedException;
+import com.campus.campus.domain.review.application.mapper.ReviewMapper;
 import com.campus.campus.domain.review.infrastructure.ClovaOcrClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -41,6 +36,7 @@ public class OcrService {
 	private final ObjectMapper objectMapper;
 	private final ReviewService reviewService;
 	private final PlaceService placeService;
+	private final ReviewMapper reviewMapper;
 
 	public ReviewPartnerResponse processReceipt(MultipartFile file, Long userId, SavedPlaceInfo placeInfo) {
 		Place place = placeService.findOrCreatePlace(placeInfo);
@@ -56,7 +52,7 @@ public class OcrService {
 
 		//ocr
 		String rawResponse = clovaOcrClient.requestReceiptOcr(imageBytes, file.getOriginalFilename());
-		log.info("[OCR RAW RESPONSE] {}", rawResponse);
+		log.debug("[OCR RAW RESPONSE] {}", rawResponse);
 
 		ReceiptOcrResponse ocrResponse = parse(rawResponse);
 		ReceiptResultDto result = extractReceiptResult(ocrResponse);
@@ -87,7 +83,7 @@ public class OcrService {
 			});
 
 		var receipt = Optional.ofNullable(image.receipt())
-			.map(ReceiptWrapper::result)
+			.map(ReceiptOcrResponse.ReceiptWrapper::result)
 			.orElseThrow(() -> {
 				log.warn("[OCR FAILED] receipt.result is null");
 				return new ReceiptOcrFailedException();
@@ -95,8 +91,8 @@ public class OcrService {
 
 		//상호명
 		String storeName = Optional.ofNullable(receipt.storeInfo())
-			.map(StoreInfo::name)
-			.map(TextField::text)
+			.map(ReceiptOcrResponse.StoreInfo::name)
+			.map(ReceiptOcrResponse.TextField::text)
 			.orElseThrow(() -> {
 				log.warn("[OCR FAILED] storeName missing");
 				return new ReceiptOcrFailedException();
@@ -104,8 +100,8 @@ public class OcrService {
 
 		//총액
 		String totalPrice = Optional.ofNullable(receipt.totalPrice())
-			.map(TotalPrice::price)
-			.map(TextField::text)
+			.map(ReceiptOcrResponse.TotalPrice::price)
+			.map(ReceiptOcrResponse.TextField::text)
 			.orElseThrow(() -> {
 				log.warn("[OCR FAILED] totalPrice missing, paymentInfo={}",
 					receipt.paymentInfo());
@@ -114,8 +110,8 @@ public class OcrService {
 
 		//결제일
 		LocalDate paymentDate = Optional.ofNullable(receipt.paymentInfo())
-			.map(PaymentInfo::date)
-			.map(TextField::text)
+			.map(ReceiptOcrResponse.PaymentInfo::date)
+			.map(ReceiptOcrResponse.TextField::text)
 			.map(this::parseDate)
 			.orElseThrow(() -> {
 				log.warn("[OCR FAILED] paymentDate missing");
@@ -127,27 +123,11 @@ public class OcrService {
 			.orElse(List.of())
 			.stream()
 			.flatMap(sr -> Optional.ofNullable(sr.items()).orElse(List.of()).stream())
-			.map(i -> new ReceiptItemDto(
-				safeText(i.name()),
-				Optional.ofNullable(i.price())
-					.map(PriceInfo::price)
-					.map(TextField::text)
-					.orElse(null)
-			))
-
+			.map(reviewMapper::toDto)
 			.toList();
 		log.info("[OCR ITEMS] count={}", items.size());
 
-		return new ReceiptResultDto(
-			storeName,
-			totalPrice,
-			paymentDate,
-			items
-		);
-	}
-
-	private String safeText(TextField field) {
-		return field != null ? field.text() : null;
+		return reviewMapper.toReceiptResultDto(storeName, totalPrice, paymentDate, items);
 	}
 
 	private LocalDate parseDate(String text) {

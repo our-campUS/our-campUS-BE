@@ -118,13 +118,16 @@ public class PlaceMapper {
 		);
 	}
 
-	public ReviewPartnerResponse toReviewPartnerResponse(StudentCouncilPost post, Place place, double averageStar) {
+	public ReviewPartnerResponse toReviewPartnerResponse(StudentCouncilPost post, Place place, double averageStar,
+		String tag, boolean isLiked) {
 		return new ReviewPartnerResponse(
 			place.getPlaceName(),
 			place.getPlaceCategory(),
 			post.getWriter().getCouncilName(),
 			averageStar, //리뷰 별점
-			post.getTitle()
+			post.getTitle(),
+			tag,
+			isLiked
 		);
 	}
 

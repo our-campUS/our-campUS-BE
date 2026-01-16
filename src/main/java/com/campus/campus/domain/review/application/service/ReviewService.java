@@ -15,12 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.councilpost.application.exception.PlaceInfoNotFoundException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
@@ -69,6 +72,8 @@ public class ReviewService {
 	private final StampService stampService;
 	private final StampRepository stampRepository;
 	private final PlaceMapper placeMapper;
+	private final LikedPlacesRepository likedPlacesRepository;
+	private final PlaceRepository placeRepository;
 
 	@Transactional
 	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
@@ -273,6 +278,9 @@ public class ReviewService {
 	public ReviewPartnerResponse findPartnership(Long placeId, ReceiptResultDto result, Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
+		Place place = placeRepository.findById(placeId)
+			.orElseThrow(PlaceInfoNotFoundException::new);
+
 		Long majorId = user.getMajor().getMajorId();
 		Long collegeId = user.getCollege().getCollegeId();
 		Long schoolId = user.getSchool().getSchoolId();
@@ -287,7 +295,10 @@ public class ReviewService {
 		).orElseThrow(NotPartnershipReceiptException::new);
 
 		double averageStar = getAverageOfStars(placeId);
-		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar);
+		String writer = post.getWriter().getCouncilName();
+
+		boolean isLiked = likedPlacesRepository.existsByUserAndPlace(user, place);
+		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar, writer, isLiked);
 	}
 
 	public double getAverageOfStars(Long placeId) {
