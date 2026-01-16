@@ -26,5 +26,4 @@ public interface CouncilPartnershipSuggestionRepository extends JpaRepository<Co
 		@Param("place") Place place,
 		@Param("council") StudentCouncil council
 	);
-
 }

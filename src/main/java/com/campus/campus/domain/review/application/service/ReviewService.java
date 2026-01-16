@@ -96,15 +96,7 @@ public class ReviewService {
 			}
 		}
 
-		String imageUrl =
-			(request.imageUrls() == null || request.imageUrls().isEmpty())
-				? null : request.imageUrls().getFirst();
-
-		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, imageUrl);
-		ReviewCreateResult createResult = getCreateResult(place, user);
-		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
-
-		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
+		return createReviewResponse(review, place, user, request.imageUrls());
 	}
 
 	@Transactional
@@ -133,15 +125,7 @@ public class ReviewService {
 			stampService.grantStampForReview(user, review);
 		}
 
-		String imageUrl =
-			(request.imageUrls() == null || request.imageUrls().isEmpty())
-				? null : request.imageUrls().getFirst();
-
-		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, imageUrl);
-		ReviewCreateResult createResult = getCreateResult(place, user);
-		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
-
-		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
+		return createReviewResponse(review, place, user, request.imageUrls());
 	}
 
 	@Transactional(readOnly = true)
@@ -396,6 +380,17 @@ public class ReviewService {
 		return partnerships.stream()
 			.map(reviewMapper::toTopPartnershipResponse)
 			.toList();
+	}
+
+	private ReviewCreateResponse createReviewResponse(Review review, Place place, User user, List<String> imageUrls) {
+		String mainImageUrl = (imageUrls == null || imageUrls.isEmpty())
+			? null : imageUrls.getFirst();
+
+		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, mainImageUrl);
+		ReviewCreateResult createResult = getCreateResult(place, user);
+		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
+
+		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
 	}
 
 	//이미지 삭제

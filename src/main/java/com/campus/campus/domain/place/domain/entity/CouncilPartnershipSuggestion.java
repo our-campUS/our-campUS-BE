@@ -58,6 +58,3 @@ public class CouncilPartnershipSuggestion extends BaseEntity {
 		return demand;
 	}
 }
-
-
-

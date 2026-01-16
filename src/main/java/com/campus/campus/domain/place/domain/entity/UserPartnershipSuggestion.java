@@ -43,5 +43,4 @@ public class UserPartnershipSuggestion extends BaseEntity {
 		s.place = place;
 		return s;
 	}
-
 }

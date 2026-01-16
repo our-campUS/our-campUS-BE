@@ -321,5 +321,4 @@ public class PartnershipPlaceService {
 			throw new AcademicInfoNotSetException();
 		}
 	}
-
 }
