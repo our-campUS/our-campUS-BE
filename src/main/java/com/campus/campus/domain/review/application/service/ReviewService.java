@@ -430,5 +430,4 @@ public class ReviewService {
 			collegeRank,
 			school.getSchoolName(), schoolRank);
 	}
-
 }

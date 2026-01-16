@@ -36,7 +36,6 @@ public class OcrService {
 	private final ClovaOcrClient clovaOcrClient;
 	private final ObjectMapper objectMapper;
 	private final ReviewService reviewService;
-	private final PlaceService placeService;
 	private final ReviewMapper reviewMapper;
 	private final PlaceRepository placeRepository;
 

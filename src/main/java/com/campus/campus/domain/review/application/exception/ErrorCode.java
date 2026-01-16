@@ -22,5 +22,4 @@ public enum ErrorCode implements ErrorCodeInterface {
 	private final int code;
 	private final HttpStatus status;
 	private final String message;
-
 }
