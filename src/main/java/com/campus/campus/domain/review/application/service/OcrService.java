@@ -24,7 +24,7 @@ import com.campus.campus.domain.review.application.dto.response.ocr.TextField;
 import com.campus.campus.domain.review.application.dto.response.ocr.TotalPrice;
 import com.campus.campus.domain.review.application.exception.ReceiptFileConvertException;
 import com.campus.campus.domain.review.application.exception.ReceiptOcrFailedException;
-import com.campus.campus.domain.review.infrastructure.ocr.ClovaOcrClient;
+import com.campus.campus.domain.review.infrastructure.ClovaOcrClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;

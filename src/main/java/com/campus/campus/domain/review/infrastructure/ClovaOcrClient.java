@@ -1,4 +1,4 @@
-package com.campus.campus.domain.review.infrastructure.ocr;
+package com.campus.campus.domain.review.infrastructure;
 
 import java.util.Base64;
 import java.util.HashMap;

@@ -1,6 +1,8 @@
 package com.campus.campus.domain.review.application.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,19 +14,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
+import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
+import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
+import com.campus.campus.domain.review.application.exception.NotPartnershipReceiptException;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -59,6 +68,7 @@ public class ReviewService {
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final StampService stampService;
 	private final StampRepository stampRepository;
+	private final PlaceMapper placeMapper;
 
 	@Transactional
 	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
@@ -178,6 +188,39 @@ public class ReviewService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<SimpleReviewResponse> getReviewSummaryList(Long placeId) {
+
+		List<Review> reviews =
+			reviewRepository.findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(placeId);
+
+		if (reviews.isEmpty()) {
+			return List.of();
+		}
+
+		List<Long> reviewIds = reviews.stream()
+			.map(Review::getId)
+			.toList();
+
+		Map<Long, String> imageMap =
+			reviewImageRepository.findAllByReviewIdInOrderByIdAsc(reviewIds)
+				.stream()
+				.collect(Collectors.toMap(
+					img -> img.getReview().getId(),
+					ReviewImage::getImageUrl,
+					(existing, ignored) -> existing
+				));
+
+		return reviews.stream()
+			.map(review ->
+				reviewMapper.toSimpleReviewResponse(
+					review,
+					imageMap.get(review.getId())
+				)
+			)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
 	public CursorPageReviewResponse<ReviewResponse> getReviewList(
 		Long placeId,
 		LocalDateTime cursorCreatedAt,
@@ -226,6 +269,70 @@ public class ReviewService {
 
 		return reviewMapper.toCursorReviewResponse(items, last, hasNext);
 
+	}
+
+	@Transactional(readOnly = true)
+	public ReviewPartnerResponse findPartnership(Long placeId, ReceiptResultDto result, Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+		Long majorId = user.getMajor().getMajorId();
+		Long collegeId = user.getCollege().getCollegeId();
+		Long schoolId = user.getSchool().getSchoolId();
+
+		//OCR 리턴 타입보고 변경해야 함
+		LocalDate paymentDateTime = result.paymentDate();
+		LocalDateTime time = paymentDateTime.atStartOfDay(); //시간은 우선 임의로
+
+		//제휴기간 내에 결제 했는지 확인
+		StudentCouncilPost post = studentCouncilPostRepository.findValidPartnershipForUserScope(
+			placeId, time, majorId, collegeId, schoolId, CouncilType.MAJOR_COUNCIL,
+			CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL
+		).orElseThrow(NotPartnershipReceiptException::new);
+
+		//review isVerified 필드 true로 변경
+
+		double averageStar = getAverageOfStars(placeId);
+		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar);
+	}
+
+	public double getAverageOfStars(Long placeId) {
+		List<Review> reviews = reviewRepository.findALlByPlace_PlaceId(placeId);
+		double averageStar = reviews.stream()
+			.mapToDouble(Review::getStar)
+			.average()
+			.orElse(0.0);
+		return averageStar;
+	}
+
+	@Transactional(readOnly = true)
+	public int getReviewCount(Long placeId) {
+		List<Review> reviews = reviewRepository.findALlByPlace_PlaceId(placeId);
+		return reviews.size();
+	}
+
+	@Transactional(readOnly = true)
+	public Map<Long, Double> getAverageListOfStars(Set<Long> placeIds) {
+
+		if (placeIds == null || placeIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		List<PlaceStarAvgRow> rows =
+			reviewRepository.findAverageStarsByPlaceIds(placeIds);
+
+		// 조회된 placeId → 평균
+		Map<Long, Double> avgMap = rows.stream()
+			.collect(Collectors.toMap(
+				PlaceStarAvgRow::placeId,
+				row -> row.avgStar() != null ? row.avgStar() : 0.0
+			));
+
+		// 리뷰가 하나도 없는 placeId는 0.0으로 채움
+		for (Long placeId : placeIds) {
+			avgMap.putIfAbsent(placeId, 0.0);
+		}
+
+		return avgMap;
 	}
 
 	@Transactional(readOnly = true)
