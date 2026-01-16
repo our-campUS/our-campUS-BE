@@ -1,6 +1,8 @@
 package com.campus.campus.domain.review.application.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,19 +14,30 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
+import com.campus.campus.domain.councilpost.application.exception.PlaceInfoNotFoundException;
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
-import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
+import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.place.domain.repository.PlaceRepository;
+import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
+import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
+import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
+import com.campus.campus.domain.review.application.exception.NotPartnershipReceiptException;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -59,9 +72,12 @@ public class ReviewService {
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final StampService stampService;
 	private final StampRepository stampRepository;
+	private final PlaceMapper placeMapper;
+	private final LikedPlacesRepository likedPlacesRepository;
+	private final PlaceRepository placeRepository;
 
 	@Transactional
-	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
+	public ReviewCreateResponse writePlaceReview(PlaceReviewRequest request, Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
@@ -69,9 +85,9 @@ public class ReviewService {
 			throw new PostImageLimitExceededException();
 		}
 
-		Place place = placeService.findOrCreatePlace(request.place());
+		Place place = placeService.createPlace(request.place());
 
-		Review review = reviewMapper.createReview(request, user, place);
+		Review review = reviewMapper.createPlaceReview(request, user, place);
 		reviewRepository.save(review);
 
 		if (request.imageUrls() != null) {
@@ -80,22 +96,36 @@ public class ReviewService {
 			}
 		}
 
-		// isOcrVerificationSuccess는 ocr이 성공했다고 가정하고 구현했습니다. 이는 ocr을 구현하면서 수정해주시면 됩니다.
-		boolean isOcrVerificationSuccess = true;
-		if (isOcrVerificationSuccess) {
+		return createReviewResponse(review, place, user, request.imageUrls());
+	}
+
+	@Transactional
+	public ReviewCreateResponse writePartnershipReview(PartnershipReviewRequest request, Long userId, Long placeId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
+			throw new PostImageLimitExceededException();
+		}
+
+		Place place = placeRepository.findById(placeId)
+			.orElseThrow(PlaceInfoNotFoundException::new);
+
+		Review review = reviewMapper.createPartnershipReview(request, user, place);
+		reviewRepository.save(review);
+
+		if (request.imageUrls() != null) {
+			for (String imageUrl : request.imageUrls()) {
+				reviewImageRepository.save(reviewMapper.createReviewImage(review, imageUrl));
+			}
+		}
+
+		if (request.isVerified()) {
 			review.verify();
 			stampService.grantStampForReview(user, review);
 		}
 
-		String imageUrl =
-			(request.imageUrls() == null || request.imageUrls().isEmpty())
-				? null : request.imageUrls().getFirst();
-
-		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, imageUrl);
-		ReviewCreateResult createResult = getCreateResult(place, user);
-		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
-
-		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
+		return createReviewResponse(review, place, user, request.imageUrls());
 	}
 
 	@Transactional(readOnly = true)
@@ -142,7 +172,7 @@ public class ReviewService {
 	}
 
 	@Transactional
-	public WriteReviewResponse update(Long userId, Long reviewId, ReviewRequest request) {
+	public WriteReviewResponse update(Long userId, Long reviewId, PlaceReviewRequest request) {
 
 		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
@@ -175,6 +205,39 @@ public class ReviewService {
 				? null : request.imageUrls().getFirst();
 
 		return reviewMapper.toWriteReviewResponse(review, imageUrl);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SimpleReviewResponse> getReviewSummaryList(Long placeId) {
+
+		List<Review> reviews =
+			reviewRepository.findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(placeId);
+
+		if (reviews.isEmpty()) {
+			return List.of();
+		}
+
+		List<Long> reviewIds = reviews.stream()
+			.map(Review::getId)
+			.toList();
+
+		Map<Long, String> imageMap =
+			reviewImageRepository.findAllByReviewIdInOrderByIdAsc(reviewIds)
+				.stream()
+				.collect(Collectors.toMap(
+					img -> img.getReview().getId(),
+					ReviewImage::getImageUrl,
+					(existing, ignored) -> existing
+				));
+
+		return reviews.stream()
+			.map(review ->
+				reviewMapper.toSimpleReviewResponse(
+					review,
+					imageMap.get(review.getId())
+				)
+			)
+			.toList();
 	}
 
 	@Transactional(readOnly = true)
@@ -229,6 +292,67 @@ public class ReviewService {
 	}
 
 	@Transactional(readOnly = true)
+	public ReviewPartnerResponse findPartnership(Long placeId, ReceiptResultDto result, Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+		Place place = placeRepository.findById(placeId)
+			.orElseThrow(PlaceInfoNotFoundException::new);
+
+		Long majorId = user.getMajor().getMajorId();
+		Long collegeId = user.getCollege().getCollegeId();
+		Long schoolId = user.getSchool().getSchoolId();
+
+		LocalDate paymentDate = result.paymentDate();
+		LocalDateTime time = paymentDate.atStartOfDay(); //시간은 우선 임의로
+
+		//제휴기간 내에 결제 했는지 확인
+		StudentCouncilPost post = studentCouncilPostRepository.findValidPartnershipForUserScope(
+			placeId, time, majorId, collegeId, schoolId, CouncilType.MAJOR_COUNCIL,
+			CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL
+		).orElseThrow(NotPartnershipReceiptException::new);
+
+		double averageStar = getAverageOfStars(placeId);
+		String writer = post.getWriter().getCouncilName();
+
+		boolean isLiked = likedPlacesRepository.existsByUserAndPlace(user, place);
+		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar, writer, isLiked, paymentDate);
+	}
+
+	public double getAverageOfStars(Long placeId) {
+		return reviewRepository.findAverageStarByPlaceId(placeId).orElse(0.0);
+	}
+
+	@Transactional(readOnly = true)
+	public int getReviewCount(Long placeId) {
+		return (int)reviewRepository.countByPlace_PlaceId(placeId);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<Long, Double> getAverageListOfStars(Set<Long> placeIds) {
+
+		if (placeIds == null || placeIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		List<PlaceStarAvgRow> rows =
+			reviewRepository.findAverageStarsByPlaceIds(placeIds);
+
+		// 조회된 placeId → 평균
+		Map<Long, Double> avgMap = rows.stream()
+			.collect(Collectors.toMap(
+				PlaceStarAvgRow::placeId,
+				row -> row.avgStar() != null ? row.avgStar() : 0.0
+			));
+
+		// 리뷰가 하나도 없는 placeId는 0.0으로 채움
+		for (Long placeId : placeIds) {
+			avgMap.putIfAbsent(placeId, 0.0);
+		}
+
+		return avgMap;
+	}
+
+	@Transactional(readOnly = true)
 	public List<PlaceReviewRankResponse> readPopularPartnerships(Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
@@ -258,8 +382,19 @@ public class ReviewService {
 			.toList();
 	}
 
+	private ReviewCreateResponse createReviewResponse(Review review, Place place, User user, List<String> imageUrls) {
+		String mainImageUrl = (imageUrls == null || imageUrls.isEmpty())
+			? null : imageUrls.getFirst();
+
+		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, mainImageUrl);
+		ReviewCreateResult createResult = getCreateResult(place, user);
+		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
+
+		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
+	}
+
 	//이미지 삭제
-	private void cleanupUnusedImages(List<ReviewImage> oldImages, ReviewRequest request) {
+	private void cleanupUnusedImages(List<ReviewImage> oldImages, PlaceReviewRequest request) {
 		List<String> newUrls = request.imageUrls() == null ? List.of() : request.imageUrls();
 		Set<String> deleteTargets = new HashSet<>();
 
@@ -323,5 +458,4 @@ public class ReviewService {
 			collegeRank,
 			school.getSchoolName(), schoolRank);
 	}
-
 }

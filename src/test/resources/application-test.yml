@@ -61,6 +61,11 @@ oci:
   private-key: dummy
   passphrase: ""
 
+clova:
+  ocr:
+    invoke-url: dummy
+    secret-key: dummy
+
 server-uri: http://localhost
 
 management:

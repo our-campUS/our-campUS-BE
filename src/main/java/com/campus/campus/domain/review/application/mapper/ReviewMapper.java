@@ -1,5 +1,6 @@
 package com.campus.campus.domain.review.application.mapper;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -7,7 +8,8 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.place.domain.entity.Place;
-import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.RankingScope;
@@ -15,7 +17,11 @@ import com.campus.campus.domain.review.application.dto.response.ReviewCreateResp
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResult;
 import com.campus.campus.domain.review.application.dto.response.ReviewRankingResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptItemDto;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptOcrResponse;
+import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -26,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReviewMapper {
 
-	public Review createReview(ReviewRequest request, User user, Place place) {
+	public Review createPlaceReview(PlaceReviewRequest request, User user, Place place) {
 		return Review.builder()
 			.user(user)
 			.content(request.content())
@@ -35,12 +41,57 @@ public class ReviewMapper {
 			.build();
 	}
 
+	public Review createPartnershipReview(PartnershipReviewRequest request, User user, Place place) {
+		return Review.builder()
+			.user(user)
+			.content(request.content())
+			.star(request.star())
+			.isVerified(request.isVerified())
+			.place(place)
+			.build();
+	}
+
+	public ReceiptResultDto toReceiptResultDto(
+		String storeName, String totalPrice, LocalDate paymentDate, List<ReceiptItemDto> items
+	) {
+		return new ReceiptResultDto(
+			storeName, totalPrice, paymentDate, items
+		);
+	}
+
+	public ReceiptItemDto toDto(ReceiptOcrResponse.ReceiptOcrItem item) {
+		return new ReceiptItemDto(
+			safeText(item.name()),
+			extractPriceText(item.price())
+		);
+	}
+
+	private String safeText(ReceiptOcrResponse.TextField field) {
+		return field != null ? field.text() : null;
+	}
+
+	private String extractPriceText(ReceiptOcrResponse.PriceInfo priceInfo) {
+		if (priceInfo == null) {
+			return null;
+		}
+		return safeText(priceInfo.price());
+	}
+
 	public CursorPageReviewResponse<ReviewResponse> toEmptyCursorReviewResponse() {
 		return CursorPageReviewResponse.<ReviewResponse>builder()
 			.items(List.of())
 			.nextCursorCreatedAt(null)
 			.nextCursorId(null)
 			.hasNext(false)
+			.build();
+	}
+
+	public SimpleReviewResponse toSimpleReviewResponse(Review review, String imageUrl) {
+		return SimpleReviewResponse.builder()
+			.star(review.getStar())
+			.writerName(review.getUser().getNickname())
+			.content(review.getContent())
+			.thumbnailImgUrl(imageUrl)
 			.build();
 	}
 

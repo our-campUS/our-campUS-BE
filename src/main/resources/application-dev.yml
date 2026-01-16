@@ -30,6 +30,10 @@ spring:
       host: ENC(wMI0GBAvI1WHsnAjmwy3xA==)
       port: 6379
       password: ENC(Ix+lo7WCNZdyhr3vfXPd3A==)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 oauth:
   kakao:
@@ -66,6 +70,12 @@ map:
     api-key: ENC(xgLHhhUSoE7yyS+SzF/KNmjs9swnSwQ2M1xKqWeJoXxrmhH/1rVOal2l5mZ9MP5E)
 
 server-uri: ENC(ZrgPccnQ3mEqVQTFEvGn6hzhP4xcNn6ISnp3TbBcd1J3jpZPb3hlzQ==)
+
 firebase:
   credentials:
     path: ENC(ChMLHkElyTmc/x8gSGr6O6xmOpdU7QP49zwVdYWdd4M1DjrxQfumH/JB/HyQ2IjL)
+
+clova:
+  ocr:
+    invoke-url: https://oprno6zgu9.apigw.ntruss.com/custom/v1/49413/b8f236bbccbb9b0008d8d0485d9028faba366671ac72ccab91d2df2bb9c96001/document/receipt
+    secret-key: ENC(27rOnbpzREczXXFbh6OSHXiqb6BQLhTNZ4VFKfv63lgV9O3ABBrNM8GHOxj3w+G4tp+lHGhazf0=)

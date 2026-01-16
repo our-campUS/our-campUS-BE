@@ -44,4 +44,10 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 	boolean existsByEmailAndDeletedAtIsNotNull(String email);
 
 	boolean existsByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(String loginId);
+
+	Optional<StudentCouncil> findByMajor_MajorIdAndDeletedAtIsNull(Long majorId);
+
+	Optional<StudentCouncil> findByCollege_CollegeIdAndDeletedAtIsNull(Long collegeId);
+
+	Optional<StudentCouncil> findBySchool_SchoolIdAndDeletedAtIsNull(Long schoolId);
 }

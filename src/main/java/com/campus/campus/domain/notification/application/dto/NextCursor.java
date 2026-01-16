@@ -5,4 +5,5 @@ import java.time.LocalDateTime;
 public record NextCursor(
 	LocalDateTime createdAt,
 	Long id
-) {}
+) {
+}

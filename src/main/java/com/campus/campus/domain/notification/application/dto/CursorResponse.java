@@ -6,4 +6,5 @@ public record CursorResponse<T>(
 	List<T> items,
 	NextCursor nextCursor,
 	boolean hasNext
-) {}
+) {
+}

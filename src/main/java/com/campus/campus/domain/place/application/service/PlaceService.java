@@ -21,31 +21,38 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.StudentCouncil;
+import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.exception.AcademicInfoNotSetException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
-import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
 import com.campus.campus.domain.place.application.dto.response.SearchPartnershipInfoResponse;
+import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.util.PlaceKeyGenerator;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
+import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
+import com.campus.campus.domain.place.domain.entity.UserPartnershipSuggestion;
+import com.campus.campus.domain.place.domain.repository.CouncilPartnershipSuggestionRepository;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
+import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
@@ -88,6 +95,9 @@ public class PlaceService {
 	private final ExecutorService executorService;
 	private final GeoCoderClient geoCoderClient;
 	private final ReviewRepository reviewRepository;
+	private final UserPartnershipSuggestionRepository userPartnershipSuggestionRepository;
+	private final CouncilPartnershipSuggestionRepository partnershipSuggestionRepository;
+	private final StudentCouncilRepository studentCouncilRepository;
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		String searchWord = keyword;
@@ -174,6 +184,55 @@ public class PlaceService {
 						.orElseThrow(PlaceCreationException::new);
 				}
 			});
+	}
+
+	public Place createPlace(SavedPlaceInfo place) {
+		try {
+			Place newPlace = placeRepository.save(placeMapper.createPlace(place));
+
+			migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
+
+			return newPlace;
+		} catch (DataIntegrityViolationException e) {
+			log.info("해당 키에 대한 장소 동시 생성이 감지되었습니다.: {}", place.placeKey());
+			return placeRepository.findByPlaceKey(place.placeKey())
+				.orElseThrow(PlaceCreationException::new);
+		}
+	}
+
+	//제휴 신청
+	@Transactional
+	public void suggestPartnership(Long userId, SavedPlaceInfo placeInfo) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Place place = findOrCreatePlace(placeInfo);
+
+		//이미 신청했는지 체크
+		if (userPartnershipSuggestionRepository
+			.existsByUserAndPlace(user, place)) {
+			throw new AlreadySuggestedPartnershipException();
+		}
+
+		//중복 방지 저장
+		userPartnershipSuggestionRepository.save(
+			UserPartnershipSuggestion.create(user, place)
+		);
+
+		//유저 소속 studentCouncil
+		List<StudentCouncil> councils = resolveCouncils(user);
+
+		// demand 조회 or 생성
+		for (StudentCouncil council : councils) {
+			CouncilPartnershipSuggestion demand =
+				partnershipSuggestionRepository.findForUpdate(place, council)
+					.orElseGet(() ->
+						partnershipSuggestionRepository.save(
+							CouncilPartnershipSuggestion.create(place, council)
+						));
+			demand.increase();
+		}
+
 	}
 
 	//장소 저장
@@ -289,6 +348,30 @@ public class PlaceService {
 	private SavedPlaceInfo fallback(SearchCandidateResponse response) {
 		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
 			response.naverPlaceUrl(), List.of());
+	}
+
+	private List<StudentCouncil> resolveCouncils(User user) {
+		List<StudentCouncil> councils = new ArrayList<>();
+
+		if (user.getMajor() != null) {
+			studentCouncilRepository.findByMajor_MajorIdAndDeletedAtIsNull(
+				user.getMajor().getMajorId()
+			).ifPresent(councils::add);
+		}
+
+		if (user.getCollege() != null) {
+			studentCouncilRepository.findByCollege_CollegeIdAndDeletedAtIsNull(
+				user.getCollege().getCollegeId()
+			).ifPresent(councils::add);
+		}
+
+		if (user.getSchool() != null) {
+			studentCouncilRepository.findBySchool_SchoolIdAndDeletedAtIsNull(
+				user.getSchool().getSchoolId()
+			).ifPresent(councils::add);
+		}
+
+		return councils;
 	}
 
 	/*

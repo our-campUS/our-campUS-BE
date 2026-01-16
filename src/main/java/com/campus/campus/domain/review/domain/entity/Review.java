@@ -47,7 +47,10 @@ public class Review extends BaseEntity {
 	@JoinColumn(name = "place_id", nullable = false)
 	private Place place;
 
-	public void update(String content, Double star) {
+	public void update(
+		String content,
+		double star
+	) {
 		this.content = content;
 		this.star = star;
 	}

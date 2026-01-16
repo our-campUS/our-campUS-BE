@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,19 +13,25 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
+import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
+import com.campus.campus.domain.review.application.service.OcrService;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -34,52 +41,93 @@ import lombok.RequiredArgsConstructor;
 public class ReviewController {
 
 	private final ReviewService reviewService;
+	private final OcrService ocrService;
 
 	@PostMapping
 	@Operation(
-		summary = "리뷰 작성",
+		summary = "리뷰 작성(제휴 없음)",
+		description = "제휴 가게여서 영수증 인증을 마쳤다면 isVerified=true 값으로 넘겨주세요.",
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 			required = true,
 			content = @io.swagger.v3.oas.annotations.media.Content(
 				mediaType = "application/json",
-				examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-					name = "리뷰 작성 요청 예시",
-					summary = "리뷰 작성 Request Body",
-					value = """
-						{
-						  "content": "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.",
-						  "star": 3.5,
-						  "imageUrls": [
-						    "https://image1.jpg",
-						    "https://image2.jpg"
-						  ],
-						  "place": {
-						    "placeName": "숙명여자대학교",
-						    "placeKey": "string",
-						    "address": "서울특별시 용산구 청파로47길 99",
-						    "category": "교육,학문>대학교",
-						    "link": "https://map.naver.com/v5/search/%EC%88%99%EB%AA%85%EC%97%AC%EC%9E%90%EB%8C%80%ED%95%99%EA%B5%90",
-						    "telephone": "010-1234-1234",
-						    "coordinate": {
-						      "latitude": 37.545947,
-						      "longitude": 126.964578
-						    },
-						    "imgUrls": [
-						      "https://place-image1.jpg"
-						    ]
-						  }
-						}
-						"""
-				)
+				schema = @Schema(implementation = PlaceReviewRequest.class),
+				examples = {
+					@io.swagger.v3.oas.annotations.media.ExampleObject(
+						name = "리뷰 작성 요청 예시",
+						summary = "영수증 인증 리뷰 작성",
+						value = """
+							{
+							  "content": "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼭꼭꼭꼭꼭꼭꼭꼮 가세요.",
+							  "star": 4.5,
+							  "imageUrls": [
+							    "https://image.campus.com/review/1.jpg",
+							    "https://image.campus.com/review/2.jpg"
+							  ],
+							  "isVerified": true,
+							  "place": {
+							    "placeName": "숙명여자대학교",
+							    "placeKey": "a9f3c0d3b1f74c8a9c2a1d9a7b3e1234",
+							    "address": "서울특별시 용산구 청파로47길 99",
+							    "category": "교육,학문>대학교",
+							    "link": "https://map.naver.com/v5/search/%EC%88%99%EB%AA%85%EC%97%AC%EC%9E%90%EB%8C%80%ED%95%99%EA%B5%90",
+							    "telephone": "02-710-9114",
+							    "coordinate": {
+							      "latitude": 37.545947,
+							      "longitude": 126.964578
+							    },
+							    "imgUrls": [
+							      "https://image.campus.com/place/1.jpg"
+							    ]
+							  }
+							}
+							"""
+					)
+				}
 			)
 		)
 	)
 	public CommonResponse<ReviewCreateResponse> writeReview(
-		@Valid @RequestBody ReviewRequest request,
+		@Valid @RequestBody PlaceReviewRequest request,
 		@CurrentUserId Long userId
 	) {
-		ReviewCreateResponse response = reviewService.writeReview(request, userId);
+		ReviewCreateResponse response = reviewService.writePlaceReview(request, userId);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
+	}
+
+	@PostMapping("/partnership/{placeId}")
+	@Operation(summary = "리뷰 작성(제휴 존재)")
+	public CommonResponse<ReviewCreateResponse> writePartnershipReview(
+		@PathVariable Long placeId,
+		@Valid @RequestBody PartnershipReviewRequest request,
+		@CurrentUserId Long userId
+	) {
+		ReviewCreateResponse response = reviewService.writePartnershipReview(request, userId, placeId);
+		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
+	}
+
+	@PostMapping(
+		value = "/receipt-ocr",
+		consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+	)
+	@Operation(
+		summary = "영수증 OCR을 통한 제휴 매장 이용 인증",
+		description = """
+			제휴 매장 리뷰 작성 전, 영수증 OCR을 통해 이용 여부를 인증하는 API입니다.
+			
+			- 제휴 매장 리뷰 작성 시 반드시 먼저 호출해야 합니다.
+			- OCR 인증이 성공적으로 완료된 후 리뷰 작성 API를 호출해주세요.
+			- 리뷰 작성 시 isVerified = true 값을 함께 전달해야 합니다.
+			- 제휴 매장이 아닌 경우에는 본 API를 호출하지 않고,
+			  리뷰 작성 API를 바로 호출하시면 됩니다.
+			"""
+	)
+	public CommonResponse<ReviewPartnerResponse> upload(
+		@RequestPart("file") MultipartFile file,
+		@RequestParam("placeId") Long placeId,
+		@CurrentUserId Long userId
+	) {
+		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file, userId, placeId));
 	}
 
 	@GetMapping("/{reviewId}")
@@ -101,7 +149,7 @@ public class ReviewController {
 	public CommonResponse<WriteReviewResponse> updateReview(
 		@CurrentUserId Long userId,
 		@PathVariable Long reviewId,
-		@RequestBody @Valid ReviewRequest request
+		@RequestBody @Valid PlaceReviewRequest request
 	) {
 		WriteReviewResponse response = reviewService.update(userId, reviewId, request);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_UPDATE_SUCCESS, response);

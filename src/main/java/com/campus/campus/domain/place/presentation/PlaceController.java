@@ -10,14 +10,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
-import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
-import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
-import com.campus.campus.domain.place.application.service.PartnershipPlaceService;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
+import com.campus.campus.domain.place.application.dto.response.PlaceDetailView;
+import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
-import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
+import com.campus.campus.domain.place.application.service.PartnershipPlaceService;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.global.annotation.CurrentUserId;
@@ -91,7 +92,7 @@ public class PlaceController {
 
 	@GetMapping("/partnership")
 	@Operation(summary = "리스트로 제휴 장소 전체 조회", description = "무한 스크롤 방식으로 제휴 장소 목록을 조회합니다.")
-	public CommonResponse<List<PartnershipResponse>> getPartnershipPlaces(
+	public CommonResponse<List<PartnershipDetailResponse>> getPartnershipPlaces(
 		@CurrentUserId Long userId,
 		@Parameter(description = "현재 위치의 위도", example = "37.50415") @RequestParam double lat,
 		@Parameter(description = "현재 위치의 경도", example = "126.9570") @RequestParam double lng,
@@ -114,7 +115,8 @@ public class PlaceController {
 		)
 		@RequestParam(required = false) Long cursor,
 		@Parameter(description = "한 번에 조회할 개수", example = "5") @RequestParam(defaultValue = "5") int size) {
-		List<PartnershipResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size, lat,
+		List<PartnershipDetailResponse> response = partnershipPlaceService.getPartnershipPlaces(userId, cursor, size,
+			lat,
 			lng);
 
 		return CommonResponse.success(PlaceResponseCode.CHECK_PARTNERSHIP_PLACES_SUCCESS, response);
@@ -141,9 +143,29 @@ public class PlaceController {
 		);
 	}
 
+	@GetMapping("/detail")
+	@Operation(summary = "장소 세부 조회")
+	public CommonResponse<PlaceDetailView> getPlaceDetails(
+		@CurrentUserId Long userId,
+		@Parameter(
+			description = "현재 위치의 위도",
+			example = "37.50415"
+		)
+		@RequestParam double lat,
+		@Parameter(
+			description = "현재 위치의 경도",
+			example = "126.9570"
+		)
+		@RequestParam double lng,
+		@RequestParam Long placeId
+	) {
+		PlaceDetailView response = partnershipPlaceService.getPlaceDetails(userId, placeId, lat, lng);
+		return CommonResponse.success(PlaceResponseCode.GET_PLACE_DETAILS_SUCCESS, response);
+	}
+
 	@GetMapping("/partnership/detail")
 	@Operation(summary = "제휴 장소 상세 조회(맵에서 핀 클릭 시)")
-	public CommonResponse<PartnershipResponse> getPartnershipPlaceDetail(
+	public CommonResponse<PartnershipDetailResponse> getPartnershipPlaceDetail(
 		@Parameter(description = "현재 위치의 위도", example = "37.50415") @RequestParam double lat,
 		@Parameter(description = "현재 위치의 경도", example = "126.9570") @RequestParam double lng,
 		@Parameter(description = "제휴글 ID", example = "10") @RequestParam Long postId,
@@ -164,5 +186,15 @@ public class PlaceController {
 		RecommendPlaceByTimeResponse response = placeService.findRecommendations(userId, lat, lng);
 
 		return CommonResponse.success(PlaceResponseCode.GET_RANDOM_PLACE_SUCCESS, response);
+	}
+
+	@PostMapping("/suggest-partnership")
+	@Operation(summary = "제휴 신청하기")
+	public CommonResponse<Void> suggestPartnership(
+		@CurrentUserId Long userId,
+		@Valid @RequestBody SavedPlaceInfo placeInfo
+	) {
+		placeService.suggestPartnership(userId, placeInfo);
+		return CommonResponse.success(PlaceResponseCode.PARTNERSHIP_SUGGEST_SUCCESS);
 	}
 }
