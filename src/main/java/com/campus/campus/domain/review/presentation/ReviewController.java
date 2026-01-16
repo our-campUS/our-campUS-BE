@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
@@ -80,6 +83,17 @@ public class ReviewController {
 	) {
 		ReviewCreateResponse response = reviewService.writeReview(request, userId);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
+	}
+
+	@PostMapping("/receipt-ocr")
+	@Operation(summary = "영수증 ocr을 통해 제휴 매장 이용 인증")
+	public CommonResponse<ReviewPartnerResponse> upload(
+		@RequestPart MultipartFile file,
+		@Valid @RequestBody SavedPlaceInfo placeInfo,
+		@CurrentUserId Long userId
+	) {
+		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS,
+			ocrService.processReceipt(file, userId, placeInfo));
 	}
 
 	@GetMapping("/{reviewId}")
