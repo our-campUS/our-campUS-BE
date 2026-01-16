@@ -70,4 +70,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	long countByPlace_PlaceIdAndUser_School_SchoolId(Long placeId, long schoolId);
 
 	List<Review> findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(Long placeId);
+
+	boolean existsByConfirmNumber(String confirmNumber);
 }

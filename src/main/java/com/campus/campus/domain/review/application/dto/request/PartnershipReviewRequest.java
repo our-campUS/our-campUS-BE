@@ -2,6 +2,8 @@ package com.campus.campus.domain.review.application.dto.request;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -23,6 +25,14 @@ public record PartnershipReviewRequest(
 	@Schema(description = "영수증 리뷰를 하고 오면 isVerified=True로 주세요.")
 	Boolean isVerified,
 
-	List<String> imageUrls
+	List<String> imageUrls,
+
+	// 승인 번호 (OCR 추론값, 존재하지 않을 수 있음)
+	@Nullable
+	@Schema(
+		description = "영수증 OCR 결과에서 추론한 승인 번호입니다. OCR 인식 결과에 따라 값이 없을 수 있습니다.",
+		example = "873492"
+	)
+	String confirmNum
 ) {
 }

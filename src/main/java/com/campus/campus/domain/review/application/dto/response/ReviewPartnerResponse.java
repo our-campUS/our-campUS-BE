@@ -10,6 +10,8 @@ public record ReviewPartnerResponse(
 	String title,
 	String tag,
 	boolean isLiked,
-	LocalDate paymentDate
+	LocalDate paymentDate,
+
+	String confirmNum
 ) {
 }

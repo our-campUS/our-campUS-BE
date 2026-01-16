@@ -22,6 +22,7 @@ import com.campus.campus.domain.review.application.exception.ReceiptDateParseExc
 import com.campus.campus.domain.review.application.exception.ReceiptFileConvertException;
 import com.campus.campus.domain.review.application.exception.ReceiptOcrFailedException;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
+import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.review.infrastructure.ClovaOcrClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -38,6 +39,7 @@ public class OcrService {
 	private final ReviewService reviewService;
 	private final ReviewMapper reviewMapper;
 	private final PlaceRepository placeRepository;
+	private final ReviewRepository reviewRepository;
 
 	public ReviewPartnerResponse processReceipt(MultipartFile file, Long userId, Long placeId) {
 		Place place = placeRepository.findById(placeId)
@@ -60,20 +62,21 @@ public class OcrService {
 		log.info("영수증 ocr 인식 결과:{}", result);
 
 		//영수증 중복 사용 여부 검증
-		boolean isDuplicateReceipt = checkIfDuplicate(result);
-		if (!isDuplicateReceipt) {
+		if (!isDuplicateReceipt(result)) {
 			throw new DuplicateReceiptException();
 		}
+
 		return reviewService.findPartnership(place.getPlaceId(), result, userId);
 	}
 
-	private boolean checkIfDuplicate(ReceiptResultDto result) {
-		//승인 번호 추출
+	private boolean isDuplicateReceipt(ReceiptResultDto result) {
+		if (result.confirmNum() == null) {
+			return false;
+		}
 
-	}
-
-	private void createReceipt(ReceiptResultDto result) {
-
+		return reviewRepository.existsByConfirmNumber(
+			result.confirmNum()
+		);
 	}
 
 	private ReceiptOcrResponse parse(String json) {
@@ -144,8 +147,9 @@ public class OcrService {
 		log.info("[OCR ITEMS] count={}", items.size());
 
 		//승인 번호
-		String confirmNum = Optional.ofNullable(receipt.paymentInfo().confirmNum())
-			// .map(ReceiptOcrResponse.PaymentInfo::confirmNum)
+		String confirmNum = Optional.ofNullable(receipt.paymentInfo())
+			.map(ReceiptOcrResponse.PaymentInfo::confirmNum)
+			.map(ReceiptOcrResponse.ConfirmNum::text)
 			.map(ReceiptOcrResponse.TextField::text)
 			.orElseThrow(() -> {
 				log.warn("[OCR FAILED] confirmNum missing, paymentInfo={}",
@@ -153,7 +157,7 @@ public class OcrService {
 				return new ReceiptOcrFailedException();
 			});
 
-		return reviewMapper.toReceiptResultDto(storeName, totalPrice, paymentDate, items);
+		return reviewMapper.toReceiptResultDto(confirmNum, storeName, totalPrice, paymentDate, items);
 	}
 
 	private LocalDate parseDate(String text) {

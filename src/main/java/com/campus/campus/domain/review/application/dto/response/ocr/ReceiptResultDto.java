@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record ReceiptResultDto(
+	String confirmNum,
 	String storeName,
 	String totalPrice,
 	LocalDate paymentDate,
