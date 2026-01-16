@@ -92,6 +92,7 @@ public class ReviewMapper {
 			.writerName(review.getUser().getNickname())
 			.content(review.getContent())
 			.thumbnailImgUrl(imageUrl)
+			.createdAt(review.getCreatedAt())
 			.build();
 	}
 
