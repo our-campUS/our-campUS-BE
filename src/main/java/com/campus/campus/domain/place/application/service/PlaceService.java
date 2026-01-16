@@ -211,7 +211,7 @@ public class PlaceService {
 		// demand 조회 or 생성
 		for (StudentCouncil council : councils) {
 			CouncilPartnershipSuggestion demand =
-				partnershipSuggestionRepository.findByPlaceAndCouncil(place, council)
+				partnershipSuggestionRepository.findForUpdate(place, council)
 					.orElseGet(() ->
 						partnershipSuggestionRepository.save(
 							CouncilPartnershipSuggestion.create(place, council)

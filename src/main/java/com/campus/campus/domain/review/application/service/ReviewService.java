@@ -291,18 +291,12 @@ public class ReviewService {
 	}
 
 	public double getAverageOfStars(Long placeId) {
-		List<Review> reviews = reviewRepository.findALlByPlace_PlaceId(placeId);
-		double averageStar = reviews.stream()
-			.mapToDouble(Review::getStar)
-			.average()
-			.orElse(0.0);
-		return averageStar;
+		return reviewRepository.findAverageStarByPlaceId(placeId).orElse(0.0);
 	}
 
 	@Transactional(readOnly = true)
 	public int getReviewCount(Long placeId) {
-		List<Review> reviews = reviewRepository.findALlByPlace_PlaceId(placeId);
-		return reviews.size();
+		return (int)reviewRepository.countByPlace_PlaceId(placeId);
 	}
 
 	@Transactional(readOnly = true)

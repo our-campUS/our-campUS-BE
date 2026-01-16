@@ -2,6 +2,7 @@ package com.campus.campus.domain.review.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
@@ -46,6 +47,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	List<PlaceStarAvgRow> findAverageStarsByPlaceIds(
 		@Param("placeIds") Set<Long> placeIds
 	);
+
+	@Query("SELECT AVG(r.star) FROM Review r WHERE r.place.placeId = :placeId")
+	Optional<Double> findAverageStarByPlaceId(@Param("placeId") Long placeId);
 
 	@Query("""
 		    SELECT r.place.placeKey, AVG(r.star)

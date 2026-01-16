@@ -3,6 +3,7 @@ package com.campus.campus.domain.review.application.service;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,7 @@ import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptWrapp
 import com.campus.campus.domain.review.application.dto.response.ocr.StoreInfo;
 import com.campus.campus.domain.review.application.dto.response.ocr.TextField;
 import com.campus.campus.domain.review.application.dto.response.ocr.TotalPrice;
+import com.campus.campus.domain.review.application.exception.ReceiptDateParseException;
 import com.campus.campus.domain.review.application.exception.ReceiptFileConvertException;
 import com.campus.campus.domain.review.application.exception.ReceiptOcrFailedException;
 import com.campus.campus.domain.review.infrastructure.ClovaOcrClient;
@@ -114,8 +116,11 @@ public class OcrService {
 		LocalDate paymentDate = Optional.ofNullable(receipt.paymentInfo())
 			.map(PaymentInfo::date)
 			.map(TextField::text)
-			.map(text -> LocalDate.parse(text, DateTimeFormatter.BASIC_ISO_DATE))
-			.orElse(null);
+			.map(this::parseDate)
+			.orElseThrow(() -> {
+				log.warn("[OCR FAILED] paymentDate missing");
+				return new ReceiptOcrFailedException();
+			});
 
 		//상품 목록
 		List<ReceiptItemDto> items = Optional.ofNullable(receipt.subResults())
@@ -143,5 +148,18 @@ public class OcrService {
 
 	private String safeText(TextField field) {
 		return field != null ? field.text() : null;
+	}
+
+	private LocalDate parseDate(String text) {
+		if (text == null || text.isBlank())
+			return null;
+		// 숫자가 아닌 문자 제거
+		String normalized = text.replaceAll("[^0-9]", "");
+		try {
+			return LocalDate.parse(normalized, DateTimeFormatter.BASIC_ISO_DATE);
+		} catch (DateTimeParseException e) {
+			log.warn("[OCR DATE PARSE FAILED] text={}", text, e);
+			throw new ReceiptDateParseException();
+		}
 	}
 }

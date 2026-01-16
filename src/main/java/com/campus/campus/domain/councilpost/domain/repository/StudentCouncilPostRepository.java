@@ -325,6 +325,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 				WHERE p.place.placeId = :placeId
 				  AND p.startDateTime <= :paymentDate
 				  AND p.endDateTime >= :paymentDate
+				  AND w.deletedAt IS NULL
 				  AND (
 					   (w.councilType =:majorType AND m.majorId = :majorId)
 					OR (w.councilType =:collegeType AND c.collegeId = :collegeId)
@@ -413,36 +414,13 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	);
 
 	@Query("""
-		    SELECT COUNT(p) > 0
-		    FROM StudentCouncilPost p
-		    JOIN p.writer w
-		    WHERE p.place = :place
-		      AND p.startDateTime <= :now
-		      AND p.endDateTime >= :now
-		      AND (
-		           (w.councilType = :majorType AND w.major.majorId = :majorId)
-		        OR (w.councilType = :collegeType AND w.college.collegeId = :collegeId)
-		        OR (w.councilType = :schoolType AND w.school.schoolId = :schoolId)
-		      )
-		""")
-	boolean existsActiveByPlaceAndUserScope(
-		@Param("place") Place place,
-		@Param("now") LocalDateTime now,
-		@Param("majorType") CouncilType majorType,
-		@Param("majorId") Long majorId,
-		@Param("collegeType") CouncilType collegeType,
-		@Param("collegeId") Long collegeId,
-		@Param("schoolType") CouncilType schoolType,
-		@Param("schoolId") Long schoolId
-	);
-
-	@Query("""
 		    SELECT p
 		    FROM StudentCouncilPost p
 		    JOIN p.writer w
 		    WHERE p.place = :place
 		      AND p.startDateTime <= :now
 		      AND p.endDateTime >= :now
+			  AND w.deletedAt IS NULL
 		      AND (
 		           (w.councilType = :majorType AND w.major.majorId = :majorId)
 		        OR (w.councilType = :collegeType AND w.college.collegeId = :collegeId)

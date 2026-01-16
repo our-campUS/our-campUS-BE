@@ -130,7 +130,7 @@ public class PartnershipPlaceService {
 				List<String> images = postImageMap.getOrDefault(post.getId(), List.of());
 				boolean isLiked = likedPlaceIds.contains(post.getPlace().getPlaceId());
 
-				double averageStar = averageStarMap.getOrDefault(post.getId(), 0.0);
+				double averageStar = averageStarMap.getOrDefault(post.getPlace().getPlaceId(), 0.0);
 
 				return placeMapper.toPartnershipResponse(
 					user,
@@ -199,6 +199,7 @@ public class PartnershipPlaceService {
 	}
 
 	//장소 상세 조회 : 제휴
+	@Transactional(readOnly = true)
 	public PartnershipDetailResponse getPartnershipDetail(
 		Long postId,
 		Long userId,
@@ -212,7 +213,9 @@ public class PartnershipPlaceService {
 			.orElseThrow(PostNotFoundException::new);
 
 		Place place = post.getPlace();
-
+		if (place == null) {
+			throw new PlaceInfoNotFoundException();
+		}
 		double distance = calculateDistance(place, userLat, userLng);
 		double averageStar = calculateAverageStar(place);
 

@@ -5,7 +5,7 @@ import java.util.List;
 
 public record ReceiptResultDto(
 	String storeName,
-	String totalPlace,
+	String totalPrice,
 	LocalDate paymentDate,
 	List<ReceiptItemDto> items
 ) {

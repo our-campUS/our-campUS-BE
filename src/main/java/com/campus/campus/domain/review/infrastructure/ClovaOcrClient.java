@@ -33,11 +33,11 @@ public class ClovaOcrClient {
 	public String requestReceiptOcr(byte[] imageBytes, String originalFilename) {
 		//이미지->Base64
 		String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-		extractFormat(originalFilename);
+		String format = extractFormat(originalFilename);
 
 		//json body 구성
 		Map<String, Object> image = new HashMap<>();
-		image.put("format", "png");
+		image.put("format", format);
 		image.put("data", base64Image);
 		image.put("name", "receipt_test2");
 
