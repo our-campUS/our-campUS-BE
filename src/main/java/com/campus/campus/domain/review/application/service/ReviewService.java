@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
 import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.MyReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
@@ -390,6 +392,37 @@ public class ReviewService {
 				return reviewMapper.toTopPartnershipResponse(post, roundedDistance);
 			})
 			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public Page<MyReviewResponse> findMyReviews(Long userId, int page, int size) {
+		userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
+
+		Page<Review> reviewPage = reviewRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+		List<Review> reviews = reviewPage.getContent();
+
+		if (reviews.isEmpty()) {
+			return Page.empty(pageable);
+		}
+
+		List<Long> reviewIds = reviews.stream()
+			.map(Review::getId)
+			.toList();
+
+		Map<Long, List<String>> imageMap = reviewImageRepository
+			.findAllByReviewIdInOrderByIdAsc(reviewIds)
+			.stream()
+			.collect(Collectors.groupingBy(
+				ri -> ri.getReview().getId(),
+				Collectors.mapping(ReviewImage::getImageUrl, Collectors.toList())
+			));
+
+		return reviewPage.map(review ->
+			reviewMapper.toMyReviewResponse(review, imageMap.get(review.getId()))
+		);
 	}
 
 	private ReviewCreateResponse createReviewResponse(Review review, Place place, User user, List<String> imageUrls) {

@@ -3,6 +3,7 @@ package com.campus.campus.domain.review.presentation;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
 import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
+import com.campus.campus.domain.review.application.dto.response.MyReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
@@ -176,5 +178,16 @@ public class ReviewController {
 	) {
 		List<PlaceReviewRankResponse> response = reviewService.readPopularPartnerships(userId, lat, lng);
 		return CommonResponse.success(ReviewResponseCode.GET_RANK_SUCCESS, response);
+	}
+
+	@GetMapping("/mine")
+	@Operation(summary = "내가 쓴 리뷰 목록 조회", description = "로그인한 사용자가 작성한 리뷰 목록을 최신순으로 조회합니다.")
+	public CommonResponse<Page<MyReviewResponse>> getMyReviews(
+		@CurrentUserId Long userId,
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		Page<MyReviewResponse> response = reviewService.findMyReviews(userId, page, size);
+		return CommonResponse.success(ReviewResponseCode.GET_MY_REVIEWS_SUCCESS, response);
 	}
 }
