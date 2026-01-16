@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
@@ -44,13 +45,13 @@ public class ReviewController {
 
 	@PostMapping
 	@Operation(
-		summary = "리뷰 작성",
+		summary = "리뷰 작성(제휴 없음)",
 		description = "제휴 가게여서 영수증 인증을 마쳤다면 isVerified=true 값으로 넘겨주세요.",
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 			required = true,
 			content = @io.swagger.v3.oas.annotations.media.Content(
 				mediaType = "application/json",
-				schema = @Schema(implementation = ReviewRequest.class),
+				schema = @Schema(implementation = PlaceReviewRequest.class),
 				examples = {
 					@io.swagger.v3.oas.annotations.media.ExampleObject(
 						name = "리뷰 작성 요청 예시",
@@ -87,10 +88,21 @@ public class ReviewController {
 		)
 	)
 	public CommonResponse<ReviewCreateResponse> writeReview(
-		@Valid @RequestBody ReviewRequest request,
+		@Valid @RequestBody PlaceReviewRequest request,
 		@CurrentUserId Long userId
 	) {
-		ReviewCreateResponse response = reviewService.writeReview(request, userId);
+		ReviewCreateResponse response = reviewService.writePlaceReview(request, userId);
+		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
+	}
+
+	@PostMapping("/partnership/{placeId}")
+	@Operation(summary = "리뷰 작성(제휴 존재)")
+	public CommonResponse<ReviewCreateResponse> writePartnershipReview(
+		@PathVariable Long placeId,
+		@Valid @RequestBody PartnershipReviewRequest request,
+		@CurrentUserId Long userId
+	) {
+		ReviewCreateResponse response = reviewService.writePartnershipReview(request, userId, placeId);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
 	}
 
@@ -137,7 +149,7 @@ public class ReviewController {
 	public CommonResponse<WriteReviewResponse> updateReview(
 		@CurrentUserId Long userId,
 		@PathVariable Long reviewId,
-		@RequestBody @Valid ReviewRequest request
+		@RequestBody @Valid PlaceReviewRequest request
 	) {
 		WriteReviewResponse response = reviewService.update(userId, reviewId, request);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_UPDATE_SUCCESS, response);

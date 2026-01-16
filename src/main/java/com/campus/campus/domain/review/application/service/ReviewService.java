@@ -24,7 +24,8 @@ import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
-import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
@@ -76,7 +77,7 @@ public class ReviewService {
 	private final PlaceRepository placeRepository;
 
 	@Transactional
-	public ReviewCreateResponse writeReview(ReviewRequest request, Long userId) {
+	public ReviewCreateResponse writePlaceReview(PlaceReviewRequest request, Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
@@ -84,9 +85,41 @@ public class ReviewService {
 			throw new PostImageLimitExceededException();
 		}
 
-		Place place = placeService.findOrCreatePlace(request.place());
+		Place place = placeService.createPlace(request.place());
 
-		Review review = reviewMapper.createReview(request, user, place);
+		Review review = reviewMapper.createPlaceReview(request, user, place);
+		reviewRepository.save(review);
+
+		if (request.imageUrls() != null) {
+			for (String imageUrl : request.imageUrls()) {
+				reviewImageRepository.save(reviewMapper.createReviewImage(review, imageUrl));
+			}
+		}
+
+		String imageUrl =
+			(request.imageUrls() == null || request.imageUrls().isEmpty())
+				? null : request.imageUrls().getFirst();
+
+		WriteReviewResponse response = reviewMapper.toWriteReviewResponse(review, imageUrl);
+		ReviewCreateResult createResult = getCreateResult(place, user);
+		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
+
+		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
+	}
+
+	@Transactional
+	public ReviewCreateResponse writePartnershipReview(PartnershipReviewRequest request, Long userId, Long placeId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
+			throw new PostImageLimitExceededException();
+		}
+
+		Place place = placeRepository.findById(placeId)
+			.orElseThrow(PlaceInfoNotFoundException::new);
+
+		Review review = reviewMapper.createPartnershipReview(request, user, place);
 		reviewRepository.save(review);
 
 		if (request.imageUrls() != null) {
@@ -155,7 +188,7 @@ public class ReviewService {
 	}
 
 	@Transactional
-	public WriteReviewResponse update(Long userId, Long reviewId, ReviewRequest request) {
+	public WriteReviewResponse update(Long userId, Long reviewId, PlaceReviewRequest request) {
 
 		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
@@ -366,7 +399,7 @@ public class ReviewService {
 	}
 
 	//이미지 삭제
-	private void cleanupUnusedImages(List<ReviewImage> oldImages, ReviewRequest request) {
+	private void cleanupUnusedImages(List<ReviewImage> oldImages, PlaceReviewRequest request) {
 		List<String> newUrls = request.imageUrls() == null ? List.of() : request.imageUrls();
 		Set<String> deleteTargets = new HashSet<>();
 
