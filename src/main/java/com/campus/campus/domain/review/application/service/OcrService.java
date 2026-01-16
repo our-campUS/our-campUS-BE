@@ -10,9 +10,10 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
+import com.campus.campus.domain.councilpost.application.exception.PlaceInfoNotFoundException;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptItemDto;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptOcrResponse;
@@ -37,10 +38,11 @@ public class OcrService {
 	private final ReviewService reviewService;
 	private final PlaceService placeService;
 	private final ReviewMapper reviewMapper;
+	private final PlaceRepository placeRepository;
 
-	public ReviewPartnerResponse processReceipt(MultipartFile file, Long userId, SavedPlaceInfo placeInfo) {
-		Place place = placeService.findOrCreatePlace(placeInfo);
-		Long placeId = place.getPlaceId();
+	public ReviewPartnerResponse processReceipt(MultipartFile file, Long userId, Long placeId) {
+		Place place = placeRepository.findById(placeId)
+			.orElseThrow(PlaceInfoNotFoundException::new);
 
 		//MultipartFIle -> byte[]
 		byte[] imageBytes;
@@ -58,7 +60,7 @@ public class OcrService {
 		ReceiptResultDto result = extractReceiptResult(ocrResponse);
 		log.info("영수증 ocr 인식 결과:{}", result);
 
-		return reviewService.findPartnership(placeId, result, userId);
+		return reviewService.findPartnership(place.getPlaceId(), result, userId);
 	}
 
 	private ReceiptOcrResponse parse(String json) {
@@ -74,8 +76,9 @@ public class OcrService {
 	private ReceiptResultDto extractReceiptResult(ReceiptOcrResponse response) {
 		log.info("[OCR RESPONSE] images size={}",
 			response.images() != null ? response.images().size() : null);
-		//images 존재 검증
-		var image = response.images().stream()
+
+		var images = Optional.ofNullable(response.images()).orElse(List.of());
+		var image = images.stream()
 			.findFirst()
 			.orElseThrow(() -> {
 				log.warn("[OCR FAILED] images empty");

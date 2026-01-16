@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.review.application.dto.request.ReviewRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
@@ -108,11 +107,10 @@ public class ReviewController {
 	)
 	public CommonResponse<ReviewPartnerResponse> upload(
 		@RequestPart("file") MultipartFile file,
-		@RequestPart("request") SavedPlaceInfo placeInfo,
+		@RequestParam("placeId") Long placeId,
 		@CurrentUserId Long userId
 	) {
-		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS,
-			ocrService.processReceipt(file, userId, placeInfo));
+		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file, userId, placeId));
 	}
 
 	@GetMapping("/{reviewId}")
