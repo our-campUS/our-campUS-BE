@@ -44,6 +44,15 @@ public class ReviewMapper {
 			.build();
 	}
 
+	public SimpleReviewResponse toSimpleReviewResponse(Review review, String imageUrl) {
+		return SimpleReviewResponse.builder()
+			.star(review.getStar())
+			.writerName(review.getUser().getNickname())
+			.content(review.getContent())
+			.thumbnailImgUrl(imageUrl)
+			.build();
+	}
+
 	public ReviewImage createReviewImage(Review review, String imageUrl) {
 		return ReviewImage.builder()
 			.review(review)
