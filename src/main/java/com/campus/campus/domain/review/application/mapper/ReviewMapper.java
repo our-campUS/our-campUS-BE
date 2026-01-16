@@ -32,6 +32,7 @@ public class ReviewMapper {
 			.user(user)
 			.content(request.content())
 			.star(request.star())
+			.isVerified(request.isVerified())
 			.place(place)
 			.build();
 	}

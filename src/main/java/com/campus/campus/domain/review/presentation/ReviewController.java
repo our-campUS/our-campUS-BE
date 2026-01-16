@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -44,6 +45,7 @@ public class ReviewController {
 	@PostMapping
 	@Operation(
 		summary = "리뷰 작성",
+		description = "제휴 가게여서 영수증 인증을 마쳤다면 isVerified=True값으로 넘겨주세요.",
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 			required = true,
 			content = @io.swagger.v3.oas.annotations.media.Content(
@@ -88,11 +90,12 @@ public class ReviewController {
 		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
 	}
 
-	@PostMapping("/receipt-ocr")
-	@Operation(summary = "영수증 ocr을 통해 제휴 매장 이용 인증")
+	@PostMapping(value = "/receipt-ocr", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary = "영수증 ocr을 통해 제휴 매장 이용 인증",
+		description = "위 api 에러 없이 끝낸 후에 리뷰 작성 api 호출. 이때, isVerified=True라는 필드를 주면됩니다. ")
 	public CommonResponse<ReviewPartnerResponse> upload(
-		@RequestPart MultipartFile file,
-		@Valid @RequestBody SavedPlaceInfo placeInfo,
+		@RequestPart("file") MultipartFile file,
+		@RequestPart("request") SavedPlaceInfo placeInfo,
 		@CurrentUserId Long userId
 	) {
 		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS,

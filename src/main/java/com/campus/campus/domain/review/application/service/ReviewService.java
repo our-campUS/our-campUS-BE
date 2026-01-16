@@ -90,9 +90,7 @@ public class ReviewService {
 			}
 		}
 
-		// isOcrVerificationSuccess는 ocr이 성공했다고 가정하고 구현했습니다. 이는 ocr을 구현하면서 수정해주시면 됩니다.
-		boolean isOcrVerificationSuccess = true;
-		if (isOcrVerificationSuccess) {
+		if (request.isVerified()) {
 			review.verify();
 			stampService.grantStampForReview(user, review);
 		}
@@ -279,7 +277,6 @@ public class ReviewService {
 		Long collegeId = user.getCollege().getCollegeId();
 		Long schoolId = user.getSchool().getSchoolId();
 
-		//OCR 리턴 타입보고 변경해야 함
 		LocalDate paymentDateTime = result.paymentDate();
 		LocalDateTime time = paymentDateTime.atStartOfDay(); //시간은 우선 임의로
 
@@ -288,8 +285,6 @@ public class ReviewService {
 			placeId, time, majorId, collegeId, schoolId, CouncilType.MAJOR_COUNCIL,
 			CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL
 		).orElseThrow(NotPartnershipReceiptException::new);
-
-		//review isVerified 필드 true로 변경
 
 		double averageStar = getAverageOfStars(placeId);
 		return placeMapper.toReviewPartnerResponse(post, post.getPlace(), averageStar);

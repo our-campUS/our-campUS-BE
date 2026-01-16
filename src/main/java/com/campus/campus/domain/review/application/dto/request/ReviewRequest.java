@@ -26,6 +26,9 @@ public record ReviewRequest(
 
 	List<String> imageUrls,
 
+	@Schema(description = "영수증 리뷰를 하고 오면 isVerified=True로 주세요.")
+	Boolean isVerified,
+
 	@Schema(example =
 		"""
 			"placeName": "숙명여자대학교",
