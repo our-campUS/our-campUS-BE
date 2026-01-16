@@ -30,6 +30,7 @@ import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -44,40 +45,44 @@ public class ReviewController {
 	@PostMapping
 	@Operation(
 		summary = "리뷰 작성",
-		description = "제휴 가게여서 영수증 인증을 마쳤다면 isVerified=True값으로 넘겨주세요.",
+		description = "제휴 가게여서 영수증 인증을 마쳤다면 isVerified=true 값으로 넘겨주세요.",
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 			required = true,
 			content = @io.swagger.v3.oas.annotations.media.Content(
 				mediaType = "application/json",
-				examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-					name = "리뷰 작성 요청 예시",
-					summary = "리뷰 작성 Request Body",
-					value = """
-						{
-						  "content": "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.",
-						  "star": 3.5,
-						  "imageUrls": [
-						    "https://image1.jpg",
-						    "https://image2.jpg"
-						  ],
-						  "place": {
-						    "placeName": "숙명여자대학교",
-						    "placeKey": "string",
-						    "address": "서울특별시 용산구 청파로47길 99",
-						    "category": "교육,학문>대학교",
-						    "link": "https://map.naver.com/v5/search/%EC%88%99%EB%AA%85%EC%97%AC%EC%9E%90%EB%8C%80%ED%95%99%EA%B5%90",
-						    "telephone": "010-1234-1234",
-						    "coordinate": {
-						      "latitude": 37.545947,
-						      "longitude": 126.964578
-						    },
-						    "imgUrls": [
-						      "https://place-image1.jpg"
-						    ]
-						  }
-						}
-						"""
-				)
+				schema = @Schema(implementation = ReviewRequest.class),
+				examples = {
+					@io.swagger.v3.oas.annotations.media.ExampleObject(
+						name = "리뷰 작성 요청 예시",
+						summary = "영수증 인증 리뷰 작성",
+						value = """
+							{
+							  "content": "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼭꼭꼭꼭꼭꼭꼭꼮 가세요.",
+							  "star": 4.5,
+							  "imageUrls": [
+							    "https://image.campus.com/review/1.jpg",
+							    "https://image.campus.com/review/2.jpg"
+							  ],
+							  "isVerified": true,
+							  "place": {
+							    "placeName": "숙명여자대학교",
+							    "placeKey": "a9f3c0d3b1f74c8a9c2a1d9a7b3e1234",
+							    "address": "서울특별시 용산구 청파로47길 99",
+							    "category": "교육,학문>대학교",
+							    "link": "https://map.naver.com/v5/search/%EC%88%99%EB%AA%85%EC%97%AC%EC%9E%90%EB%8C%80%ED%95%99%EA%B5%90",
+							    "telephone": "02-710-9114",
+							    "coordinate": {
+							      "latitude": 37.545947,
+							      "longitude": 126.964578
+							    },
+							    "imgUrls": [
+							      "https://image.campus.com/place/1.jpg"
+							    ]
+							  }
+							}
+							"""
+					)
+				}
 			)
 		)
 	)
