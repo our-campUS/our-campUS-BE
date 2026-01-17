@@ -1,6 +1,7 @@
 package com.campus.campus.domain.place.application.mapper;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -35,8 +36,9 @@ public class PlaceMapper {
 	}
 
 	public SavedPlaceInfo toSavedPlaceInfo(NaverSearchResponse.Item item, String placeName, String placeKey,
-		String naverPlaceUrl, List<String> images) {
+		String naverPlaceUrl, List<String> images, Long placeId) {
 		return new SavedPlaceInfo(
+			placeId,
 			placeName,
 			placeKey,
 			item.address(),
@@ -203,6 +205,44 @@ public class PlaceMapper {
 		return Coordinate.fromNaver(
 			Double.parseDouble(item.mapx()),
 			Double.parseDouble(item.mapy())
+		);
+	}
+
+	public PartnershipDetailResponse toPartnershipDetailResponseFromSearch(
+		SavedPlaceInfo savedPlaceInfo,
+		Place dbPlace,
+		boolean isLiked,
+		double distance,
+		Double averageStar,
+		List<SimpleReviewResponse> reviews,
+		StudentCouncilPost activePost
+	) {
+		Long placeId = (dbPlace != null) ? dbPlace.getPlaceId() : null;
+
+		// 제휴 정보 매핑
+		boolean isPartnership = (activePost != null);
+		String partnerTitle = (activePost != null) ? activePost.getTitle() : null;
+		LocalDate endDate = (activePost != null) ? activePost.getDisplayEndDate() : null;
+		String tag = (activePost != null) ? activePost.getWriter().getCouncilName() : null;
+
+		return new PartnershipDetailResponse(
+			isPartnership,
+			placeId,
+			savedPlaceInfo.placeKey(),
+			savedPlaceInfo.placeName(),
+			savedPlaceInfo.category(),
+			savedPlaceInfo.address(),
+			savedPlaceInfo.coordinate().latitude(),
+			savedPlaceInfo.coordinate().longitude(),
+			tag,
+			isLiked,
+			(averageStar != null) ? averageStar : 0.0,
+			partnerTitle,
+			distance,
+			endDate,
+			savedPlaceInfo.imgUrls(),
+			(reviews != null) ? reviews : Collections.emptyList(),
+			(reviews != null) ? reviews.size() : 0
 		);
 	}
 }

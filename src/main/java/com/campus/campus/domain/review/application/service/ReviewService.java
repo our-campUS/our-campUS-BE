@@ -1,5 +1,7 @@
 package com.campus.campus.domain.review.application.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -314,7 +316,9 @@ public class ReviewService {
 			CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL
 		).orElseThrow(NotPartnershipReceiptException::new);
 
-		double averageStar = getAverageOfStars(placeId);
+		double rawStar = getAverageOfStars(placeId);
+		double averageStar = Math.round(rawStar * 10.0) / 10.0;
+
 		String writer = post.getWriter().getCouncilName();
 
 		boolean isLiked = likedPlacesRepository.existsByUserAndPlace(user, place);
@@ -344,7 +348,12 @@ public class ReviewService {
 		Map<Long, Double> avgMap = rows.stream()
 			.collect(Collectors.toMap(
 				PlaceStarAvgRow::placeId,
-				row -> row.avgStar() != null ? row.avgStar() : 0.0
+				row -> {
+					double val = row.avgStar() != null ? row.avgStar() : 0.0;
+					return BigDecimal.valueOf(val)
+						.setScale(1, RoundingMode.HALF_UP) // 소수점 첫째 자리까지 반올림
+						.doubleValue();
+				}
 			));
 
 		// 리뷰가 하나도 없는 placeId는 0.0으로 채움

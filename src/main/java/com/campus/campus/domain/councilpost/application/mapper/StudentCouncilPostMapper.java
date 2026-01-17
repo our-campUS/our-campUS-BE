@@ -244,6 +244,7 @@ public class StudentCouncilPostMapper {
 		}
 
 		return new SavedPlaceInfo(
+			place.getPlaceId(),
 			place.getPlaceName(),
 			place.getPlaceKey(),
 			place.getAddress(),

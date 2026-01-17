@@ -197,4 +197,19 @@ public class PlaceController {
 		placeService.suggestPartnership(userId, placeInfo);
 		return CommonResponse.success(PlaceResponseCode.PARTNERSHIP_SUGGEST_SUCCESS);
 	}
+
+	@GetMapping("/search/detailed")
+	@Operation(
+		summary = "키워드 기반 장소 상세 검색 (제휴/리뷰/좋아요 정보 포함)",
+		description = "키워드로 장소를 검색하며, DB에 데이터가 있는 경우 리뷰, 별점, 제휴 정보를 함께 반환합니다."
+	)
+	public CommonResponse<List<PartnershipDetailResponse>> searchDetailedPlaces(
+		@Parameter(description = "검색할 키워드", example = "스타벅스") @RequestParam String keyword,
+		@Parameter(description = "현재 위치의 위도", example = "37.50415") @RequestParam double lat,
+		@Parameter(description = "현재 위치의 경도", example = "126.9570") @RequestParam double lng,
+		@CurrentUserId(required = false) Long userId
+	) {
+		List<PartnershipDetailResponse> response = placeService.searchDetailedPlaces(userId, lat, lng, keyword);
+		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, response);
+	}
 }

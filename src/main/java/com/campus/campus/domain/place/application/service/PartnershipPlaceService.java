@@ -1,7 +1,5 @@
 package com.campus.campus.domain.place.application.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -33,6 +31,7 @@ import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -55,6 +54,7 @@ public class PartnershipPlaceService {
 	private final ReviewService reviewService;
 	private final PlaceRepository placeRepository;
 	private final PlaceImagesRepository placeImagesRepository;
+	private final PlaceService placeService;
 
 	@Transactional(readOnly = true)
 	public List<PartnershipDetailResponse> getPartnershipPlaces(Long userId, Long cursor, int size, double userLat,
@@ -132,6 +132,9 @@ public class PartnershipPlaceService {
 
 				double averageStar = averageStarMap.getOrDefault(post.getPlace().getPlaceId(), 0.0);
 
+				List<SimpleReviewResponse> reviews = reviewService.getReviewSummaryList(post.getPlace().getPlaceId());
+
+
 				return placeMapper.toPartnershipResponse(
 					user,
 					post,
@@ -140,7 +143,7 @@ public class PartnershipPlaceService {
 					images,
 					rounded,
 					averageStar,
-					null,
+					reviews,
 					size
 				);
 			})
@@ -297,11 +300,7 @@ public class PartnershipPlaceService {
 	}
 
 	private double calculateAverageStar(Place place) {
-		return BigDecimal.valueOf(
-				reviewService.getAverageOfStars(place.getPlaceId())
-			)
-			.setScale(1, RoundingMode.HALF_UP)
-			.doubleValue();
+		return reviewService.getAverageOfStars(place.getPlaceId());
 	}
 
 	private boolean isLiked(Place place, User user) {

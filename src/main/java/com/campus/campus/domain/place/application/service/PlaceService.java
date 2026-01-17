@@ -1,5 +1,7 @@
 package com.campus.campus.domain.place.application.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -14,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,9 +24,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.exception.AcademicInfoNotSetException;
+import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
@@ -37,6 +42,7 @@ import com.campus.campus.domain.place.application.dto.response.SearchPartnership
 import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
 import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
 import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
@@ -56,6 +62,12 @@ import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestio
 import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
+import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
+import com.campus.campus.domain.review.application.mapper.ReviewMapper;
+import com.campus.campus.domain.review.application.service.ReviewService;
+import com.campus.campus.domain.review.domain.entity.Review;
+import com.campus.campus.domain.review.domain.entity.ReviewImage;
+import com.campus.campus.domain.review.domain.repository.ReviewImageRepository;
 import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -63,6 +75,7 @@ import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
 import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
+import com.campus.campus.global.util.geocoder.GeoUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,6 +111,8 @@ public class PlaceService {
 	private final UserPartnershipSuggestionRepository userPartnershipSuggestionRepository;
 	private final CouncilPartnershipSuggestionRepository partnershipSuggestionRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
+	private final ReviewImageRepository reviewImageRepository;
+	private final ReviewMapper reviewMapper;
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		String searchWord = keyword;
@@ -140,8 +155,13 @@ public class PlaceService {
 		Map<String, Double> starMap = reviewRepository.findAverageStarsByPlaceKeys(placeKeys).stream()
 			.collect(Collectors.toMap(
 				obj -> (String)obj[0],
-				obj -> (Double)obj[1]
-			));
+				obj -> {
+					Double val = (Double)obj[1];
+					return BigDecimal.valueOf(val != null ? val : 0.0)
+						.setScale(1, RoundingMode.HALF_UP)
+						.doubleValue();
+				})
+			);
 
 		Map<String, List<SearchPartnershipInfoResponse>> partnershipMap = studentCouncilPostRepository
 			.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST)).stream()
@@ -317,6 +337,9 @@ public class PlaceService {
 			.distinct()
 			.toList();
 
+		Map<String, Long> placeIdMap = placeRepository.findByPlaceKeyIn(placeKeys).stream()
+			.collect(Collectors.toMap(Place::getPlaceKey, Place::getPlaceId));
+
 		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
 			.collect(Collectors.groupingBy(
 				PlaceImages::getPlaceKey,
@@ -324,10 +347,11 @@ public class PlaceService {
 			));
 
 		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
-			.map(response -> CompletableFuture.supplyAsync(() -> convertToSavedPlaceInfo(response, images, imageLimit),
+			.map(response -> CompletableFuture.supplyAsync(
+					() -> convertToSavedPlaceInfo(response, images, imageLimit, placeIdMap),
 					executorService)
-				.completeOnTimeout(fallback(response), 4, TimeUnit.SECONDS)
-				.exceptionally(ex -> fallback(response)))
+				.completeOnTimeout(fallback(response, placeIdMap), 4, TimeUnit.SECONDS)
+				.exceptionally(ex -> fallback(response, placeIdMap)))
 			.toList();
 
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -335,19 +359,24 @@ public class PlaceService {
 	}
 
 	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images,
-		int imageLimit) {
+		int imageLimit, Map<String, Long> placeIdMap) {
 		List<String> cached = images.getOrDefault(response.placeKey(), List.of());
 		List<String> placeImages = !cached.isEmpty()
 			? cached : googleClient.fetchImages(response.name(), response.address(), imageLimit);
 
+		Long placeId = placeIdMap.get(response.placeKey());
+
 		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
-			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages
+			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages,
+			placeId
 		);
 	}
 
-	private SavedPlaceInfo fallback(SearchCandidateResponse response) {
+	private SavedPlaceInfo fallback(SearchCandidateResponse response, Map<String, Long> placeIdMap) {
+		Long placeId = placeIdMap.get(response.placeKey());
+
 		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
-			response.naverPlaceUrl(), List.of());
+			response.naverPlaceUrl(), List.of(), placeId);
 	}
 
 	private List<StudentCouncil> resolveCouncils(User user) {
@@ -529,4 +558,101 @@ public class PlaceService {
 			.toList();
 	}
 
+	@Transactional(readOnly = true)
+	public List<PartnershipDetailResponse> searchDetailedPlaces(
+		Long userId,
+		double lat,
+		double lng,
+		String keyword
+	) {
+		// 1. 외부 API(네이버/구글)를 통해 장소 검색 (기존 로직 활용, 이미지 3장 제한)
+		List<SavedPlaceInfo> searchResults = searchByLocationAndKeyword(lat, lng, keyword, 3);
+
+		if (searchResults.isEmpty()) {
+			return List.of();
+		}
+
+		// 2. 검색된 placeKey 추출 및 DB 장소 일괄 조회
+		List<String> placeKeys = searchResults.stream()
+			.map(SavedPlaceInfo::placeKey)
+			.toList();
+
+		Map<String, Place> dbPlaceMap = placeRepository.findAllByPlaceKeyIn(placeKeys).stream()
+			.collect(Collectors.toMap(Place::getPlaceKey, Function.identity()));
+
+		// 3. 좋아요 여부 일괄 조회
+		Set<String> likedPlaceKeys = (userId != null)
+			? likedPlacesRepository.findLikedPlaceKeys(userId, placeKeys)
+			: Collections.emptySet();
+
+		LocalDateTime now = LocalDateTime.now();
+
+		// 4. 결과 조립
+		return searchResults.stream().map(info -> {
+			String key = info.placeKey();
+			Place dbPlace = dbPlaceMap.get(key);
+
+			boolean isLiked = likedPlaceKeys.contains(key);
+			Double avgStar = 0.0;
+			List<SimpleReviewResponse> reviews = Collections.emptyList();
+			StudentCouncilPost activePost = null;
+
+			// DB에 저장된 장소인 경우 상세 정보 조회
+			if (dbPlace != null) {
+				Long placeId = dbPlace.getPlaceId();
+
+				// 4-1. 평점 조회 (Repository 직접 호출)
+				avgStar = reviewRepository.findAverageStarByPlaceId(placeId).orElse(0.0);
+
+				// 4-2. 최신 리뷰 3개 조회 (Repository 직접 호출)
+				List<Review> topReviews = reviewRepository.findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(placeId);
+
+				if (!topReviews.isEmpty()) {
+					List<Long> reviewIds = topReviews.stream().map(Review::getId).toList();
+					// 리뷰 이미지 조회
+					Map<Long, String> imageMap = reviewImageRepository.findAllByReviewIdInOrderByIdAsc(reviewIds)
+						.stream()
+						.collect(Collectors.toMap(
+							img -> img.getReview().getId(),
+							ReviewImage::getImageUrl,
+							(existing, ignored) -> existing
+						));
+
+					// 변환
+					reviews = topReviews.stream()
+						.map(review -> reviewMapper.toSimpleReviewResponse(review, imageMap.get(review.getId())))
+						.toList();
+				}
+
+				// 4-3. 현재 유효한 제휴 정보 조회 (단순화: 해당 장소의 유효한 제휴 아무거나 하나)
+				// 필요 시 user의 학교/학과 정보를 필터링 조건에 추가 가능
+				List<StudentCouncilPost> posts = studentCouncilPostRepository.findPinsInBounds(
+					null, null, null, // 전체 범위
+					PostCategory.PARTNERSHIP,
+					CouncilType.MAJOR_COUNCIL, CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL,
+					-90.0, 90.0, -180.0, 180.0, // 전체 좌표 범위
+					now
+				);
+
+				// 현재 장소(placeId)와 일치하는 제휴글 필터링
+				activePost = posts.stream()
+					.filter(p -> p.getPlace().getPlaceId().equals(placeId))
+					.findFirst()
+					.orElse(null);
+			}
+
+			// 5. 거리 계산
+			double distance = GeoUtil.distanceMeter(
+				lat, lng,
+				info.coordinate().latitude(), info.coordinate().longitude()
+			);
+			double roundedDistance = Math.round(distance * 100.0) / 100.0;
+
+			// 6. 최종 매핑
+			return placeMapper.toPartnershipDetailResponseFromSearch(
+				info, dbPlace, isLiked, roundedDistance, avgStar, reviews, activePost
+			);
+
+		}).toList();
+	}
 }
