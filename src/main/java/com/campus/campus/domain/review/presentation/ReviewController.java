@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
 import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
@@ -24,10 +22,8 @@ import com.campus.campus.domain.review.application.dto.response.CursorPageReview
 import com.campus.campus.domain.review.application.dto.response.MyReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewCreateResponse;
-import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
-import com.campus.campus.domain.review.application.service.OcrService;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -43,7 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class ReviewController {
 
 	private final ReviewService reviewService;
-	private final OcrService ocrService;
+	// private final OcrService ocrService;
 
 	@PostMapping
 	@Operation(
@@ -112,25 +108,25 @@ public class ReviewController {
 		value = "/receipt-ocr",
 		consumes = MediaType.MULTIPART_FORM_DATA_VALUE
 	)
-	@Operation(
-		summary = "영수증 OCR을 통한 제휴 매장 이용 인증",
-		description = """
-			제휴 매장 리뷰 작성 전, 영수증 OCR을 통해 이용 여부를 인증하는 API입니다.
-			
-			- 제휴 매장 리뷰 작성 시 반드시 먼저 호출해야 합니다.
-			- OCR 인증이 성공적으로 완료된 후 리뷰 작성 API를 호출해주세요.
-			- 리뷰 작성 시 isVerified = true 값을 함께 전달해야 합니다.
-			- 제휴 매장이 아닌 경우에는 본 API를 호출하지 않고,
-			  리뷰 작성 API를 바로 호출하시면 됩니다.
-			"""
-	)
-	public CommonResponse<ReviewPartnerResponse> upload(
-		@RequestPart("file") MultipartFile file,
-		@RequestParam("placeId") Long placeId,
-		@CurrentUserId Long userId
-	) {
-		return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file, userId, placeId));
-	}
+	// @Operation(
+	// 	summary = "영수증 OCR을 통한 제휴 매장 이용 인증",
+	// 	description = """
+	// 		제휴 매장 리뷰 작성 전, 영수증 OCR을 통해 이용 여부를 인증하는 API입니다.
+	//
+	// 		- 제휴 매장 리뷰 작성 시 반드시 먼저 호출해야 합니다.
+	// 		- OCR 인증이 성공적으로 완료된 후 리뷰 작성 API를 호출해주세요.
+	// 		- 리뷰 작성 시 isVerified = true 값을 함께 전달해야 합니다.
+	// 		- 제휴 매장이 아닌 경우에는 본 API를 호출하지 않고,
+	// 		  리뷰 작성 API를 바로 호출하시면 됩니다.
+	// 		"""
+	// )
+	// public CommonResponse<ReviewPartnerResponse> upload(
+	// 	@RequestPart("file") MultipartFile file,
+	// 	@RequestParam("placeId") Long placeId,
+	// 	@CurrentUserId Long userId
+	// ) {
+	// 	return CommonResponse.success(ReviewResponseCode.OCR_SUCCESS, ocrService.processReceipt(file, userId, placeId));
+	// }
 
 	@GetMapping("/{reviewId}")
 	@Operation(summary = "리뷰 상세 조회")
