@@ -23,6 +23,7 @@ import com.campus.campus.domain.user.application.dto.response.UserFirstProfileRe
 import com.campus.campus.domain.user.application.dto.response.UserInfoIdsResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
 import com.campus.campus.domain.user.application.exception.AcademicInfoUpdateRestrictionException;
+import com.campus.campus.domain.user.application.exception.CauOnlyException;
 import com.campus.campus.domain.user.application.exception.NicknameAlreadyExistsException;
 import com.campus.campus.domain.user.application.exception.UserNotFirstLoginException;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -40,6 +41,7 @@ public class UserService {
 	private final SchoolRepository schoolRepository;
 	private final MajorRepository majorRepository;
 	private final UserMapper userMapper;
+	private static final Long CAU_SCHOOL_ID = 285L;
 
 	@Transactional
 	public UserFirstProfileResponse writeUserProfile(Long userId, UserProfileRequest userProfileRequest) {
@@ -48,6 +50,10 @@ public class UserService {
 
 		if (!user.isProfileNotCompleted()) {
 			throw new UserNotFirstLoginException();
+		}
+
+		if (!CAU_SCHOOL_ID.equals(userProfileRequest.schoolId())) {
+			throw new CauOnlyException();
 		}
 
 		School school = schoolRepository.findById(userProfileRequest.schoolId())
@@ -100,6 +106,10 @@ public class UserService {
 			if (LocalDateTime.now().isBefore(nextAvailableDate)) {
 				throw new AcademicInfoUpdateRestrictionException();
 			}
+		}
+
+		if (!CAU_SCHOOL_ID.equals(userAcademicRequest.schoolId())) {
+			throw new CauOnlyException();
 		}
 
 		School school = schoolRepository.findById(userAcademicRequest.schoolId())
