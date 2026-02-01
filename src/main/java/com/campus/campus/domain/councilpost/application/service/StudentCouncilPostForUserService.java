@@ -109,48 +109,32 @@ public class StudentCouncilPostForUserService {
 		return studentCouncilPostMapper.toGetPostForUserResponse(post, imageUrls, userId, isLiked);
 	}
 
-	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId,
-		Long excludePostId) {
+	public Page<PostListItemResponse> findPosts(CouncilType councilType, PostCategory category, int page, int size,
+		Long userId, Long excludePostId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
+		Long collegeId = null;
+		Long majorId = null;
 
-		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findBySchoolId(user.getSchool().getSchoolId(), category, CouncilType.SCHOOL_COUNCIL, excludePostId,
-				pageable);
+		if (CouncilType.COLLEGE_COUNCIL.equals(councilType)) {
+			if (user.isProfileNotCompleted() || user.getCollege() == null) {
+				throw new CollegeNotSetException();
+			}
+			collegeId = user.getCollege().getCollegeId();
+		}
 
-		return mapPostsWithLikes(posts, userId);
-	}
-
-	public Page<PostListItemResponse> findCollegePosts(PostCategory category, int page, int size, Long userId,
-		Long excludePostId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
-
-		if (user.isProfileNotCompleted() || user.getCollege() == null) {
-			throw new CollegeNotSetException();
+		if (CouncilType.MAJOR_COUNCIL.equals(councilType)) {
+			if (user.isProfileNotCompleted() || user.getMajor() == null) {
+				throw new MajorNotSetException();
+			}
+			majorId = user.getMajor().getMajorId();
 		}
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByCollegeId(user.getCollege().getCollegeId(), category, CouncilType.COLLEGE_COUNCIL, excludePostId,
+			.findByCouncilType(user.getSchool().getSchoolId(), councilType, collegeId, majorId, category, excludePostId,
 				pageable);
-
-		return mapPostsWithLikes(posts, userId);
-	}
-
-	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId,
-		Long excludePostId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
-
-		if (user.isProfileNotCompleted() || user.getMajor() == null) {
-			throw new MajorNotSetException();
-		}
-
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
-
-		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByMajorId(user.getMajor().getMajorId(), category, CouncilType.MAJOR_COUNCIL, excludePostId, pageable);
 
 		return mapPostsWithLikes(posts, userId);
 	}

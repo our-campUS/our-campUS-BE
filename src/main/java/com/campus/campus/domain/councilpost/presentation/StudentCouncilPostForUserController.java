@@ -58,94 +58,36 @@ public class StudentCouncilPostForUserController {
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responses);
 	}
 
-	@GetMapping("/school")
+	@GetMapping
 	@Operation(
-		summary = "학교 학생회 게시글 목록 조회",
+		summary = "학생회 타입별 게시글 목록 조회",
 		description =
-			"현재 로그인한 사용자가 속한 **학교 범위**의 학생회 게시글 목록을 조회합니다.\n\n" +
-				"### ✅ 필터/페이징\n" +
-				"- `category`를 전달하면 해당 카테고리만 조회합니다. (미전달 시 전체)\n" +
-				"- `page`는 1부터 시작합니다.\n" +
-				"- `size`는 한 페이지당 조회 개수입니다.\n\n" +
-				"### ✅ 현재 게시글 제외 조회(상세 하단 '다른 글' 용도)\n" +
-				"- `excludePostId`를 전달하면 해당 게시글 ID를 목록에서 제외하고 조회합니다.\n" +
-				"- 목록 페이지에서는 `excludePostId` 없이 호출하면 됩니다.\n\n" +
-				"### 🔎 예시\n" +
-				"- 목록 조회: `/student-council/posts/school?page=1&size=20`\n" +
-				"- 카테고리 필터: `/student-council/posts/school?category=EVENT&page=1&size=20`\n" +
-				"- 상세 하단 다른 글: `/student-council/posts/school?excludePostId=123&page=1&size=20`"
-	)
-	public CommonResponse<Page<PostListItemResponse>> getSchoolPosts(
-		@RequestParam(required = false) PostCategory category,
-		@RequestParam(defaultValue = "1") int page,
-		@RequestParam(defaultValue = "20") int size,
-		@RequestParam(required = false) Long excludePostId,
-		@CurrentUserId Long userId
-	) {
-		Page<PostListItemResponse> responseDto = postService.findSchoolPosts(category, page, size, userId,
-			excludePostId);
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
-	}
-
-	@GetMapping("/college")
-	@Operation(
-		summary = "단과대 학생회 게시글 목록 조회",
-		description =
-			"현재 로그인한 사용자가 속한 **단과대(College) 범위**의 학생회 게시글 목록을 조회합니다.\n\n" +
+			"현재 로그인한 사용자가 속한 학생회 범위의 게시글 목록을 **타입별로** 조회합니다.\n\n" +
+				"### ✅ councilType (필수)\n" +
+				"- `SCHOOL_COUNCIL` : 학교 학생회\n" +
+				"- `COLLEGE_COUNCIL` : 단과대 학생회 (단과대 정보 미설정 시 예외)\n" +
+				"- `MAJOR_COUNCIL` : 전공 학생회 (전공 정보 미설정 시 예외)\n\n" +
 				"### ✅ 필터/페이징\n" +
 				"- `category`를 전달하면 해당 카테고리만 조회합니다. (미전달 시 전체)\n" +
 				"- `page`는 1부터 시작합니다.\n" +
 				"- `size`는 한 페이지당 조회 개수입니다.\n\n" +
 				"### ✅ 현재 게시글 제외 조회(상세 하단 '다른 글' 용도)\n" +
 				"- `excludePostId`를 전달하면 해당 게시글 ID를 목록에서 제외하고 조회합니다.\n\n" +
-				"### ⚠️ 예외\n" +
-				"- 사용자가 프로필(학교/단과대 정보)을 완료하지 않았거나 단과대가 설정되어 있지 않으면 예외가 발생할 수 있습니다.\n\n" +
 				"### 🔎 예시\n" +
-				"- 목록 조회: `/student-council/posts/college?page=1&size=20`\n" +
-				"- 카테고리 필터: `/student-council/posts/college?category=PARTNERSHIP&page=1&size=20`\n" +
-				"- 상세 하단 다른 글: `/student-council/posts/college?excludePostId=123&page=1&size=20`"
+				"- 학교 목록: `?councilType=SCHOOL_COUNCIL&page=1&size=20`\n" +
+				"- 단과대 카테고리 필터: `?councilType=COLLEGE_COUNCIL&category=PARTNERSHIP&page=1&size=20`\n" +
+				"- 상세 하단 다른 글: `?councilType=MAJOR_COUNCIL&excludePostId=123&page=1&size=20`"
 	)
-	public CommonResponse<Page<PostListItemResponse>> getCollegePosts(
+	public CommonResponse<Page<PostListItemResponse>> getPosts(
+		@RequestParam CouncilType councilType,
 		@RequestParam(required = false) PostCategory category,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "20") int size,
 		@RequestParam(required = false) Long excludePostId,
 		@CurrentUserId Long userId
 	) {
-		Page<PostListItemResponse> responseDto = postService.findCollegePosts(category, page, size, userId,
+		Page<PostListItemResponse> responseDto = postService.findPosts(councilType, category, page, size, userId,
 			excludePostId);
-
-		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
-	}
-
-	@GetMapping("/major")
-	@Operation(
-		summary = "전공 학생회 게시글 목록 조회",
-		description =
-			"현재 로그인한 사용자가 속한 **전공(Major) 범위**의 학생회 게시글 목록을 조회합니다.\n\n" +
-				"### ✅ 필터/페이징\n" +
-				"- `category`를 전달하면 해당 카테고리만 조회합니다. (미전달 시 전체)\n" +
-				"- `page`는 1부터 시작합니다.\n" +
-				"- `size`는 한 페이지당 조회 개수입니다.\n\n" +
-				"### ✅ 현재 게시글 제외 조회(상세 하단 '다른 글' 용도)\n" +
-				"- `excludePostId`를 전달하면 해당 게시글 ID를 목록에서 제외하고 조회합니다.\n\n" +
-				"### ⚠️ 예외\n" +
-				"- 사용자가 프로필(학교/전공 정보)을 완료하지 않았거나 전공이 설정되어 있지 않으면 예외가 발생할 수 있습니다.\n\n" +
-				"### 🔎 예시\n" +
-				"- 목록 조회: `/student-council/posts/major?page=1&size=20`\n" +
-				"- 카테고리 필터: `/student-council/posts/major?category=EVENT&page=1&size=20`\n" +
-				"- 상세 하단 다른 글: `/student-council/posts/major?excludePostId=123&page=1&size=20`"
-	)
-	public CommonResponse<Page<PostListItemResponse>> getMajorPosts(
-		@RequestParam(required = false) PostCategory category,
-		@RequestParam(defaultValue = "1") int page,
-		@RequestParam(defaultValue = "20") int size,
-		@RequestParam(required = false) Long excludePostId,
-		@CurrentUserId Long userId
-	) {
-		Page<PostListItemResponse> responseDto = postService.findMajorPosts(category, page, size, userId,
-			excludePostId);
-
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
