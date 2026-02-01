@@ -109,120 +109,69 @@ public class StudentCouncilPostForUserService {
 		return studentCouncilPostMapper.toGetPostForUserResponse(post, imageUrls, userId, isLiked);
 	}
 
-	public Page<PostListItemResponse> findSchoolPosts(PostCategory category, int page, int size, Long userId,
-		Long excludePostId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
+	public Page<PostListItemResponse> findPosts(CouncilType councilType, PostCategory category, int page, int size,
+		Long userId, Long excludePostId) {
+		User user = userRepository.findByIdWithAcademicInfo(userId)
+			.orElseThrow(UserNotFoundException::new);
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
+		Long collegeId = null;
+		Long majorId = null;
 
-		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findBySchoolId(user.getSchool().getSchoolId(), category, CouncilType.SCHOOL_COUNCIL, excludePostId,
-				pageable);
+		if (CouncilType.COLLEGE_COUNCIL.equals(councilType)) {
+			if (user.isProfileNotCompleted() || user.getCollege() == null) {
+				throw new CollegeNotSetException();
+			}
+			collegeId = user.getCollege().getCollegeId();
+		}
 
-		return mapPostsWithLikes(posts, userId);
-	}
-
-	public Page<PostListItemResponse> findCollegePosts(PostCategory category, int page, int size, Long userId,
-		Long excludePostId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
-
-		if (user.isProfileNotCompleted() || user.getCollege() == null) {
-			throw new CollegeNotSetException();
+		if (CouncilType.MAJOR_COUNCIL.equals(councilType)) {
+			if (user.isProfileNotCompleted() || user.getMajor() == null) {
+				throw new MajorNotSetException();
+			}
+			majorId = user.getMajor().getMajorId();
 		}
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByCollegeId(user.getCollege().getCollegeId(), category, CouncilType.COLLEGE_COUNCIL, excludePostId,
+			.findByCouncilType(user.getSchool().getSchoolId(), councilType, collegeId, majorId, category, excludePostId,
 				pageable);
 
 		return mapPostsWithLikes(posts, userId);
 	}
 
-	public Page<PostListItemResponse> findMajorPosts(PostCategory category, int page, int size, Long userId,
-		Long excludePostId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
+	public Page<PostListItemResponse> findUpcomingEvents72h(CouncilType councilType, int page, int size, Long userId) {
+		User user = userRepository.findByIdWithAcademicInfo(userId)
+			.orElseThrow(UserNotFoundException::new);
 
-		if (user.isProfileNotCompleted() || user.getMajor() == null) {
-			throw new MajorNotSetException();
+		Long collegeId = null;
+		Long majorId = null;
+
+		if (CouncilType.COLLEGE_COUNCIL.equals(councilType)) {
+			if (user.isProfileNotCompleted() || user.getCollege() == null) {
+				throw new CollegeNotSetException();
+			}
+			collegeId = user.getCollege().getCollegeId();
 		}
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
-
-		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByMajorId(user.getMajor().getMajorId(), category, CouncilType.MAJOR_COUNCIL, excludePostId, pageable);
-
-		return mapPostsWithLikes(posts, userId);
-	}
-
-	public Page<PostListItemResponse> findUpcomingSchoolEvents72h(int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
+		if (CouncilType.MAJOR_COUNCIL.equals(councilType)) {
+			if (user.isProfileNotCompleted() || user.getMajor() == null) {
+				throw new MajorNotSetException();
+			}
+			majorId = user.getMajor().getMajorId();
+		}
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.ASC, "startDateTime"));
 
 		LocalDateTime now = LocalDateTime.now(KST);
 		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);
 
-		Page<StudentCouncilPost> posts = studentCouncilPostRepository.findUpcomingSchoolEvents(
+		Page<StudentCouncilPost> posts = studentCouncilPostRepository.findUpcomingEvents(
 			user.getSchool().getSchoolId(),
+			councilType,
+			collegeId,
+			majorId,
 			PostCategory.EVENT,
-			CouncilType.SCHOOL_COUNCIL,
-			now,
-			limit,
-			pageable
-		);
-
-		return mapPostsWithLikes(posts, userId);
-	}
-
-	public Page<PostListItemResponse> findUpcomingCollegeEvents72h(int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
-
-		if (user.isProfileNotCompleted() || user.getCollege() == null) {
-			throw new CollegeNotSetException();
-		}
-
-		Pageable pageable = PageRequest.of(
-			Math.max(page - 1, 0),
-			size,
-			Sort.by(Sort.Direction.ASC, "startDateTime")
-		);
-
-		LocalDateTime now = LocalDateTime.now(KST);
-		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);
-
-		Page<StudentCouncilPost> posts = studentCouncilPostRepository.findUpcomingCollegeEvents(
-			user.getCollege().getCollegeId(),
-			PostCategory.EVENT,
-			CouncilType.COLLEGE_COUNCIL,
-			now,
-			limit,
-			pageable
-		);
-
-		return mapPostsWithLikes(posts, userId);
-	}
-
-	public Page<PostListItemResponse> findUpcomingMajorEvents72h(int page, int size, Long userId) {
-		User user = userRepository.findByIdWithAcademicInfo(userId).orElseThrow(UserNotFoundException::new);
-
-		if (user.isProfileNotCompleted() || user.getMajor() == null) {
-			throw new MajorNotSetException();
-		}
-
-		Pageable pageable = PageRequest.of(
-			Math.max(page - 1, 0),
-			size,
-			Sort.by(Sort.Direction.ASC, "startDateTime")
-		);
-
-		LocalDateTime now = LocalDateTime.now(KST);
-		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);
-
-		Page<StudentCouncilPost> posts = studentCouncilPostRepository.findUpcomingMajorEvents(
-			user.getMajor().getMajorId(),
-			PostCategory.EVENT,
-			CouncilType.MAJOR_COUNCIL,
 			now,
 			limit,
 			pageable
