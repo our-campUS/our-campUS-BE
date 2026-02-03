@@ -15,12 +15,15 @@ import jakarta.validation.constraints.NotNull;
 
 public record PostRequest(
 
+	@Schema(description = "게시글 카테고리", example = "EVENT")
 	@NotNull
 	PostCategory category,
 
+	@Schema(description = "게시글 이름", example = "중간고사 간식생사")
 	@NotBlank
 	String title,
 
+	@Schema(description = "게시글 내용", example = "중간고사 간식행사 진행합니다.")
 	@NotBlank
 	String content,
 
@@ -48,19 +51,23 @@ public record PostRequest(
 	@Schema(description = "상세 장소 (예: 310관 B301호)", example = "310관 B301호") // 추가됨
 	String detailedLocation,
 
-	@Schema(example = "2025-04-10T18:00")
+	@Schema(description = "시작 시간", example = "2025-04-10T18:00")
 	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
 	LocalDateTime startDateTime,
 
-	@Schema(example = "2025-04-30T23:59")
+	@Schema(description = "행사/게시글 종료 시간", example = "2025-04-30T23:59")
 	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
 	LocalDateTime endDateTime,
 
 	// 썸네일 (둘 중 하나는 필수)
+	@Schema(description = "썸네일 image url", example = "https://www.example.com.png")
 	String thumbnailImageUrl,
+
+	@Schema(description = "썸네일 아이콘", example = "FOOD")
 	ThumbnailIcon thumbnailIcon,
 
 	// 본문 이미지들
+	@Schema(description = "게시글 image urls")
 	List<String> imageUrls
 ) {
 }

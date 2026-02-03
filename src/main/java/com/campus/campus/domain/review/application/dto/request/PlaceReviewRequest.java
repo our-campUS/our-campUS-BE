@@ -15,13 +15,13 @@ public record PlaceReviewRequest(
 
 	@NotNull
 	@Size(min = 10, message = "리뷰 내용은 최소 10자 이상이어야 합니다.")
-	@Schema(example = "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.")
+	@Schema(description = "리뷰 내용", example = "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.")
 	String content,
 
 	@NotNull
 	@DecimalMin(value = "0.0", inclusive = true)
 	@DecimalMax(value = "5.0", inclusive = true)
-	@Schema(example = "3.5")
+	@Schema(description = "평점", example = "3.5")
 	Double star,
 
 	List<String> imageUrls,

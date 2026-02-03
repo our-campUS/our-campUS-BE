@@ -11,18 +11,19 @@ import jakarta.validation.constraints.Size;
 public record PartnershipReviewRequest(
 	@NotNull
 	@Size(min = 10, message = "리뷰 내용은 최소 10자 이상이어야 합니다.")
-	@Schema(example = "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.")
+	@Schema(description = "리뷰 내용", example = "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.")
 	String content,
 
 	@NotNull
 	@DecimalMin(value = "0.0", inclusive = true)
 	@DecimalMax(value = "5.0", inclusive = true)
-	@Schema(example = "3.5")
+	@Schema(description = "평점", example = "3.5")
 	Double star,
 
-	@Schema(description = "영수증 리뷰를 하고 오면 isVerified=True로 주세요.")
+	@Schema(description = "ocr 인증 여부", example = "true")
 	Boolean isVerified,
 
+	@Schema(description = "리뷰 이미지")
 	List<String> imageUrls
 ) {
 }
