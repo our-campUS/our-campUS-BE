@@ -2,8 +2,6 @@ package com.campus.campus.domain.place.application.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -40,15 +38,12 @@ import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchCandidateResponse;
 import com.campus.campus.domain.place.application.dto.response.SearchPartnershipInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
-import com.campus.campus.domain.place.application.dto.response.geocoder.AddressResponse;
-import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.dto.response.kakao.KakaoSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
-import com.campus.campus.domain.place.application.exception.NaverMapAPIException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.util.PlaceKeyGenerator;
-import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
@@ -59,12 +54,10 @@ import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
-import com.campus.campus.domain.place.infrastructure.geocoder.GeoCoderClient;
 import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
-import com.campus.campus.domain.place.infrastructure.naver.NaverMapClient;
+import com.campus.campus.domain.place.infrastructure.kakao.KakaoLocalClient;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
-import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
 import com.campus.campus.domain.review.domain.repository.ReviewImageRepository;
@@ -95,7 +88,7 @@ public class PlaceService {
 	private static final LocalTime BAR_END = LocalTime.of(23, 30);
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
-	private final NaverMapClient naverMapClient;
+	private final KakaoLocalClient kakaoLocalClient;
 	private final PlaceMapper placeMapper;
 	private final PlaceRepository placeRepository;
 	private final GooglePlaceClient googleClient;
@@ -106,7 +99,6 @@ public class PlaceService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
-	private final GeoCoderClient geoCoderClient;
 	private final ReviewRepository reviewRepository;
 	private final UserPartnershipSuggestionRepository userPartnershipSuggestionRepository;
 	private final CouncilPartnershipSuggestionRepository partnershipSuggestionRepository;
@@ -115,25 +107,11 @@ public class PlaceService {
 	private final ReviewMapper reviewMapper;
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
-		String searchWord = keyword;
+		log.info("카카오 좌표 기반 검색: lat={}, lng={}, keyword={}", lat, lng, keyword);
 
-		try {
-			AddressResponse addressResponse = geoCoderClient.getAddress(lat, lng);
-			String nowAddress = toStringAddress(addressResponse);
-
-			if (nowAddress != null && !nowAddress.isBlank()) {
-				searchWord = nowAddress + " " + keyword;
-				log.info("nowAddress={}", nowAddress);
-			}
-		} catch (Exception e) {
-			log.warn("지오코딩 변환 실패 (좌표: {}, {}). 사유: {}", lat, lng, e.getMessage());
-		}
-
-		log.info("최종 검색어(searchWord)={}", searchWord);
-
-		//네이버에서 특정 장소 기본정보 받아오기
-		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(searchWord, 5);
-		return processSearchResults(naverSearchResponse, imageLimit);
+		// 카카오 로컬 API로 좌표 기반 검색 (반경 2km, 거리순 정렬)
+		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, lat, lng, 2000, 5);
+		return processSearchResults(kakaoSearchResponse, imageLimit);
 	}
 
 	public List<SearchPlaceInfoResponse> searchByLocationAndKeywordWithInfo(Long userId, double lat, double lng,
@@ -182,9 +160,9 @@ public class PlaceService {
 	}
 
 	public List<SavedPlaceInfo> searchByKeyword(String keyword, int imageLimit) {
-		NaverSearchResponse naverSearchResponse = naverMapClient.searchPlaces(keyword, 5);
+		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, 5);
 
-		return processSearchResults(naverSearchResponse, imageLimit);
+		return processSearchResults(kakaoSearchResponse, imageLimit);
 	}
 
 	public Place findOrCreatePlace(SavedPlaceInfo place) {
@@ -321,14 +299,14 @@ public class PlaceService {
 		}
 	}
 
-	private List<SavedPlaceInfo> processSearchResults(NaverSearchResponse naverSearchResponse, int imageLimit) {
-		List<SearchCandidateResponse> candidates = naverSearchResponse.items().stream()
-			.map(item -> {
-				String name = stripHtml(item.title());
-				String address = item.roadAddress();
+	private List<SavedPlaceInfo> processSearchResults(KakaoSearchResponse kakaoSearchResponse, int imageLimit) {
+		List<SearchCandidateResponse> candidates = kakaoSearchResponse.documents().stream()
+			.map(document -> {
+				String name = document.placeName();
+				String address = document.roadAddressName();
 				String placeKey = PlaceKeyGenerator.generate(name, address);
-				String naverPlaceUrl = buildNaverPlaceUrl(item);
-				return new SearchCandidateResponse(item, name, address, placeKey, naverPlaceUrl);
+				String placeUrl = document.placeUrl();
+				return new SearchCandidateResponse(document, name, address, placeKey, placeUrl);
 			})
 			.toList();
 
@@ -366,8 +344,8 @@ public class PlaceService {
 
 		Long placeId = placeIdMap.get(response.placeKey());
 
-		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
-			response.naverPlaceUrl(), placeImages == null ? List.of() : placeImages,
+		return placeMapper.toSavedPlaceInfo(response.document(), response.name(), response.placeKey(),
+			response.placeUrl(), placeImages == null ? List.of() : placeImages,
 			placeId
 		);
 	}
@@ -375,8 +353,8 @@ public class PlaceService {
 	private SavedPlaceInfo fallback(SearchCandidateResponse response, Map<String, Long> placeIdMap) {
 		Long placeId = placeIdMap.get(response.placeKey());
 
-		return placeMapper.toSavedPlaceInfo(response.item(), response.name(), response.placeKey(),
-			response.naverPlaceUrl(), List.of(), placeId);
+		return placeMapper.toSavedPlaceInfo(response.document(), response.name(), response.placeKey(),
+			response.placeUrl(), List.of(), placeId);
 	}
 
 	private List<StudentCouncil> resolveCouncils(User user) {
@@ -410,35 +388,6 @@ public class PlaceService {
 		return text.replaceAll("<[^>]*>", "");
 	}
 
-	private String buildNaverPlaceUrl(NaverSearchResponse.Item item) {
-		String link = item.link();
-		if (link != null && !link.isBlank()) {
-			String normalized = normalizeNaverMapLink(link);
-			if (normalized != null) {
-				return normalized;
-			}
-		}
-
-		try {
-			Coordinate coordinate = placeMapper.toCoordinate(item);
-			return String.format(
-				"https://map.naver.com/v5/search/%s?c=%f,%f,15,0,0,0,dh",
-				URLEncoder.encode(stripHtml(item.title()), StandardCharsets.UTF_8),
-				coordinate.latitude(),
-				coordinate.longitude()
-			);
-		} catch (Exception e) {
-			throw new NaverMapAPIException();
-		}
-	}
-
-	private String normalizeNaverMapLink(String link) {
-		String trimmed = link.trim();
-		if (trimmed.contains("naver.com") || trimmed.contains("naver.me")) {
-			return trimmed.replace("http://", "https://");
-		}
-		return null;
-	}
 
 	private void migrateImagesToOci(String placeKey, List<String> imageUrls) {
 		if (imageUrls == null || imageUrls.isEmpty()) {
@@ -469,13 +418,6 @@ public class PlaceService {
 		}
 	}
 
-	private String toStringAddress(AddressResponse nowAddress) {
-		return nowAddress.getResponse().getResult().stream()
-			.filter(r -> "road".equalsIgnoreCase(r.getType()) || "parcel".equalsIgnoreCase(r.getType()))
-			.findFirst()
-			.map(AddressResponse.Result::getText)
-			.orElse(null);
-	}
 
 	private boolean isLunchTime(LocalTime now) {
 		return !now.isBefore(LUNCH_START) && now.isBefore(LUNCH_END);
