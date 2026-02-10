@@ -19,6 +19,7 @@ import com.campus.campus.domain.user.application.dto.request.ChangeUserAcademicR
 import com.campus.campus.domain.user.application.dto.request.UserProfileRequest;
 import com.campus.campus.domain.user.application.dto.response.ChangeProfileImageResponse;
 import com.campus.campus.domain.user.application.dto.response.ChangeUserAcademicResponse;
+import com.campus.campus.domain.user.application.dto.response.UserProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoIdsResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
@@ -130,6 +131,13 @@ public class UserService {
 			.orElseThrow(UserNotFoundException::new);
 
 		return userMapper.toUserInfoIdsResponse(user);
+	}
+
+	public UserProfileResponse getUserProfile(Long userId) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		return userMapper.toUserProfileResponse(user);
 	}
 
 }
