@@ -50,4 +50,7 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 	Optional<StudentCouncil> findByCollege_CollegeIdAndDeletedAtIsNull(Long collegeId);
 
 	Optional<StudentCouncil> findBySchool_SchoolIdAndDeletedAtIsNull(Long schoolId);
+
+	Optional<StudentCouncil> findByIdAndDeletedAtIsNull(Long councilId);
+
 }

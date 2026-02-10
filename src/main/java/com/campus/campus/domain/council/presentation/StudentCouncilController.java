@@ -1,6 +1,7 @@
 package com.campus.campus.domain.council.presentation;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import com.campus.campus.domain.council.application.dto.request.StudentCouncilCh
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilNicknameRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilChangeProfileImageResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilProfileResponse;
 import com.campus.campus.domain.council.application.service.CouncilService;
 import com.campus.campus.global.annotation.CurrentCouncilId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -64,5 +66,12 @@ public class StudentCouncilController {
 			studentCouncilChangeProfileImageRequest);
 
 		return CommonResponse.success(StudentCouncilResponseCode.CHANGE_PROFILE_IMAGE_SUCCESS, response);
+	}
+
+	@GetMapping("/profile")
+	@Operation(summary = "학생회 프로필 조회(닉네임, 프로필 이미지)")
+	public CommonResponse<StudentCouncilProfileResponse> getCouncilProfile(@CurrentCouncilId Long councilId) {
+		StudentCouncilProfileResponse res = councilService.getCouncilProfile(councilId);
+		return CommonResponse.success(StudentCouncilResponseCode.GET_COUNCIL_PROFILE_SUCCESS, res);
 	}
 }

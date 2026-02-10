@@ -9,6 +9,7 @@ import com.campus.campus.domain.council.application.dto.request.StudentCouncilCh
 import com.campus.campus.domain.council.application.dto.request.StudentCouncilNicknameRequest;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilChangeProfileImageResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilProfileResponse;
 import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.NewPasswordConfirmNotMatchException;
 import com.campus.campus.domain.council.application.exception.NewPasswordIsCurrentPasswordException;
@@ -119,5 +120,12 @@ public class CouncilService {
 		}
 
 		return emailVerification;
+	}
+
+	public StudentCouncilProfileResponse getCouncilProfile(Long councilId) {
+		StudentCouncil council = studentCouncilRepository.findByIdAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		return StudentCouncilMapper.toStudentCouncilProfileResponse(council);
 	}
 }
