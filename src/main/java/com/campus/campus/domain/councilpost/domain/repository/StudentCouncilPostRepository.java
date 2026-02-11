@@ -97,6 +97,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN p.writer w
+		LEFT JOIN p.place pl
 		LEFT JOIN w.college c
 		LEFT JOIN w.major m
 		WHERE w.school.schoolId = :schoolId
@@ -106,14 +107,27 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		  AND (:category IS NULL OR p.category = :category)
 		  AND (:excludePostId IS NULL OR p.id <> :excludePostId)
 		  AND w.deletedAt IS NULL
+		  AND (:keyword IS NULL OR :keyword = '' OR (
+				  REPLACE(p.title, ' ', '') LIKE %:keyword%
+				  OR REPLACE(pl.placeName, ' ', '') LIKE %:keyword%
+				  ))
+		 	ORDER BY 
+			(CASE
+				WHEN :keyword IS NULL OR :keyword = '' THEN 3
+				WHEN REPLACE(p.title, ' ', '') LIKE %:keyword% THEN	1
+				WHEN REPLACE(pl.placeName, ' ', '') LIKE %:keyword% THEN 2
+				ELSE 3
+			END) ASC,
+			p.startDateTime ASC
 		""")
-	Page<StudentCouncilPost> findByCouncilType(
+	Page<StudentCouncilPost> findPostsByFilters(
 		@Param("schoolId") Long schoolId,
 		@Param("councilType") CouncilType councilType,
 		@Param("collegeId") Long collegeId,
 		@Param("majorId") Long majorId,
 		@Param("category") PostCategory category,
 		@Param("excludePostId") Long excludePostId,
+		@Param("keyword") String keyword,
 		Pageable pageable
 	);
 
