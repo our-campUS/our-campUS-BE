@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
@@ -109,8 +110,8 @@ public class StudentCouncilPostForUserService {
 		return studentCouncilPostMapper.toGetPostForUserResponse(post, imageUrls, userId, isLiked);
 	}
 
-	public Page<PostListItemResponse> findPosts(CouncilType councilType, PostCategory category, int page, int size,
-		Long userId, Long excludePostId) {
+	public Page<PostListItemResponse> findPosts(CouncilType councilType, PostCategory category, String keyword,
+		int page, int size, Long userId, Long excludePostId) {
 		User user = userRepository.findByIdWithAcademicInfo(userId)
 			.orElseThrow(UserNotFoundException::new);
 
@@ -131,11 +132,15 @@ public class StudentCouncilPostForUserService {
 			majorId = user.getMajor().getMajorId();
 		}
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.DESC, "startDateTime"));
+		String cleanKeyword = (StringUtils.hasText(keyword))
+			? keyword.replaceAll("\\s", "")
+			: null;
+
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
 
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
-			.findByCouncilType(user.getSchool().getSchoolId(), councilType, collegeId, majorId, category, excludePostId,
-				pageable);
+			.findPostsByFilters(user.getSchool().getSchoolId(), councilType, collegeId, majorId, category,
+				excludePostId, cleanKeyword, pageable);
 
 		return mapPostsWithLikes(posts, userId);
 	}
