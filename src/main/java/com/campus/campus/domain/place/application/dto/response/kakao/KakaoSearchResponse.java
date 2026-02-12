@@ -23,6 +23,10 @@ public record KakaoSearchResponse(
 		@JsonProperty("category_name")
 		String categoryName,
 
+		@Schema(description = "카테고리 그룹명 (정형화된 카테고리)", example = "카페")
+		@JsonProperty("category_group_name")
+		String categoryGroupName,
+
 		@Schema(description = "지번 주소", example = "서울특별시 강남구 역삼동 123")
 		@JsonProperty("address_name")
 		String addressName,

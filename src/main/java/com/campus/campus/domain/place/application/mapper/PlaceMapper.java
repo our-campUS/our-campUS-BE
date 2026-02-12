@@ -46,7 +46,7 @@ public class PlaceMapper {
 			placeName,
 			placeKey,
 			unifiedAddress,
-			document.categoryName(),
+			document.categoryGroupName(),
 			placeUrl,
 			document.phone(),
 			toCoordinate(document),

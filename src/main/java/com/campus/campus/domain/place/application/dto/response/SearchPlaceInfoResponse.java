@@ -20,8 +20,7 @@ public record SearchPlaceInfoResponse(
 	@NotBlank
 	String address,
 
-	@Schema(description = "장소 카테고리", example = "교육,학문>대학교")
-	@NotBlank
+	@Schema(description = "장소 카테고리 (category_group_name, 없으면 null)", example = "카페")
 	String category,
 
 	@Schema(description = "장소 상세 정보 네이버 페이지 하이퍼링크")
