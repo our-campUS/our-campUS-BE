@@ -71,7 +71,7 @@ public class Inquiry extends BaseEntity {
 	}
 
 	public String getWriterType() {
-		return (this.writer != null) ? "USER" : "STUDENT_COUNCIL";
+		return (this.writer != null) ? this.writerType.name() : null;
 	}
 
 	public void updateAnswer(String answer) {
