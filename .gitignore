@@ -38,3 +38,6 @@ src/main/resources/oci
 
 ### VS Code ###
 .vscode/
+
+### Firebase ###
+**/firebase/*.json
