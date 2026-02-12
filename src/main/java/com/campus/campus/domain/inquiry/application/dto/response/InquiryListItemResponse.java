@@ -9,7 +9,10 @@ public record InquiryListItemResponse(
 	Long id,
 
 	@Schema(description = "작성자 ID", example = "2")
-	Long userId,
+	Long writerId,
+
+	@Schema(description = "작성자 타입", example = "USER || STUDENT_COUNCIL")
+	String writerType,
 
 	@Schema(description = "문의 제목", example = "서비스 문의 드려요")
 	String title,

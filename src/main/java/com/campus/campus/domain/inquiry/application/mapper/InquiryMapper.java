@@ -2,6 +2,7 @@ package com.campus.campus.domain.inquiry.application.mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.inquiry.application.dto.request.InquiryCreateRequest;
 import com.campus.campus.domain.inquiry.application.dto.response.InquiryCreateResponse;
 import com.campus.campus.domain.inquiry.application.dto.response.InquiryListItemResponse;
@@ -22,10 +23,19 @@ public class InquiryMapper {
 			.build();
 	}
 
+	public Inquiry createInquiry(StudentCouncil council, InquiryCreateRequest dto) {
+		return Inquiry.builder()
+			.studentCouncilWriter(council)
+			.title(dto.title())
+			.content(dto.content())
+			.build();
+	}
+
 	public InquiryCreateResponse toInquiryCreateResponse(Inquiry inquiry) {
 		return new InquiryCreateResponse(
 			inquiry.getId(),
-			inquiry.getWriter().getId(),
+			inquiry.getWriterId(),
+			inquiry.getWriterType(),
 			inquiry.getTitle(),
 			inquiry.getContent(),
 			inquiry.getStatus().name(),
@@ -36,13 +46,14 @@ public class InquiryMapper {
 	public InquiryListItemResponse toInquiryListItemResponse(Inquiry inquiry) {
 		return new InquiryListItemResponse(
 			inquiry.getId(),
-			inquiry.getWriter().getId(),
+			inquiry.getWriterId(),
+			inquiry.getWriterType(),
 			inquiry.getTitle(),
 			inquiry.getContent(),
 			inquiry.getStatus().name(),
 			inquiry.getAnswer(),
 			inquiry.getCreatedAt(),
-			inquiry.getUpdatedAt()
+			inquiry.getAnsweredAt()
 		);
 	}
 }
