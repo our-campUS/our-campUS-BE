@@ -1,0 +1,34 @@
+package com.campus.campus.domain.inquiry.application.mapper;
+
+import org.springframework.stereotype.Component;
+
+import com.campus.campus.domain.inquiry.application.dto.request.InquiryCreateRequest;
+import com.campus.campus.domain.inquiry.application.dto.response.InquiryCreateResponse;
+import com.campus.campus.domain.inquiry.domain.entity.Inquiry;
+import com.campus.campus.domain.user.domain.entity.User;
+
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class InquiryMapper {
+
+	public Inquiry createInquiry(User writer, InquiryCreateRequest dto) {
+		return Inquiry.builder()
+			.writer(writer)
+			.title(dto.title())
+			.content(dto.content())
+			.build();
+	}
+
+	public InquiryCreateResponse toInquiryCreateResponse(Inquiry inquiry) {
+		return new InquiryCreateResponse(
+			inquiry.getId(),
+			inquiry.getWriter().getId(),
+			inquiry.getTitle(),
+			inquiry.getContent(),
+			inquiry.getStatus().name(),
+			inquiry.getCreatedAt()
+		);
+	}
+}
