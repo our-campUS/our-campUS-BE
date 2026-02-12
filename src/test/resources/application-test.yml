@@ -37,9 +37,6 @@ map:
   naver:
     client-id: dummy
     client-secret: dummy
-  google:
-    places:
-      api-key: dummy
   geocoder:
     api-key: dummy
 
