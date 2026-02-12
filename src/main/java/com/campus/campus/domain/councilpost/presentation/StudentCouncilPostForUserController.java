@@ -19,7 +19,6 @@ import com.campus.campus.domain.councilpost.application.dto.response.LikePostRes
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.TodayEventResponse;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostForUserService;
-import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -37,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StudentCouncilPostForUserController {
 	private final StudentCouncilPostForUserService postService;
-	private final StudentCouncilPostService studentCouncilPostService;
 
 	@PostMapping("/{postId}/like")
 	@Operation(summary = "학생회 게시글 좋아요 토글")
