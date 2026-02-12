@@ -1,10 +1,13 @@
 package com.campus.campus.domain.inquiry.application.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.inquiry.application.dto.request.InquiryCreateRequest;
 import com.campus.campus.domain.inquiry.application.dto.response.InquiryCreateResponse;
+import com.campus.campus.domain.inquiry.application.dto.response.InquiryListItemResponse;
 import com.campus.campus.domain.inquiry.application.mapper.InquiryMapper;
 import com.campus.campus.domain.inquiry.domain.entity.Inquiry;
 import com.campus.campus.domain.inquiry.domain.repository.InquiryRepository;
@@ -30,5 +33,15 @@ public class InquiryService {
 		Inquiry savedInquiry = inquiryRepository.save(inquiry);
 
 		return inquiryMapper.toInquiryCreateResponse(savedInquiry);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<InquiryListItemResponse> getMyInquiries(Long userId, Pageable pageable) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Page<Inquiry> inquiries = inquiryRepository.findAllByWriterOrderByCreatedAtDesc(user, pageable);
+
+		return inquiries.map(inquiryMapper::toInquiryListItemResponse);
 	}
 }

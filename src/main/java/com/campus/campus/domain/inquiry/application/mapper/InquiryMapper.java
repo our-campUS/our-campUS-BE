@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.inquiry.application.dto.request.InquiryCreateRequest;
 import com.campus.campus.domain.inquiry.application.dto.response.InquiryCreateResponse;
+import com.campus.campus.domain.inquiry.application.dto.response.InquiryListItemResponse;
 import com.campus.campus.domain.inquiry.domain.entity.Inquiry;
 import com.campus.campus.domain.user.domain.entity.User;
 
@@ -29,6 +30,19 @@ public class InquiryMapper {
 			inquiry.getContent(),
 			inquiry.getStatus().name(),
 			inquiry.getCreatedAt()
+		);
+	}
+
+	public InquiryListItemResponse toInquiryListItemResponse(Inquiry inquiry) {
+		return new InquiryListItemResponse(
+			inquiry.getId(),
+			inquiry.getWriter().getId(),
+			inquiry.getTitle(),
+			inquiry.getContent(),
+			inquiry.getStatus().name(),
+			inquiry.getAnswer(),
+			inquiry.getCreatedAt(),
+			inquiry.getUpdatedAt()
 		);
 	}
 }
