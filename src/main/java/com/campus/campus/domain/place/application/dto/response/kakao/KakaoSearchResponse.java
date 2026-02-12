@@ -12,6 +12,9 @@ public record KakaoSearchResponse(
 ) {
 
 	public record Document(
+		@Schema(description = "장소 ID", example = "18577297")
+		String id,
+
 		@Schema(description = "장소명", example = "스타벅스 강남점")
 		@JsonProperty("place_name")
 		String placeName,

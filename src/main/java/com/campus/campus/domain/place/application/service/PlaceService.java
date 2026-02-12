@@ -43,7 +43,6 @@ import com.campus.campus.domain.place.application.dto.response.partnership.Partn
 import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
-import com.campus.campus.domain.place.application.util.PlaceKeyGenerator;
 import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
@@ -285,8 +284,10 @@ public class PlaceService {
 		List<SearchCandidateResponse> candidates = kakaoSearchResponse.documents().stream()
 			.map(document -> {
 				String name = document.placeName();
-				String address = document.roadAddressName();
-				String placeKey = PlaceKeyGenerator.generate(name, address);
+				String address = (document.roadAddressName() != null && !document.roadAddressName().isBlank())
+					? document.roadAddressName()
+					: document.addressName();
+				String placeKey = document.id();
 				String placeUrl = document.placeUrl();
 				return new SearchCandidateResponse(document, name, address, placeKey, placeUrl);
 			})
