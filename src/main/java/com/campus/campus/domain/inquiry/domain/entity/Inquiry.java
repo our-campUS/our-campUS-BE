@@ -2,6 +2,7 @@ package com.campus.campus.domain.inquiry.domain.entity;
 
 import java.time.LocalDateTime;
 
+import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.global.entity.BaseEntity;
 
@@ -38,6 +39,13 @@ public class Inquiry extends BaseEntity {
 	@JoinColumn(name = "user_id")
 	private User writer;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "student_council_id")
+	private StudentCouncil studentCouncilWriter;
+
+	@Enumerated(EnumType.STRING)
+	private WriterType writerType;
+
 	private String title;
 
 	@Column(columnDefinition = "TEXT")
@@ -51,6 +59,20 @@ public class Inquiry extends BaseEntity {
 	private String answer;
 
 	private LocalDateTime answeredAt;
+
+	public Long getWriterId() {
+		if (this.writer != null) {
+			return this.writer.getId();
+		}
+		if (this.studentCouncilWriter != null) {
+			return this.studentCouncilWriter.getId();
+		}
+		return null;
+	}
+
+	public String getWriterType() {
+		return (this.writer != null) ? "USER" : "STUDENT_COUNCIL";
+	}
 
 	public void updateAnswer(String answer) {
 		this.answer = answer;
