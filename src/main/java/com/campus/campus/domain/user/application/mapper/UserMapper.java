@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.user.application.dto.response.ChangeProfileImageResponse;
 import com.campus.campus.domain.user.application.dto.response.ChangeUserAcademicResponse;
+import com.campus.campus.domain.user.application.dto.response.UserProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoIdsResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
@@ -14,6 +15,15 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class UserMapper {
+
+	public UserProfileResponse toUserProfileResponse(User user) {
+		return new UserProfileResponse(
+			user.getId(),
+			user.getCampusNickname(),
+			user.getProfileImage()
+		);
+	}
+
 	public User createUser(Long kakaoId, String nickname, String email, String profileImage) {
 		return User.builder()
 			.kakaoId(kakaoId)

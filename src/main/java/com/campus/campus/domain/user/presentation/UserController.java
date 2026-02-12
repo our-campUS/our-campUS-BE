@@ -15,6 +15,7 @@ import com.campus.campus.domain.user.application.dto.response.ChangeUserAcademic
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoIdsResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
+import com.campus.campus.domain.user.application.dto.response.UserProfileResponse;
 import com.campus.campus.domain.user.application.service.UserService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
@@ -79,6 +80,13 @@ public class UserController {
 	public CommonResponse<UserInfoIdsResponse> getUserInfoIdsInfo(@CurrentUserId Long userId) {
 		UserInfoIdsResponse res = userService.getUserInfoIds(userId);
 		return CommonResponse.success(UserResponseCode.GET_USER_INFO_SUCCESS, res);
+	}
+
+	@GetMapping("/profile")
+	@Operation(summary = "마이페이지 프로필 조회(닉네임, 프로필 이미지)")
+	public CommonResponse<UserProfileResponse> getUserProfile(@CurrentUserId Long userId) {
+		UserProfileResponse res = userService.getUserProfile(userId);
+		return CommonResponse.success(UserResponseCode.GET_USER_PROFILE_SUCCESS, res);
 	}
 
 }

@@ -7,6 +7,7 @@ import com.campus.campus.domain.council.application.dto.response.StudentCouncilC
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilFindIdResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilLoginResponse;
 import com.campus.campus.domain.council.application.dto.response.StudentCouncilNicknameResponse;
+import com.campus.campus.domain.council.application.dto.response.StudentCouncilProfileResponse;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
@@ -75,6 +76,14 @@ public class StudentCouncilMapper {
 			studentCouncil.getId(),
 			studentCouncil.getCouncilName(),
 			studentCouncil.getCouncilProfileImageUrl()
+		);
+	}
+
+	public static StudentCouncilProfileResponse toStudentCouncilProfileResponse(StudentCouncil council) {
+		return new StudentCouncilProfileResponse(
+			council.getId(),
+			council.getCouncilNickname(),
+			council.getCouncilProfileImageUrl()
 		);
 	}
 }
