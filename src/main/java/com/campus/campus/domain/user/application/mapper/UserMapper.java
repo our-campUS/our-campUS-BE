@@ -19,7 +19,7 @@ public class UserMapper {
 	public UserProfileResponse toUserProfileResponse(User user) {
 		return new UserProfileResponse(
 			user.getId(),
-			user.getNickname(),
+			user.getCampusNickname(),
 			user.getProfileImage()
 		);
 	}

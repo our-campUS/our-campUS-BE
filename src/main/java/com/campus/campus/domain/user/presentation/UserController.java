@@ -89,5 +89,4 @@ public class UserController {
 		return CommonResponse.success(UserResponseCode.GET_USER_PROFILE_SUCCESS, res);
 	}
 
-
 }
