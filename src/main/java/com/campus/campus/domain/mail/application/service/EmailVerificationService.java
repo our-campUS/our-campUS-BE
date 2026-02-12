@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.mail.application.dto.request.EmailVerificationConfirmRequest;
+import com.campus.campus.domain.mail.application.exception.CauEmailRequiredException;
 import com.campus.campus.domain.mail.application.exception.EmailVerificationNotFoundException;
-import com.campus.campus.domain.mail.application.exception.InvalidSchoolEmailException;
 import com.campus.campus.domain.mail.application.exception.VerificationCodeExpiredException;
 import com.campus.campus.domain.mail.application.exception.VerificationCodeNotMatchException;
 import com.campus.campus.domain.mail.application.mapper.EmailVerificationMapper;
@@ -25,8 +25,10 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class EmailVerificationService {
 	private static final long EXPIRE_TIME = 5L;
-	private static final String SCHOOL_EMAIL_SUFFIX_AC = ".ac.kr";
-	private static final String SCHOOL_EMAIL_SUFFIX_EDU = ".edu";
+
+	// private static final String SCHOOL_EMAIL_SUFFIX_AC = ".ac.kr";
+	// private static final String SCHOOL_EMAIL_SUFFIX_EDU = ".edu";
+	private static final String CAU_EMAIL_DOMAIN = "@cau.ac.kr";
 
 	private final JavaMailSender javaMailSender;
 	private final EmailVerificationMapper emailVerificationMapper;
@@ -188,9 +190,16 @@ public class EmailVerificationService {
 		return String.valueOf(code);
 	}
 
+	//모든 학교 허용 시, 주석 해제
+	// private void validateSchoolEmail(String email) {
+	// 	if (!email.endsWith(SCHOOL_EMAIL_SUFFIX_AC) && !email.endsWith(SCHOOL_EMAIL_SUFFIX_EDU)) {
+	// 		throw new InvalidSchoolEmailException();
+	// 	}
+	// }
 	private void validateSchoolEmail(String email) {
-		if (!email.endsWith(SCHOOL_EMAIL_SUFFIX_AC) && !email.endsWith(SCHOOL_EMAIL_SUFFIX_EDU)) {
-			throw new InvalidSchoolEmailException();
+		String normalized = (email == null) ? "" : email.trim().toLowerCase();
+		if (!normalized.endsWith(CAU_EMAIL_DOMAIN)) {
+			throw new CauEmailRequiredException();
 		}
 	}
 }

@@ -95,120 +95,49 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 
 	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
 	@Query("""
-		
-		SELECT p FROM StudentCouncilPost p
-		      JOIN p.writer w
-		      JOIN w.school s
-		      WHERE w.councilType = :councilType
-		        AND s.schoolId = :schoolId
-		        AND (:category IS NULL OR p.category = :category)
-				AND (:excludePostId IS NULL OR p.id <> :excludePostId)
-		        AND w.deletedAt IS NULL
-		""")
-	Page<StudentCouncilPost> findBySchoolId(
-		@Param("schoolId") Long schoolId,
-		@Param("category") PostCategory category,
-		@Param("councilType") CouncilType councilType,
-		@Param("excludePostId") Long excludePostId,
-		Pageable pageable
-	);
-
-	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
-	@Query("""
 		SELECT p FROM StudentCouncilPost p
 		JOIN p.writer w
-		JOIN w.college c
-		WHERE w.councilType = :councilType
-		  AND c.collegeId = :collegeId
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
+		WHERE w.school.schoolId = :schoolId
+		  AND w.councilType = :councilType
+		  AND (:collegeId IS NULL OR c.collegeId = :collegeId)
+		  AND (:majorId IS NULL OR m.majorId = :majorId)
 		  AND (:category IS NULL OR p.category = :category)
 		  AND (:excludePostId IS NULL OR p.id <> :excludePostId)
 		  AND w.deletedAt IS NULL
 		""")
-	Page<StudentCouncilPost> findByCollegeId(
-		@Param("collegeId") Long collegeId,
-		@Param("category") PostCategory category,
-		@Param("councilType") CouncilType councilType,
-		@Param("excludePostId") Long excludePostId,
-		Pageable pageable
-	);
-
-	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
-	@Query("""
-		SELECT p FROM StudentCouncilPost p
-		JOIN p.writer w
-		JOIN w.major m
-		WHERE w.councilType = :councilType
-		  AND m.majorId = :majorId
-		  AND (:category IS NULL OR p.category = :category)
-		  AND (:excludePostId IS NULL OR p.id <> :excludePostId)
-		  AND w.deletedAt IS NULL
-		""")
-	Page<StudentCouncilPost> findByMajorId(
-		@Param("majorId") Long majorId,
-		@Param("category") PostCategory category,
-		@Param("councilType") CouncilType councilType,
-		@Param("excludePostId") Long excludePostId,
-		Pageable pageable
-	);
-
-	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
-	@Query("""
-		SELECT p FROM StudentCouncilPost p
-		JOIN p.writer w
-		JOIN w.school s
-		WHERE w.councilType = :councilType
-		  AND s.schoolId = :schoolId
-		  AND p.category = :category
-		  AND p.startDateTime BETWEEN :now AND :limit
-		  AND w.deletedAt IS NULL
-		ORDER BY p.startDateTime ASC
-		""")
-	Page<StudentCouncilPost> findUpcomingSchoolEvents(
+	Page<StudentCouncilPost> findByCouncilType(
 		@Param("schoolId") Long schoolId,
-		@Param("category") PostCategory category,
 		@Param("councilType") CouncilType councilType,
-		@Param("now") LocalDateTime now,
-		@Param("limit") LocalDateTime limit,
-		Pageable pageable
-	);
-
-	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
-	@Query("""
-		SELECT p FROM StudentCouncilPost p
-		JOIN p.writer w
-		JOIN w.college c
-		WHERE w.councilType = :councilType
-		  AND c.collegeId = :collegeId
-		  AND p.category = :category
-		  AND p.startDateTime BETWEEN :now AND :limit
-		  AND w.deletedAt IS NULL
-		ORDER BY p.startDateTime ASC
-		""")
-	Page<StudentCouncilPost> findUpcomingCollegeEvents(
 		@Param("collegeId") Long collegeId,
-		@Param("category") PostCategory category,
-		@Param("councilType") CouncilType councilType,
-		@Param("now") LocalDateTime now,
-		@Param("limit") LocalDateTime limit,
-		Pageable pageable
-	);
-
-	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
-	@Query("""
-		SELECT p FROM StudentCouncilPost p
-		JOIN p.writer w
-		JOIN w.major m
-		WHERE w.councilType = :councilType
-		  AND m.majorId = :majorId
-		  AND p.category = :category
-		  AND p.startDateTime BETWEEN :now AND :limit
-		  AND w.deletedAt IS NULL
-		ORDER BY p.startDateTime ASC
-		""")
-	Page<StudentCouncilPost> findUpcomingMajorEvents(
 		@Param("majorId") Long majorId,
 		@Param("category") PostCategory category,
+		@Param("excludePostId") Long excludePostId,
+		Pageable pageable
+	);
+
+	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major"})
+	@Query("""
+		SELECT p FROM StudentCouncilPost p
+		JOIN p.writer w
+		LEFT JOIN w.college c
+		LEFT JOIN w.major m
+		WHERE w.school.schoolId = :schoolId
+		  AND w.councilType = :councilType
+		  AND (:collegeId IS NULL OR c.collegeId = :collegeId)
+		  AND (:majorId IS NULL OR m.majorId = :majorId)
+		  AND p.category = :category
+		  AND p.startDateTime BETWEEN :now AND :limit
+		  AND w.deletedAt IS NULL
+		ORDER BY p.startDateTime ASC
+		""")
+	Page<StudentCouncilPost> findUpcomingEvents(
+		@Param("schoolId") Long schoolId,
 		@Param("councilType") CouncilType councilType,
+		@Param("collegeId") Long collegeId,
+		@Param("majorId") Long majorId,
+		@Param("category") PostCategory category,
 		@Param("now") LocalDateTime now,
 		@Param("limit") LocalDateTime limit,
 		Pageable pageable

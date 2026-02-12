@@ -17,7 +17,7 @@ import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByT
 import com.campus.campus.domain.place.application.dto.response.SavedPlaceInfo;
 import com.campus.campus.domain.place.application.dto.response.SearchPartnershipInfoResponse;
 import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoResponse;
-import com.campus.campus.domain.place.application.dto.response.naver.NaverSearchResponse;
+import com.campus.campus.domain.place.application.dto.response.kakao.KakaoSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
@@ -35,17 +35,17 @@ public class PlaceMapper {
 		);
 	}
 
-	public SavedPlaceInfo toSavedPlaceInfo(NaverSearchResponse.Item item, String placeName, String placeKey,
-		String naverPlaceUrl, List<String> images, Long placeId) {
+	public SavedPlaceInfo toSavedPlaceInfo(KakaoSearchResponse.Document document, String placeName, String placeKey,
+		String placeUrl, List<String> images, Long placeId) {
 		return new SavedPlaceInfo(
 			placeId,
 			placeName,
 			placeKey,
-			item.address(),
-			item.category(),
-			naverPlaceUrl,
-			item.telephone(),
-			toCoordinate(item),
+			document.addressName(),
+			document.categoryName(),
+			placeUrl,
+			document.phone(),
+			toCoordinate(document),
 			images
 		);
 	}
@@ -201,10 +201,10 @@ public class PlaceMapper {
 			.build();
 	}
 
-	public Coordinate toCoordinate(NaverSearchResponse.Item item) {
-		return Coordinate.fromNaver(
-			Double.parseDouble(item.mapx()),
-			Double.parseDouble(item.mapy())
+	public Coordinate toCoordinate(KakaoSearchResponse.Document document) {
+		return new Coordinate(
+			Double.parseDouble(document.y()),  // 위도 (latitude)
+			Double.parseDouble(document.x())   // 경도 (longitude)
 		);
 	}
 
