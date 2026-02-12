@@ -108,14 +108,14 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		  AND (:excludePostId IS NULL OR p.id <> :excludePostId)
 		  AND w.deletedAt IS NULL
 		  AND (:keyword IS NULL OR :keyword = '' OR (
-		              REPLACE(p.title, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\\\'
-		              OR REPLACE(pl.placeName, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\\\'
+		              REPLACE(p.title, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\'
+		              OR REPLACE(pl.placeName, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\'
 		              ))
 		ORDER BY 
 			(CASE
 				 WHEN :keyword IS NULL OR :keyword = '' THEN 3
-				 WHEN REPLACE(p.title, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\\\' THEN 1
-				 WHEN REPLACE(pl.placeName, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\\\' THEN 2
+				 WHEN REPLACE(p.title, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\' THEN 1
+				 WHEN REPLACE(pl.placeName, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\' THEN 2
 				 ELSE 3
 			END) ASC,
 			p.startDateTime ASC
