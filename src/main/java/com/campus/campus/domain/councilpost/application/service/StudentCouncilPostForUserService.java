@@ -134,6 +134,9 @@ public class StudentCouncilPostForUserService {
 
 		String cleanKeyword = (StringUtils.hasText(keyword))
 			? keyword.replaceAll("\\s", "")
+			.replace("\\", "\\\\")
+			.replace("%", "\\%")
+			.replace("_", "\\_")
 			: null;
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
