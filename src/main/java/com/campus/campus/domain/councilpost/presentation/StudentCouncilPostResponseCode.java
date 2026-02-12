@@ -19,7 +19,8 @@ public enum StudentCouncilPostResponseCode implements ResponseCodeInterface {
 	UPCOMING_SCHOOL_EVENT_LIST_READ_SUCCESS(200, HttpStatus.OK, "학교 72시간 이내 행사 조회에 성공했습니다."),
 	UPCOMING_COLLEGE_EVENT_LIST_READ_SUCCESS(200, HttpStatus.OK, "단과대 72시간 이내 행사 조회에 성공했습니다."),
 	UPCOMING_MAJOR_EVENT_LIST_READ_SUCCESS(200, HttpStatus.OK, "학과 72시간 이내 행사 조회에 성공했습니다."),
-	POST_LIKE_SUCCESS(200, HttpStatus.OK, "게시글 좋아요 처리에 성공했습니다.");
+	POST_LIKE_SUCCESS(200, HttpStatus.OK, "게시글 좋아요 처리에 성공했습니다."),
+	POST_SEARCH_SUCCESS(200, HttpStatus.OK, "게시글 검색에 성공했습니다.");
 
 	private final int code;
 	private final HttpStatus status;

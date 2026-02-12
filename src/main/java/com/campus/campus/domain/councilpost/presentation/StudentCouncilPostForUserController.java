@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.application.dto.response.GetActivePartnershipListForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.GetLikedPostResponse;
+import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.LikePostResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.PostListItemResponse;
-import com.campus.campus.domain.councilpost.application.dto.response.GetPostForUserResponse;
 import com.campus.campus.domain.councilpost.application.dto.response.TodayEventResponse;
 import com.campus.campus.domain.councilpost.application.service.StudentCouncilPostForUserService;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
@@ -60,13 +60,18 @@ public class StudentCouncilPostForUserController {
 
 	@GetMapping
 	@Operation(
-		summary = "학생회 타입별 게시글 목록 조회",
+		summary = "학생회 타입별 게시글 목록 조회 및 검색",
 		description =
-			"현재 로그인한 사용자가 속한 학생회 범위의 게시글 목록을 **타입별로** 조회합니다.\n\n" +
+			"현재 로그인한 사용자가 속한 학생회 범위의 게시글 목록을 **타입별로** 조회합니다. keyword를 넣으면 검색어로 작동합니다.\n\n" +
 				"### ✅ councilType (필수)\n" +
 				"- `SCHOOL_COUNCIL` : 학교 학생회\n" +
 				"- `COLLEGE_COUNCIL` : 단과대 학생회 (단과대 정보 미설정 시 예외)\n" +
 				"- `MAJOR_COUNCIL` : 전공 학생회 (전공 정보 미설정 시 예외)\n\n" +
+				"### ✅ 검색 (keyword)\n" +
+				"- `keyword`를 전달하면 해당 단어가 포함된 게시글을 필터링합니다.\n" +
+				"- **제휴 검색 시**: 제목(`title`) 또는 장소(`place`)를 검색합니다.\n" +
+				"- **행사 검색 시**: 행사 제목(`title`) 또는 장소(`place`)를 검색합니다.\n" +
+				"- 키워드를 미전달하거나 빈 값일 경우 전체 목록을 반환합니다.\n\n" +
 				"### ✅ 필터/페이징\n" +
 				"- `category`를 전달하면 해당 카테고리만 조회합니다. (미전달 시 전체)\n" +
 				"- `page`는 1부터 시작합니다.\n" +
@@ -76,18 +81,21 @@ public class StudentCouncilPostForUserController {
 				"### 🔎 예시\n" +
 				"- 학교 목록: `?councilType=SCHOOL_COUNCIL&page=1&size=20`\n" +
 				"- 단과대 카테고리 필터: `?councilType=COLLEGE_COUNCIL&category=PARTNERSHIP&page=1&size=20`\n" +
+				"- 키워드 검색: `?councilType=SCHOOL_COUNCIL&keyword=치킨&page=1&size=20`\n" +
 				"- 상세 하단 다른 글: `?councilType=MAJOR_COUNCIL&excludePostId=123&page=1&size=20`"
 	)
 	public CommonResponse<Page<PostListItemResponse>> getPosts(
 		@RequestParam CouncilType councilType,
 		@RequestParam(required = false) PostCategory category,
+		@RequestParam(required = false) String keyword,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "20") int size,
 		@RequestParam(required = false) Long excludePostId,
 		@CurrentUserId Long userId
 	) {
-		Page<PostListItemResponse> responseDto = postService.findPosts(councilType, category, page, size, userId,
-			excludePostId);
+		Page<PostListItemResponse> responseDto = postService.findPosts(
+			councilType, category, keyword, page, size, userId, excludePostId
+		);
 		return CommonResponse.success(StudentCouncilPostResponseCode.POST_LIST_READ_SUCCESS, responseDto);
 	}
 
