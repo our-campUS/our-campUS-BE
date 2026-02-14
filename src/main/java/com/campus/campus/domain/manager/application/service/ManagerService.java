@@ -9,16 +9,23 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
+import com.campus.campus.domain.inquiry.application.dto.response.InquiryListItemResponse;
+import com.campus.campus.domain.inquiry.application.mapper.InquiryMapper;
+import com.campus.campus.domain.inquiry.domain.entity.Inquiry;
+import com.campus.campus.domain.inquiry.domain.entity.WriterType;
+import com.campus.campus.domain.inquiry.domain.repository.InquiryRepository;
 import com.campus.campus.domain.manager.application.dto.request.CouncilApproveOrDenyRequest;
+import com.campus.campus.domain.manager.application.dto.request.InquirySearchCondition;
 import com.campus.campus.domain.manager.application.dto.request.ManagerLoginRequest;
 import com.campus.campus.domain.manager.application.dto.request.RewardRequest;
+import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilResponse;
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
-import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
 import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
 import com.campus.campus.domain.manager.application.exception.ManagerNotFoundException;
@@ -44,10 +51,12 @@ public class ManagerService {
 	private final ManagerRepository managerRepository;
 	private final UserRepository userRepository;
 	private final RewardRepository rewardRepository;
+	private final InquiryRepository inquiryRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProvider jwtProvider;
 	private final RedisTokenService redisTokenService;
 	private final ManagerMapper managerMapper;
+	private final InquiryMapper inquiryMapper;
 	private final JavaMailSender javaMailSender;
 	private final ApplicationEventPublisher eventPublisher;
 
@@ -134,6 +143,22 @@ public class ManagerService {
 		user.updateRewardNeeded(false);
 
 		eventPublisher.publishEvent(managerMapper.createRewardGrantedEvent(userId, "스탬프 보상"));
+	}
+
+	public List<InquiryListItemResponse> getAllInquiries(InquirySearchCondition condition) {
+		WriterType type = null;
+		if (StringUtils.hasText(condition.writerType())) {
+			type = WriterType.valueOf(condition.writerType().toUpperCase());
+		}
+
+		List<Inquiry> inquiries = inquiryRepository.findAllByCondition(
+			condition.status(),
+			type
+		);
+
+		return inquiries.stream()
+			.map(inquiryMapper::toInquiryListItemResponse)
+			.toList();
 	}
 
 	private void sendCouncilApprovedMail(String to) {

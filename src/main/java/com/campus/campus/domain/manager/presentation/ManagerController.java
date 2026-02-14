@@ -2,6 +2,7 @@ package com.campus.campus.domain.manager.presentation;
 
 import java.util.List;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.inquiry.application.dto.response.InquiryListItemResponse;
 import com.campus.campus.domain.manager.application.dto.request.CouncilApproveOrDenyRequest;
+import com.campus.campus.domain.manager.application.dto.request.InquirySearchCondition;
 import com.campus.campus.domain.manager.application.dto.request.ManagerLoginRequest;
 import com.campus.campus.domain.manager.application.dto.request.RewardRequest;
+import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilResponse;
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
-import com.campus.campus.domain.manager.application.dto.response.CertifyRequestCouncilListResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
 import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
 import com.campus.campus.domain.manager.application.service.ManagerService;
@@ -90,5 +93,18 @@ public class ManagerController {
 		managerService.grantRewardToUser(userId, rewardRequest);
 
 		return CommonResponse.success(ManagerResponseCode.GRANT_REWARD_SUCCESS);
+	}
+
+	@GetMapping("/inquiries")
+	@PreAuthorize("hasRole('MANAGER')")
+	@Operation(
+		summary = "전체 문의 내역 조회",
+		description = "작성자 타입과 답변 상태에 따라 문의를 필터링하여 조회합니다."
+	)
+	public CommonResponse<List<InquiryListItemResponse>> getAllInquiries(
+		@ParameterObject @Valid InquirySearchCondition condition
+	) {
+		List<InquiryListItemResponse> response = managerService.getAllInquiries(condition);
+		return CommonResponse.success(ManagerResponseCode.INQUIRY__LIST_SUCCESS, response);
 	}
 }
