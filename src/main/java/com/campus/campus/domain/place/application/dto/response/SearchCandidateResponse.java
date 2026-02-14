@@ -11,7 +11,7 @@ public record SearchCandidateResponse(
 
 		@Schema(description = "주소", example = "서울특별시 동작구 흑석로 84") String address,
 
-		@Schema(description = "Google Place ID", example = "ChIJN1t_tDeuEmsRUsoyG83frY4") String placeKey,
+		@Schema(description = "카카오 장소 ID", example = "18577297") String placeKey,
 
 		@Schema(description = "카카오맵 상세 페이지 URL", example = "https://place.map.kakao.com/12345") String placeUrl) {
 }

@@ -23,8 +23,7 @@ public record SavedPlaceInfo(
 	@NotBlank
 	String address,
 
-	@Schema(description = "장소 카테고리", example = "교육,학문>대학교")
-	@NotBlank
+	@Schema(description = "장소 카테고리 (category_group_name, 없으면 null)", example = "카페")
 	String category,
 
 	@Schema(description = "장소 상세 정보 네이버 페이지 하이퍼링크", example = "https://map.naver.com/v5/search/%EC%88%99%EB%AA%85%EC%97%AC%EC%9E%90%EB%8C%80%ED%95%99%EA%B5%90+%EC%A0%9C1%EC%BA%A0%ED%8D%BC%EC%8A%A4?c=37.545947,126.964578,15,0,0,0,dh")

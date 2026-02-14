@@ -37,12 +37,16 @@ public class PlaceMapper {
 
 	public SavedPlaceInfo toSavedPlaceInfo(KakaoSearchResponse.Document document, String placeName, String placeKey,
 		String placeUrl, List<String> images, Long placeId) {
+		String unifiedAddress = (document.roadAddressName() != null && !document.roadAddressName().isBlank())
+			? document.roadAddressName()
+			: document.addressName();
+
 		return new SavedPlaceInfo(
 			placeId,
 			placeName,
 			placeKey,
-			document.addressName(),
-			document.categoryName(),
+			unifiedAddress,
+			document.categoryGroupName(),
 			placeUrl,
 			document.phone(),
 			toCoordinate(document),
