@@ -70,6 +70,16 @@ public class Inquiry extends BaseEntity {
 		return null;
 	}
 
+	public String getWriterName() {
+		if (this.writerType == WriterType.USER && this.writer != null) {
+			return this.writer.getNickname();
+		}
+		if (this.writerType == WriterType.STUDENT_COUNCIL && this.studentCouncilWriter != null) {
+			return this.studentCouncilWriter.getCouncilName();
+		}
+		return "알 수 없음";
+	}
+
 	public String getWriterType() {
 		return (this.writer != null) ? this.writerType.name() : null;
 	}

@@ -11,6 +11,9 @@ public record InquiryListItemResponse(
 	@Schema(description = "작성자 ID", example = "2")
 	Long writerId,
 
+	@Schema(description = "작성자 이름", example = "홍길동")
+	String writerName,
+
 	@Schema(description = "작성자 타입", example = "USER || STUDENT_COUNCIL")
 	String writerType,
 
