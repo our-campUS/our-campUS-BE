@@ -16,7 +16,8 @@ public enum ManagerResponseCode implements ResponseCodeInterface {
 	CERTIFY_REQUEST_ELECTION_IMAGE_SUCCESS(200, HttpStatus.OK, "해당 학생회 인증 요청 당선 사진 조회에 성공했습니다."),
 	REWARD_NEEDED_USER_LIST_SUCCESS(200, HttpStatus.OK, "스탬프 보상이 필요한 유저 목록 조회에 성공했습니다."),
 	GRANT_REWARD_SUCCESS(200, HttpStatus.OK, "스탬프 보상 지급에 성공했습니다."),
-	INQUIRY_LIST_SUCCESS(200, HttpStatus.OK, "문의 내역 조회에 성공했습니다.");
+	INQUIRY_LIST_SUCCESS(200, HttpStatus.OK, "문의 내역 조회에 성공했습니다."),
+	INQUIRY_ANSWER_SUCCESS(200, HttpStatus.OK, "문의에 답변이 작성되었습니다.");
 
 	private final int code;
 	private final HttpStatus status;
