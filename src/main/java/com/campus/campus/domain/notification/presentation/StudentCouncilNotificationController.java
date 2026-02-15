@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,5 +47,18 @@ public class StudentCouncilNotificationController {
 			councilNotificationService.getCouncilNotificationsByCursor(councilId, cursorCreatedAt, cursorId, limit);
 
 		return CommonResponse.success(NotificationResponseCode.NOTIFICATION_READ_SUCCESS, response);
+	}
+
+	@PatchMapping("/{notificationId}/read")
+	@Operation(
+		summary = "학생회 특정 알림 읽음 처리",
+		description = "학생회 알림을 읽음 상태로 변경합니다."
+	)
+	public CommonResponse<Void> markAsRead(
+		@PathVariable Long notificationId,
+		@CurrentCouncilId Long councilId
+	) {
+		councilNotificationService.markCouncilNotificationAsRead(councilId, notificationId);
+		return CommonResponse.success(NotificationResponseCode.NOTIFICATION_READ_SUCCESS);
 	}
 }
