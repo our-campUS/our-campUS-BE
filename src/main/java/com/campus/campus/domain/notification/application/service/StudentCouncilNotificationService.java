@@ -78,4 +78,9 @@ public class StudentCouncilNotificationService {
 
 		notification.markAsRead();
 	}
+
+	@Transactional(readOnly = true)
+	public boolean hasCouncilUnread(Long councilId) {
+		return notificationRepository.existsByStudentCouncil_IdAndIsReadFalse(councilId);
+	}
 }

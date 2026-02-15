@@ -61,4 +61,18 @@ public class StudentCouncilNotificationController {
 		councilNotificationService.markCouncilNotificationAsRead(councilId, notificationId);
 		return CommonResponse.success(NotificationResponseCode.NOTIFICATION_READ_SUCCESS);
 	}
+
+	@GetMapping("/unread/exists")
+	@Operation(
+		summary = "학생회 미확인 알림 여부 확인",
+		description = "학생회 홈에서 미확인 알림이 있는지 확인하여 빨간 점 등을 표시합니다."
+	)
+	public CommonResponse<Boolean> hasUnread(@CurrentCouncilId Long councilId) {
+		boolean hasUnread = councilNotificationService.hasCouncilUnread(councilId);
+
+		return CommonResponse.success(
+			NotificationResponseCode.NOTIFICATION_UNREAD_EXISTS_SUCCESS,
+			hasUnread
+		);
+	}
 }

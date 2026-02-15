@@ -33,6 +33,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 	);
 
 	boolean existsByUser_IdAndIsReadFalse(Long userId);
+	
+	boolean existsByStudentCouncil_IdAndIsReadFalse(Long councilId);
 
 	List<Notification> findByStudentCouncilOrderByCreatedAtDescIdDesc(StudentCouncil council, Pageable pageable);
 
