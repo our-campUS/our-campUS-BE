@@ -149,8 +149,13 @@ public class ManagerService {
 
 	public List<InquiryListItemResponse> getAllInquiries(InquirySearchCondition condition) {
 		WriterType type = null;
+
 		if (StringUtils.hasText(condition.writerType())) {
-			type = WriterType.valueOf(condition.writerType().toUpperCase());
+			try {
+				type = WriterType.valueOf(condition.writerType().toUpperCase());
+			} catch (IllegalArgumentException e) {
+				type = null;
+			}
 		}
 
 		List<Inquiry> inquiries = inquiryRepository.findAllByCondition(
