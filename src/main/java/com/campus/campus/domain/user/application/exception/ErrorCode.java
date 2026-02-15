@@ -17,7 +17,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 	NICKNAME_ALREADY_EXISTS(2104, HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
 	ACADEMIC_INFO_CANNOT_CHANGE(2105, HttpStatus.BAD_REQUEST, "학적 정보는 6개월에 한번만 변경 가능합니다."),
 	CAU_SCHOOL_ONLY(2106, HttpStatus.BAD_REQUEST, "중앙대학교 학생만 가입할 수 있습니다."),
-	INQUIRY_NOT_FOUND(2107, HttpStatus.BAD_REQUEST, "존재하지 않는 문의입니다.");
+	INQUIRY_NOT_FOUND(2107, HttpStatus.BAD_REQUEST, "존재하지 않는 문의입니다."),
+	ALREADY_ANSWERED_INQUIRY(2108, HttpStatus.BAD_REQUEST, "이미 답변이 완료된 문의입니다.");
 
 	private final int code;
 	private final HttpStatus status;
