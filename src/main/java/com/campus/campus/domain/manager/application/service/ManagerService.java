@@ -15,11 +15,13 @@ import com.campus.campus.domain.council.application.exception.StudentCouncilNotF
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.inquiry.application.dto.response.InquiryListItemResponse;
+import com.campus.campus.domain.inquiry.application.exception.InquiryNotFoundException;
 import com.campus.campus.domain.inquiry.application.mapper.InquiryMapper;
 import com.campus.campus.domain.inquiry.domain.entity.Inquiry;
 import com.campus.campus.domain.inquiry.domain.entity.WriterType;
 import com.campus.campus.domain.inquiry.domain.repository.InquiryRepository;
 import com.campus.campus.domain.manager.application.dto.request.CouncilApproveOrDenyRequest;
+import com.campus.campus.domain.manager.application.dto.request.InquiryAnswerRequest;
 import com.campus.campus.domain.manager.application.dto.request.InquirySearchCondition;
 import com.campus.campus.domain.manager.application.dto.request.ManagerLoginRequest;
 import com.campus.campus.domain.manager.application.dto.request.RewardRequest;
@@ -159,6 +161,14 @@ public class ManagerService {
 		return inquiries.stream()
 			.map(inquiryMapper::toInquiryListItemResponse)
 			.toList();
+	}
+
+	@Transactional
+	public void answerInquiry(Long inquiryId, InquiryAnswerRequest request) {
+		Inquiry inquiry = inquiryRepository.findById(inquiryId)
+			.orElseThrow(InquiryNotFoundException::new);
+
+		inquiry.updateAnswer(request.answer());
 	}
 
 	private void sendCouncilApprovedMail(String to) {

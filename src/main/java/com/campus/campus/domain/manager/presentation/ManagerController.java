@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.inquiry.application.dto.response.InquiryListItemResponse;
 import com.campus.campus.domain.manager.application.dto.request.CouncilApproveOrDenyRequest;
+import com.campus.campus.domain.manager.application.dto.request.InquiryAnswerRequest;
 import com.campus.campus.domain.manager.application.dto.request.InquirySearchCondition;
 import com.campus.campus.domain.manager.application.dto.request.ManagerLoginRequest;
 import com.campus.campus.domain.manager.application.dto.request.RewardRequest;
@@ -105,6 +106,20 @@ public class ManagerController {
 		@ParameterObject @Valid InquirySearchCondition condition
 	) {
 		List<InquiryListItemResponse> response = managerService.getAllInquiries(condition);
-		return CommonResponse.success(ManagerResponseCode.INQUIRY__LIST_SUCCESS, response);
+		return CommonResponse.success(ManagerResponseCode.INQUIRY_LIST_SUCCESS, response);
+	}
+
+	@PatchMapping("/inquiries/{inquiryId}/answer")
+	@PreAuthorize("hasRole('MANAGER')")
+	@Operation(
+		summary = "문의 답변 작성",
+		description = "특정 ID의 문의에 대해 답변을 작성합니다."
+	)
+	public CommonResponse<Void> answerInquiry(
+		@PathVariable Long inquiryId,
+		@Valid @RequestBody InquiryAnswerRequest request
+	) {
+		managerService.answerInquiry(inquiryId, request);
+		return CommonResponse.success(ManagerResponseCode.INQUIRY_ANSWER_SUCCESS);
 	}
 }
