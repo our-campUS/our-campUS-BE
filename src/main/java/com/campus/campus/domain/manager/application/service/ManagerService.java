@@ -1,5 +1,6 @@
 package com.campus.campus.domain.manager.application.service;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +10,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
@@ -148,15 +148,10 @@ public class ManagerService {
 	}
 
 	public List<InquiryListItemResponse> getAllInquiries(InquirySearchCondition condition) {
-		WriterType type = null;
-
-		if (StringUtils.hasText(condition.writerType())) {
-			try {
-				type = WriterType.valueOf(condition.writerType().toUpperCase());
-			} catch (IllegalArgumentException e) {
-				type = null;
-			}
-		}
+		WriterType type = Arrays.stream(WriterType.values())
+			.filter(t -> t.name().equalsIgnoreCase(condition.writerType()))
+			.findFirst()
+			.orElse(null);
 
 		List<Inquiry> inquiries = inquiryRepository.findAllByCondition(
 			condition.status(),
