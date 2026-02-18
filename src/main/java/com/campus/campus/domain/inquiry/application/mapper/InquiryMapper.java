@@ -50,6 +50,7 @@ public class InquiryMapper {
 		return new InquiryListItemResponse(
 			inquiry.getId(),
 			inquiry.getWriterId(),
+			inquiry.getWriterName(),
 			inquiry.getWriterType(),
 			inquiry.getTitle(),
 			inquiry.getContent(),
