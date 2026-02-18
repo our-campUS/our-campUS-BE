@@ -148,8 +148,10 @@ public class ManagerService {
 	}
 
 	public List<InquiryListItemResponse> getAllInquiries(InquirySearchCondition condition) {
+		String writerTypeInput = (condition.writerType() != null) ? condition.writerType().trim() : "";
+
 		WriterType type = Arrays.stream(WriterType.values())
-			.filter(t -> t.name().equalsIgnoreCase(condition.writerType()))
+			.filter(t -> t.name().equalsIgnoreCase(writerTypeInput))
 			.findFirst()
 			.orElse(null);
 
