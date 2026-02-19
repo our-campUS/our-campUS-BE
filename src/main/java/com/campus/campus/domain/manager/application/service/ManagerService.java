@@ -188,7 +188,7 @@ public class ManagerService {
 				log.warn("문의 ID={}에 대한 알림 수신자(User/Council)를 찾을 수 없습니다.", inquiry.getId());
 			}
 		} catch (Exception e) {
-			log.error("문의 답변 알림 발송 중 오류 발생: inquiryId={}", inquiry.getId());
+			log.error("문의 답변 알림 발송 중 오류 발생: inquiryId={}", inquiry.getId(), e);
 		}
 	}
 
