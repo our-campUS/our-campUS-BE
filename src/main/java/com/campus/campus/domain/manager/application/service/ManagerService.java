@@ -178,13 +178,17 @@ public class ManagerService {
 
 		inquiry.updateAnswer(request.answer());
 
-		if (inquiry.getWriter() != null) {
-			notificationService.saveInquiryAnsweredNotification(inquiry.getWriter(), inquiry.getId());
-		} else if (inquiry.getStudentCouncilWriter() != null) {
-			councilNotificationService.saveInquiryAnsweredNotification(inquiry.getStudentCouncilWriter(),
-				inquiry.getId());
-		} else {
-			log.warn("문의 ID={}에 대한 알림 수신자(User/Council)를 찾을 수 없습니다.", inquiry.getId());
+		try {
+			if (inquiry.getWriter() != null) {
+				notificationService.saveInquiryAnsweredNotification(inquiry.getWriter(), inquiry.getId());
+			} else if (inquiry.getStudentCouncilWriter() != null) {
+				councilNotificationService.saveInquiryAnsweredNotification(inquiry.getStudentCouncilWriter(),
+					inquiry.getId());
+			} else {
+				log.warn("문의 ID={}에 대한 알림 수신자(User/Council)를 찾을 수 없습니다.", inquiry.getId());
+			}
+		} catch (Exception e) {
+			log.error("문의 답변 알림 발송 중 오류 발생: inquiryId={}", inquiry.getId());
 		}
 	}
 
