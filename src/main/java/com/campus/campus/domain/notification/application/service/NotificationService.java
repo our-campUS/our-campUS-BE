@@ -117,6 +117,22 @@ public class NotificationService {
 		return notificationRepository.existsByUser_IdAndIsReadFalse(userId);
 	}
 
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void saveInquiryAnsweredNotification(User user, Long inquiryId) {
+		String title = "캠어스";
+		String body = "문의하신 내용에 답변이 도착했어요.";
+
+		Notification notification = notificationMapper.createNotification(
+			user,
+			NotificationType.SYSTEM_NOTICE,
+			title,
+			body,
+			inquiryId
+		);
+
+		notificationRepository.save(notification);
+	}
+
 	private List<User> findUsersByTopic(String topic) {
 
 		String[] parts = topic.split("_");

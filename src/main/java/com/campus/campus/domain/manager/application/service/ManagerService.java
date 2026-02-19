@@ -35,6 +35,8 @@ import com.campus.campus.domain.manager.application.exception.PasswordNotCorrect
 import com.campus.campus.domain.manager.application.mapper.ManagerMapper;
 import com.campus.campus.domain.manager.domain.entity.Manager;
 import com.campus.campus.domain.manager.domain.repository.ManagerRepository;
+import com.campus.campus.domain.notification.application.service.NotificationService;
+import com.campus.campus.domain.notification.application.service.StudentCouncilNotificationService;
 import com.campus.campus.domain.stamp.domain.entity.Reward;
 import com.campus.campus.domain.stamp.domain.repository.RewardRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -61,6 +63,8 @@ public class ManagerService {
 	private final InquiryMapper inquiryMapper;
 	private final JavaMailSender javaMailSender;
 	private final ApplicationEventPublisher eventPublisher;
+	private final NotificationService notificationService;
+	private final StudentCouncilNotificationService councilNotificationService;
 
 	@Value("${jwt.refresh.expiration-seconds}")
 	private long refreshTokenExpirationSeconds;
@@ -171,6 +175,13 @@ public class ManagerService {
 			.orElseThrow(InquiryNotFoundException::new);
 
 		inquiry.updateAnswer(request.answer());
+
+		if (inquiry.getWriter() != null) {
+			notificationService.saveInquiryAnsweredNotification(inquiry.getWriter(), inquiry.getId());
+		} else {
+			councilNotificationService.saveInquiryAnsweredNotification(inquiry.getStudentCouncilWriter(),
+				inquiry.getId());
+		}
 	}
 
 	private void sendCouncilApprovedMail(String to) {

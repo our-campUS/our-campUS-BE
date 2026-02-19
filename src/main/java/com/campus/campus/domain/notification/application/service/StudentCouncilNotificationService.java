@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
@@ -18,6 +19,7 @@ import com.campus.campus.domain.notification.application.exception.NotificationA
 import com.campus.campus.domain.notification.application.exception.NotificationNotFoundException;
 import com.campus.campus.domain.notification.application.mapper.NotificationMapper;
 import com.campus.campus.domain.notification.domain.entity.Notification;
+import com.campus.campus.domain.notification.domain.entity.NotificationType;
 import com.campus.campus.domain.notification.domain.repository.NotificationRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -82,5 +84,20 @@ public class StudentCouncilNotificationService {
 	@Transactional(readOnly = true)
 	public boolean hasCouncilUnread(Long councilId) {
 		return notificationRepository.existsByStudentCouncil_IdAndIsReadFalse(councilId);
+	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void saveInquiryAnsweredNotification(StudentCouncil council, Long inquiryId) {
+		String title = "캠어스";
+		String body = "문의하신 내용에 답변이 도착했어요.";
+
+		Notification notification = notificationMapper.createCouncilNotification(
+			council,
+			NotificationType.SYSTEM_NOTICE,
+			title,
+			body,
+			inquiryId
+		);
+		notificationRepository.save(notification);
 	}
 }
