@@ -2,6 +2,7 @@ package com.campus.campus.domain.notification.domain.entity;
 
 import java.time.LocalDateTime;
 
+import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.global.entity.BaseEntity;
 
@@ -30,8 +31,12 @@ public class Notification extends BaseEntity {
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
+	@JoinColumn(name = "user_id")
 	private User user;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "student_council_id")
+	private StudentCouncil studentCouncil;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
@@ -53,9 +58,10 @@ public class Notification extends BaseEntity {
 	private LocalDateTime readAt;
 
 	@Builder
-	public Notification(User user, NotificationType type, String title,
+	public Notification(User user, StudentCouncil studentCouncil, NotificationType type, String title,
 		String body, Long referenceId) {
 		this.user = user;
+		this.studentCouncil = studentCouncil;
 		this.type = type;
 		this.title = title;
 		this.body = body;

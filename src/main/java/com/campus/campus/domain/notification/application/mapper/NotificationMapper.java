@@ -2,6 +2,7 @@ package com.campus.campus.domain.notification.application.mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.notification.application.dto.NotificationResponse;
 import com.campus.campus.domain.notification.domain.entity.Notification;
 import com.campus.campus.domain.notification.domain.entity.NotificationType;
@@ -32,6 +33,17 @@ public class NotificationMapper {
 		String title, String body, Long referenceId) {
 		return Notification.builder()
 			.user(user)
+			.type(type)
+			.title(title)
+			.body(body)
+			.referenceId(referenceId)
+			.build();
+	}
+
+	public Notification createCouncilNotification(StudentCouncil council, NotificationType type,
+		String title, String body, Long referenceId) {
+		return Notification.builder()
+			.studentCouncil(council)
 			.type(type)
 			.title(title)
 			.body(body)

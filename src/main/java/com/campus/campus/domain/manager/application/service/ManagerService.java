@@ -35,6 +35,8 @@ import com.campus.campus.domain.manager.application.exception.PasswordNotCorrect
 import com.campus.campus.domain.manager.application.mapper.ManagerMapper;
 import com.campus.campus.domain.manager.domain.entity.Manager;
 import com.campus.campus.domain.manager.domain.repository.ManagerRepository;
+import com.campus.campus.domain.notification.application.service.NotificationService;
+import com.campus.campus.domain.notification.application.service.StudentCouncilNotificationService;
 import com.campus.campus.domain.stamp.domain.entity.Reward;
 import com.campus.campus.domain.stamp.domain.repository.RewardRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -44,7 +46,9 @@ import com.campus.campus.global.util.jwt.JwtProvider;
 import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -61,6 +65,8 @@ public class ManagerService {
 	private final InquiryMapper inquiryMapper;
 	private final JavaMailSender javaMailSender;
 	private final ApplicationEventPublisher eventPublisher;
+	private final NotificationService notificationService;
+	private final StudentCouncilNotificationService councilNotificationService;
 
 	@Value("${jwt.refresh.expiration-seconds}")
 	private long refreshTokenExpirationSeconds;
@@ -171,6 +177,19 @@ public class ManagerService {
 			.orElseThrow(InquiryNotFoundException::new);
 
 		inquiry.updateAnswer(request.answer());
+
+		try {
+			if (inquiry.getWriter() != null) {
+				notificationService.saveInquiryAnsweredNotification(inquiry.getWriter(), inquiry.getId());
+			} else if (inquiry.getStudentCouncilWriter() != null) {
+				councilNotificationService.saveInquiryAnsweredNotification(inquiry.getStudentCouncilWriter(),
+					inquiry.getId());
+			} else {
+				log.warn("문의 ID={}에 대한 알림 수신자(User/Council)를 찾을 수 없습니다.", inquiry.getId());
+			}
+		} catch (Exception e) {
+			log.error("문의 답변 알림 발송 중 오류 발생: inquiryId={}", inquiry.getId(), e);
+		}
 	}
 
 	private void sendCouncilApprovedMail(String to) {
