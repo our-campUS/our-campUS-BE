@@ -46,7 +46,9 @@ import com.campus.campus.global.util.jwt.JwtProvider;
 import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -178,9 +180,11 @@ public class ManagerService {
 
 		if (inquiry.getWriter() != null) {
 			notificationService.saveInquiryAnsweredNotification(inquiry.getWriter(), inquiry.getId());
-		} else {
+		} else if (inquiry.getStudentCouncilWriter() != null) {
 			councilNotificationService.saveInquiryAnsweredNotification(inquiry.getStudentCouncilWriter(),
 				inquiry.getId());
+		} else {
+			log.warn("문의 ID={}에 대한 알림 수신자(User/Council)를 찾을 수 없습니다.", inquiry.getId());
 		}
 	}
 
