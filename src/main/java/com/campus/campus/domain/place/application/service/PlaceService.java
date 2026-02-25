@@ -45,7 +45,6 @@ import com.campus.campus.domain.place.application.exception.CoordinateNotFoundEx
 import com.campus.campus.domain.place.application.exception.ErrorCode;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
-import com.campus.campus.domain.place.application.util.PlaceKeyGenerator;
 import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
 import com.campus.campus.domain.place.domain.entity.NonPartnerPlace;
@@ -58,7 +57,6 @@ import com.campus.campus.domain.place.domain.repository.NonPartnerPlaceRepositor
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
-import com.campus.campus.domain.place.infrastructure.google.GooglePlaceClient;
 import com.campus.campus.domain.place.infrastructure.kakao.KakaoLocalClient;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -69,11 +67,11 @@ import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.util.geocoder.GeoUtil;
 import com.campus.campus.global.common.exception.ApplicationException;
 import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
 import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
-import com.campus.campus.global.util.geocoder.GeoUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,10 +94,7 @@ public class PlaceService {
 	private final KakaoLocalClient kakaoLocalClient;
 	private final PlaceMapper placeMapper;
 	private final PlaceRepository placeRepository;
-	private final GooglePlaceClient googleClient;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
-	private final PlaceImagesRepository placeImagesRepository;
-	private final PresignedUrlService presignedUrlService;
 	private final RedisPlaceCacheService redisPlaceCacheService;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
@@ -115,9 +110,8 @@ public class PlaceService {
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		log.info("카카오 좌표 기반 검색: lat={}, lng={}, keyword={}", lat, lng, keyword);
 
-		// 카카오 로컬 API로 좌표 기반 검색 (반경 2km, 거리순 정렬)
 		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, lat, lng, 2000, 5);
-		return processSearchResults(kakaoSearchResponse, imageLimit);
+		return processSearchResults(kakaoSearchResponse);
 	}
 
 	public List<SearchPlaceInfoResponse> searchByLocationAndKeywordWithInfo(Long userId, double lat, double lng,
@@ -168,7 +162,7 @@ public class PlaceService {
 	public List<SavedPlaceInfo> searchByKeyword(String keyword, int imageLimit) {
 		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, 5);
 
-		return processSearchResults(kakaoSearchResponse, imageLimit);
+		return processSearchResults(kakaoSearchResponse);
 	}
 
 	public Place findOrCreatePlace(SavedPlaceInfo place) {
@@ -178,8 +172,6 @@ public class PlaceService {
 			.orElseGet(() -> {
 				try {
 					Place newPlace = placeRepository.save(placeMapper.createPlace(place));
-
-					migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
 
 					return newPlace;
 				} catch (DataIntegrityViolationException e) {
@@ -193,8 +185,6 @@ public class PlaceService {
 	public Place createPlace(SavedPlaceInfo place) {
 		try {
 			Place newPlace = placeRepository.save(placeMapper.createPlace(place));
-
-			migrateImagesToOci(newPlace.getPlaceKey(), place.imgUrls());
 
 			return newPlace;
 		} catch (DataIntegrityViolationException e) {
@@ -349,12 +339,14 @@ public class PlaceService {
 		}
 	}
 
-	private List<SavedPlaceInfo> processSearchResults(KakaoSearchResponse kakaoSearchResponse, int imageLimit) {
+	private List<SavedPlaceInfo> processSearchResults(KakaoSearchResponse kakaoSearchResponse) {
 		List<SearchCandidateResponse> candidates = kakaoSearchResponse.documents().stream()
 			.map(document -> {
 				String name = document.placeName();
-				String address = document.roadAddressName();
-				String placeKey = PlaceKeyGenerator.generate(name, address);
+				String address = (document.roadAddressName() != null && !document.roadAddressName().isBlank())
+					? document.roadAddressName()
+					: document.addressName();
+				String placeKey = document.id();
 				String placeUrl = document.placeUrl();
 				return new SearchCandidateResponse(document, name, address, placeKey, placeUrl);
 			})
@@ -368,15 +360,9 @@ public class PlaceService {
 		Map<String, Long> placeIdMap = placeRepository.findByPlaceKeyIn(placeKeys).stream()
 			.collect(Collectors.toMap(Place::getPlaceKey, Place::getPlaceId));
 
-		Map<String, List<String>> images = placeImagesRepository.findAllByPlaceKeyIn(placeKeys).stream()
-			.collect(Collectors.groupingBy(
-				PlaceImages::getPlaceKey,
-				Collectors.mapping(PlaceImages::getImageUrl, Collectors.toList())
-			));
-
 		List<CompletableFuture<SavedPlaceInfo>> futures = candidates.stream()
 			.map(response -> CompletableFuture.supplyAsync(
-					() -> convertToSavedPlaceInfo(response, images, imageLimit, placeIdMap),
+					() -> convertToSavedPlaceInfo(response, placeIdMap),
 					executorService)
 				.completeOnTimeout(fallback(response, placeIdMap), 4, TimeUnit.SECONDS)
 				.exceptionally(ex -> fallback(response, placeIdMap)))
@@ -386,16 +372,11 @@ public class PlaceService {
 		return futures.stream().map(CompletableFuture::join).toList();
 	}
 
-	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, List<String>> images,
-		int imageLimit, Map<String, Long> placeIdMap) {
-		List<String> cached = images.getOrDefault(response.placeKey(), List.of());
-		List<String> placeImages = !cached.isEmpty()
-			? cached : googleClient.fetchImages(response.name(), response.address(), imageLimit);
-
+	private SavedPlaceInfo convertToSavedPlaceInfo(SearchCandidateResponse response, Map<String, Long> placeIdMap) {
 		Long placeId = placeIdMap.get(response.placeKey());
 
 		return placeMapper.toSavedPlaceInfo(response.document(), response.name(), response.placeKey(),
-			response.placeUrl(), placeImages == null ? List.of() : placeImages,
+			response.placeUrl(), List.of(),
 			placeId
 		);
 	}
@@ -429,42 +410,6 @@ public class PlaceService {
 		}
 
 		return councils;
-	}
-
-	/*
-	 * 태그 제거용
-	 */
-	private String stripHtml(String text) {
-		return text.replaceAll("<[^>]*>", "");
-	}
-
-	private void migrateImagesToOci(String placeKey, List<String> imageUrls) {
-		if (imageUrls == null || imageUrls.isEmpty()) {
-			return;
-		}
-
-		//google 이미지 OCI 업로드
-		for (String googleUrl : imageUrls) {
-			try {
-				// google 이미지 다운로드
-				byte[] bytes = googleClient.downloadImage(googleUrl);
-
-				//OCI 업로드->objectKey 반환
-				PresignedUrlResponseDto presignedUrlResponseDto =
-					presignedUrlService.createPresignedUrl(
-						"places",
-						new PresignedUrlRequestDto("image/jpeg")
-					);
-
-				presignedUrlService.uploadToOci(presignedUrlResponseDto.uploadUrl(), bytes, "image/jpeg");
-
-				PlaceImages placeImages = placeMapper.createPlaceImages(placeKey, presignedUrlResponseDto.imageUrl());
-				placeImagesRepository.save(placeImages);
-			} catch (Exception e) {
-				log.warn("이미지를 OCI에 업로드하여 저장하는 것을 실패했어요. placeKey={},imageUrl={}", placeKey, googleUrl, e);
-			}
-
-		}
 	}
 
 	private boolean isLunchTime(LocalTime now) {

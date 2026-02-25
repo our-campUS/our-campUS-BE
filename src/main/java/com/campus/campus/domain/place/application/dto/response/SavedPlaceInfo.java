@@ -23,7 +23,7 @@ public record SavedPlaceInfo(
 	@Schema(description = "장소 주소(없을 수 있음)", example = "서울특별시 노원구 화랑로 621")
 	String address,
 
-	@Schema(description = "장소 카테고리(없을 수 있음)", example = "교육,학문>대학교")
+	@Schema(description = "장소 카테고리 (category_group_name, 없으면 null)", example = "카페")
 	String category,
 
 	@Schema(description = "장소 상세 링크(카카오 place_url 등)", example = "https://place.map.kakao.com/123456789")
