@@ -8,6 +8,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 public record SearchPlaceInfoResponse(
+	@Schema(description = "DB 장소 ID (미저장 시 null)", example = "42")
+	Long placeId,
+
 	@Schema(description = "해당 장소명", example = "숙명여자대학교")
 	@NotBlank
 	String placeName,

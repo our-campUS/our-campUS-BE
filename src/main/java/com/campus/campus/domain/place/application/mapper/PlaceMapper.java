@@ -57,6 +57,7 @@ public class PlaceMapper {
 	public SearchPlaceInfoResponse toSearchPlaceInfoResponse(SavedPlaceInfo savedPlaceInfo, boolean isLiked,
 		List<SearchPartnershipInfoResponse> partnerships, Double averageStar) {
 		return new SearchPlaceInfoResponse(
+			savedPlaceInfo.placeId(),
 			savedPlaceInfo.placeName(),
 			savedPlaceInfo.placeKey(),
 			savedPlaceInfo.address(),
