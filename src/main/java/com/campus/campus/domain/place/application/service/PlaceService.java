@@ -51,6 +51,7 @@ import com.campus.campus.domain.place.domain.repository.CouncilPartnershipSugges
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
+import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.place.infrastructure.kakao.KakaoLocalClient;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -94,6 +95,7 @@ public class PlaceService {
 	private final CouncilPartnershipSuggestionRepository partnershipSuggestionRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final ReviewImageRepository reviewImageRepository;
+	private final PostImageRepository postImageRepository;
 	private final ReviewMapper reviewMapper;
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
@@ -140,11 +142,58 @@ public class PlaceService {
 				)
 			));
 
+		// 제휴 장소 이미지: postId → List<imageUrl>
+		Set<Long> postIds = partnershipMap.values().stream()
+			.flatMap(List::stream)
+			.map(SearchPartnershipInfoResponse::postId)
+			.collect(Collectors.toSet());
+
+		Map<Long, List<String>> postImageMap = postIds.isEmpty()
+			? Collections.emptyMap()
+			: postImageRepository.findImageUrlsByPostIds(postIds).stream()
+				.collect(Collectors.groupingBy(
+					obj -> (Long)obj[0],
+					Collectors.mapping(obj -> (String)obj[1], Collectors.toList())
+				));
+
+		// 비제휴 DB 장소 이미지: placeId → imageUrl (1장)
+		Set<Long> nonPartnershipPlaceIds = basicResults.stream()
+			.filter(info -> info.placeId() != null && !partnershipMap.containsKey(info.placeKey()))
+			.map(SavedPlaceInfo::placeId)
+			.collect(Collectors.toSet());
+
+		Map<Long, String> reviewImageMap = nonPartnershipPlaceIds.isEmpty()
+			? Collections.emptyMap()
+			: reviewImageRepository.findFirstImageUrlsByPlaceIds(nonPartnershipPlaceIds).stream()
+				.collect(Collectors.toMap(obj -> (Long)obj[0], obj -> (String)obj[1]));
+
 		return basicResults.stream()
-			.map(info -> placeMapper.toSearchPlaceInfoResponse(
-				info, likedKeys.contains(info.placeKey()), partnershipMap.getOrDefault(info.placeKey(), List.of()),
-				Math.round(starMap.getOrDefault(info.placeKey(), 0.0) * 10.0) / 10.0
-			))
+			.map(info -> {
+				List<SearchPartnershipInfoResponse> partnerships = partnershipMap.getOrDefault(info.placeKey(),
+					List.of());
+
+				List<String> imgUrls;
+				if (!partnerships.isEmpty()) {
+					// 제휴 장소 → PostImage 전체
+					imgUrls = partnerships.stream()
+						.map(SearchPartnershipInfoResponse::postId)
+						.flatMap(postId -> postImageMap.getOrDefault(postId, List.of()).stream())
+						.toList();
+				} else if (info.placeId() != null) {
+					// DB 장소 → ReviewImage 1장
+					String reviewImgUrl = reviewImageMap.get(info.placeId());
+					imgUrls = reviewImgUrl != null ? List.of(reviewImgUrl) : List.of();
+				} else {
+					// 미저장 장소 → 빈 배열
+					imgUrls = List.of();
+				}
+
+				return placeMapper.toSearchPlaceInfoResponse(
+					info, likedKeys.contains(info.placeKey()), partnerships,
+					Math.round(starMap.getOrDefault(info.placeKey(), 0.0) * 10.0) / 10.0,
+					imgUrls
+				);
+			})
 			.toList();
 	}
 

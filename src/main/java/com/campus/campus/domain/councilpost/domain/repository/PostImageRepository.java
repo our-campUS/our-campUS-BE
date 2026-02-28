@@ -1,6 +1,7 @@
 package com.campus.campus.domain.councilpost.domain.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +27,12 @@ public interface PostImageRepository extends JpaRepository<PostImage, Long> {
 	List<String> findImageUrlsByPost(@Param("post") StudentCouncilPost post);
 
 	List<PostImage> findAllByPostIn(List<StudentCouncilPost> posts);
+
+	@Query("""
+		SELECT pi.post.id, pi.imageUrl
+		FROM PostImage pi
+		WHERE pi.post.id IN :postIds
+		ORDER BY pi.id ASC
+		""")
+	List<Object[]> findImageUrlsByPostIds(@Param("postIds") Set<Long> postIds);
 }
