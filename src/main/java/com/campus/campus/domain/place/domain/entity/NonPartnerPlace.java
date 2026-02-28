@@ -3,6 +3,8 @@ package com.campus.campus.domain.place.domain.entity;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.global.entity.BaseEntity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,31 +22,30 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
-	name = "liked_places",
+	name = "non_partner_places",
 	uniqueConstraints = {
-		@UniqueConstraint(columnNames = {"user_id", "place_id"}),
-		@UniqueConstraint(columnNames = {"user_id", "non_partner_place_id"})
-	})
+		@UniqueConstraint(columnNames = {"place_key"})
+	}
+)
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LikedPlace extends BaseEntity {
+public class NonPartnerPlace extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long likedPlaceId;
+	private Long nonPartnerPlaceId;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id")
-	private User user;
+	@Column(name = "place_key", nullable = false, length = 50)
+	private String placeKey;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "place_id")
-	private Place place;
+	@Column(name = "place_name", nullable = false, length = 200)
+	private String placeName;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "non_partner_place_id")
-	private NonPartnerPlace nonPartnerPlace;
+	@Column(name = "address", length = 300)
+	private String address;
 
+	@Embedded
+	private Coordinate coordinate;
 }

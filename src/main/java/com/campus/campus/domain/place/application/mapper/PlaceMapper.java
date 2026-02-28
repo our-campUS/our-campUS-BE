@@ -21,6 +21,7 @@ import com.campus.campus.domain.place.application.dto.response.kakao.KakaoSearch
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
+import com.campus.campus.domain.place.domain.entity.NonPartnerPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
@@ -248,5 +249,59 @@ public class PlaceMapper {
 			(reviews != null) ? reviews : Collections.emptyList(),
 			(reviews != null) ? reviews.size() : 0
 		);
+	}
+
+	public NonPartnerPlace createNonPartnerPlace(SavedPlaceInfo placeInfo) {
+		return NonPartnerPlace.builder()
+			.placeKey(placeInfo.placeKey())
+			.placeName(stripHtml(placeInfo.placeName()))
+			.address(placeInfo.address())
+			.coordinate(placeInfo.coordinate())
+			.build();
+	}
+
+	private String stripHtml(String raw) {
+		if (raw == null) return null;
+		return raw.replaceAll("<[^>]*>", "");
+	}
+
+	public LikedPlace createPartnerLikedPlace(User user, Place place) {
+		return LikedPlace.builder()
+			.user(user)
+			.place(place)
+			.nonPartnerPlace(null)
+			.build();
+	}
+
+	public LikedPlace createNonPartnerLikedPlace(User user, NonPartnerPlace nonPartnerPlace) {
+		return LikedPlace.builder()
+			.user(user)
+			.place(null)
+			.nonPartnerPlace(nonPartnerPlace)
+			.build();
+	}
+	public LikedPlace createPlace(User user, Place place) {
+		return LikedPlace.builder()
+			.user(user)
+			.place(place)
+			.nonPartnerPlace(null)
+			.build();
+	}
+
+	public LikedPlace createPlace(User user, NonPartnerPlace nonPartnerPlace) {
+		return LikedPlace.builder()
+			.user(user)
+			.place(null)
+			.nonPartnerPlace(nonPartnerPlace)
+			.build();
+	}
+
+	public NonPartnerPlace createNonPartnerPlace(SavedPlaceInfo placeInfo, String cleanedName) {
+		return NonPartnerPlace.builder()
+			.placeKey(placeInfo.placeKey())
+			.placeName(cleanedName)
+			.address(placeInfo.address())
+			.coordinate(placeInfo.coordinate())
+			.build();
 	}
 }

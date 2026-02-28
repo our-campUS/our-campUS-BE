@@ -41,14 +41,20 @@ import com.campus.campus.domain.place.application.dto.response.SearchPlaceInfoRe
 import com.campus.campus.domain.place.application.dto.response.kakao.KakaoSearchResponse;
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
+import com.campus.campus.domain.place.application.exception.CoordinateNotFoundException;
+import com.campus.campus.domain.place.application.exception.ErrorCode;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
+import com.campus.campus.domain.place.domain.entity.NonPartnerPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
+import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.entity.UserPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.repository.CouncilPartnershipSuggestionRepository;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
+import com.campus.campus.domain.place.domain.repository.NonPartnerPlaceRepository;
+import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
 import com.campus.campus.domain.place.infrastructure.kakao.KakaoLocalClient;
@@ -62,6 +68,10 @@ import com.campus.campus.domain.user.application.exception.UserNotFoundException
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.util.geocoder.GeoUtil;
+import com.campus.campus.global.common.exception.ApplicationException;
+import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
+import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
+import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,6 +99,7 @@ public class PlaceService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
+	private final NonPartnerPlaceRepository nonPartnerPlaceRepository;
 	private final ReviewRepository reviewRepository;
 	private final UserPartnershipSuggestionRepository userPartnershipSuggestionRepository;
 	private final CouncilPartnershipSuggestionRepository partnershipSuggestionRepository;
@@ -218,43 +229,91 @@ public class PlaceService {
 
 	}
 
-	//장소 저장
-	@Transactional
-	public LikeResponse likePlace(SavedPlaceInfo placeInfo, Long userId) {
+	public LikeResponse likePlace(SavedPlaceInfo request, Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
-		String placeKey = placeInfo.placeKey();
+		String placeKey = request.placeKey();
 
-		//이미 좋아요가 존재하는지 확인
-		Optional<LikedPlace> likedPlace = likedPlacesRepository.findByUserIdAndPlace_PlaceKey(userId, placeKey);
+		// 1) 제휴면: 기존 place 기반 토글
+		Optional<Place> partnerPlaceOpt = placeRepository.findByPlaceKey(placeKey);
+		if (partnerPlaceOpt.isPresent()) {
+			return togglePartnerLike(user, partnerPlaceOpt.get());
+		}
 
-		if (likedPlace.isPresent()) {
-			//이미 좋아요 상태->좋아요 취소
-			likedPlacesRepository.delete(likedPlace.get());
+		// 2) 비제휴면: non_partner_places + liked_places 토글
+		return toggleNonPartnerLike(user, request);
+	}
+
+	private LikeResponse togglePartnerLike(User user, Place place) {
+		Long userId = user.getId();
+		String placeKey = place.getPlaceKey();
+
+		Optional<LikedPlace> liked =
+			likedPlacesRepository.findByUserIdAndPlace_PlaceKey(userId, placeKey);
+
+		if (liked.isPresent()) {
+			likedPlacesRepository.delete(liked.get());
 			return new LikeResponse(null, false);
 		}
 
-		//Place 엔티티 생성
-		Place place;
-		try {
-			//조회
-			place = placeRepository.findByPlaceKey(placeKey)
-				.orElseGet(() -> {
-					Place newPlace = placeRepository.save(placeMapper.createPlace(placeInfo));
-
-					return newPlace;
-				});
-		} catch (DataIntegrityViolationException e) {
-			//동시 생성으로 unique 제약 위반 시 다시 조회
-			place = placeRepository.findByPlaceKey(placeKey)
-				.orElseThrow(PlaceCreationException::new);
-		}
-		//likedPlace 저장
-		LikedPlace savedLikedPlace = placeMapper.createLikedPlace(user, place);
-		likedPlacesRepository.save(savedLikedPlace);
+		LikedPlace newLiked = placeMapper.createPartnerLikedPlace(user, place);
+		likedPlacesRepository.save(newLiked);
 
 		return placeMapper.toLikeResponse(place);
+	}
+
+	private LikeResponse toggleNonPartnerLike(User user, SavedPlaceInfo request) {
+		if (request.coordinate() == null) {
+			throw new CoordinateNotFoundException();
+		}
+
+		Long userId = user.getId();
+		String placeKey = request.placeKey();
+
+		Optional<LikedPlace> liked =
+			likedPlacesRepository.findByUserIdAndNonPartnerPlace_PlaceKey(userId, placeKey);
+
+		if (liked.isPresent()) {
+			likedPlacesRepository.delete(liked.get());
+			return new LikeResponse(null, false);
+		}
+
+		NonPartnerPlace nonPartnerPlace = findOrCreateNonPartnerPlace(request);
+
+		try {
+			LikedPlace newLiked =
+				placeMapper.createNonPartnerLikedPlace(user, nonPartnerPlace);
+			likedPlacesRepository.save(newLiked);
+
+			return new LikeResponse(null, true);
+
+		} catch (DataIntegrityViolationException e) {
+			// 동시 클릭/중복 요청(unique(user_id, non_partner_place_id))
+			Optional<LikedPlace> again =
+				likedPlacesRepository.findByUserIdAndNonPartnerPlace_PlaceKey(userId, placeKey);
+
+			if (again.isPresent()) {
+				likedPlacesRepository.delete(again.get());
+				return new LikeResponse(null, false);
+			}
+			throw new PlaceCreationException(); // 2605 재사용
+		}
+	}
+
+	private NonPartnerPlace findOrCreateNonPartnerPlace(SavedPlaceInfo request) {
+		String placeKey = request.placeKey();
+
+		try {
+			return nonPartnerPlaceRepository.findByPlaceKey(placeKey)
+				.orElseGet(() -> nonPartnerPlaceRepository.save(
+					placeMapper.createNonPartnerPlace(request)
+				));
+		} catch (DataIntegrityViolationException e) {
+			// 동시 생성(unique(place_key)) -> 재조회
+			return nonPartnerPlaceRepository.findByPlaceKey(placeKey)
+				.orElseThrow(PlaceCreationException::new); // 2605 재사용
+		}
 	}
 
 	@Transactional(readOnly = true)
