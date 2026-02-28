@@ -61,7 +61,7 @@ public class PlaceController {
 		@CurrentUserId(required = false) Long userId
 	) {
 		List<SearchPlaceInfoResponse> searchResponse = placeService.searchByLocationAndKeywordWithInfo(userId, lat, lng,
-			keyword, 3);
+			keyword);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}

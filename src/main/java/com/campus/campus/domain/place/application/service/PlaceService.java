@@ -106,8 +106,8 @@ public class PlaceService {
 	}
 
 	public List<SearchPlaceInfoResponse> searchByLocationAndKeywordWithInfo(Long userId, double lat, double lng,
-		String keyword, int imageLimit) {
-		List<SavedPlaceInfo> basicResults = searchByLocationAndKeyword(lat, lng, keyword, imageLimit);
+		String keyword) {
+		List<SavedPlaceInfo> basicResults = searchByLocationAndKeyword(lat, lng, keyword, 0);
 
 		if (basicResults.isEmpty()) {
 			return List.of();
