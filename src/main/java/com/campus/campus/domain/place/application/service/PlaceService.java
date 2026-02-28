@@ -178,7 +178,7 @@ public class PlaceService {
 
 		Map<Long, String> reviewImageMap = nonPartnershipPlaceIds.isEmpty()
 			? Collections.emptyMap()
-			: reviewImageRepository.findFirstImageUrlsByPlaceIds(nonPartnershipPlaceIds).stream()
+			: reviewImageRepository.findOldestImageUrlsByPlaceIds(nonPartnershipPlaceIds).stream()
 				.collect(Collectors.toMap(obj -> (Long)obj[0], obj -> (String)obj[1]));
 
 		return basicResults.stream()

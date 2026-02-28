@@ -21,11 +21,15 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Long> 
 	void deleteByReview(Review review);
 
 	@Query("""
-		SELECT ri.review.place.placeId, MIN(ri.imageUrl)
+		SELECT ri.review.place.placeId, ri.imageUrl
 		FROM ReviewImage ri
 		WHERE ri.review.place.placeId IN :placeIds
-		GROUP BY ri.review.place.placeId
+		  AND ri.id = (
+		    SELECT MIN(ri2.id)
+		    FROM ReviewImage ri2
+		    WHERE ri2.review.place.placeId = ri.review.place.placeId
+		  )
 		""")
-	List<Object[]> findFirstImageUrlsByPlaceIds(@Param("placeIds") Set<Long> placeIds);
+	List<Object[]> findOldestImageUrlsByPlaceIds(@Param("placeIds") Set<Long> placeIds);
 
 }
