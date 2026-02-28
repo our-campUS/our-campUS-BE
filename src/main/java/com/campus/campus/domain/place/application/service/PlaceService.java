@@ -132,15 +132,29 @@ public class PlaceService {
 				})
 			);
 
-		Map<String, List<SearchPartnershipInfoResponse>> partnershipMap = studentCouncilPostRepository
-			.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST)).stream()
-			.collect(Collectors.groupingBy(
-				obj -> (String)obj[0],
-				Collectors.mapping(
-					obj -> new SearchPartnershipInfoResponse((Long)obj[3], (String)obj[1], (String)obj[2]),
-					Collectors.toList()
-				)
-			));
+		Map<String, List<SearchPartnershipInfoResponse>> partnershipMap;
+		if (userId != null) {
+			User user = userRepository.findById(userId)
+				.orElseThrow(UserNotFoundException::new);
+			Long schoolId = user.getSchool() != null ? user.getSchool().getSchoolId() : null;
+			Long collegeId = user.getCollege() != null ? user.getCollege().getCollegeId() : null;
+			Long majorId = user.getMajor() != null ? user.getMajor().getMajorId() : null;
+
+			partnershipMap = studentCouncilPostRepository
+				.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST),
+					majorId, collegeId, schoolId,
+					CouncilType.MAJOR_COUNCIL, CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL)
+				.stream()
+				.collect(Collectors.groupingBy(
+					obj -> (String)obj[0],
+					Collectors.mapping(
+						obj -> new SearchPartnershipInfoResponse((Long)obj[3], (String)obj[1], (String)obj[2]),
+						Collectors.toList()
+					)
+				));
+		} else {
+			partnershipMap = Collections.emptyMap();
+		}
 
 		// 제휴 장소 이미지: postId → List<imageUrl>
 		Set<Long> postIds = partnershipMap.values().stream()
