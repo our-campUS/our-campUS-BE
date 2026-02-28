@@ -101,7 +101,7 @@ public class PlaceService {
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		log.info("카카오 좌표 기반 검색: lat={}, lng={}, keyword={}", lat, lng, keyword);
 
-		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, lat, lng, 2000, 5);
+		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, lat, lng, 1500);
 		return processSearchResults(kakaoSearchResponse);
 	}
 
@@ -211,7 +211,7 @@ public class PlaceService {
 			.toList();
 	}
 
-	public List<SavedPlaceInfo> searchByKeyword(String keyword, int imageLimit) {
+	public List<SavedPlaceInfo> searchByKeyword(String keyword) {
 		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, 5);
 
 		return processSearchResults(kakaoSearchResponse);
