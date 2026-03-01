@@ -39,8 +39,9 @@ public class PlaceController {
 	private final PartnershipPlaceService partnershipPlaceService;
 	private final GeoCoderClient geoCoderClient;
 
+	@Deprecated
 	@GetMapping("/search")
-	@Operation(summary = "현위치 기반 가까운 순으로 장소 키워드 검색", description = "검색 결과 5개 검색되도록 함")
+	@Operation(summary = "현위치 기반 가까운 순으로 장소 키워드 검색", description = "GET /places/search/info 로 대체됨", deprecated = true)
 	public CommonResponse<List<SavedPlaceInfo>> getPlaceWithLocationAndKeyword(
 		@Parameter(description = "검색할 키워드", example = "스타벅스") @RequestParam String keyword,
 		@Parameter(description = "현재 위치의 위도", example = "37.50415") @RequestParam double lat,
@@ -60,7 +61,7 @@ public class PlaceController {
 		@CurrentUserId(required = false) Long userId
 	) {
 		List<SearchPlaceInfoResponse> searchResponse = placeService.searchByLocationAndKeywordWithInfo(userId, lat, lng,
-			keyword, 3);
+			keyword);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
@@ -68,7 +69,7 @@ public class PlaceController {
 	@GetMapping("/search/keyword")
 	@Operation(summary = "키워드 기반 장소 검색")
 	public CommonResponse<List<SavedPlaceInfo>> getPlaceInfoWithKeyword(@RequestParam String keyword) {
-		List<SavedPlaceInfo> searchResponse = placeService.searchByKeyword(keyword, 3);
+		List<SavedPlaceInfo> searchResponse = placeService.searchByKeyword(keyword);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SEARCH_SUCCESS, searchResponse);
 	}
@@ -198,10 +199,12 @@ public class PlaceController {
 		return CommonResponse.success(PlaceResponseCode.PARTNERSHIP_SUGGEST_SUCCESS);
 	}
 
+	@Deprecated
 	@GetMapping("/search/detailed")
 	@Operation(
 		summary = "키워드 기반 장소 상세 검색 (제휴/리뷰/좋아요 정보 포함)",
-		description = "키워드로 장소를 검색하며, DB에 데이터가 있는 경우 리뷰, 별점, 제휴 정보를 함께 반환합니다."
+		description = "GET /places/search/info + GET /reviews/list/{placeId} 조합으로 대체됨",
+		deprecated = true
 	)
 	public CommonResponse<List<PartnershipDetailResponse>> searchDetailedPlaces(
 		@Parameter(description = "검색할 키워드", example = "스타벅스") @RequestParam String keyword,

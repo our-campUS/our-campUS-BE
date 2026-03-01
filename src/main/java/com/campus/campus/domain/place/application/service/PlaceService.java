@@ -57,6 +57,7 @@ import com.campus.campus.domain.place.domain.repository.NonPartnerPlaceRepositor
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
+import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.place.infrastructure.kakao.KakaoLocalClient;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
@@ -105,18 +106,19 @@ public class PlaceService {
 	private final CouncilPartnershipSuggestionRepository partnershipSuggestionRepository;
 	private final StudentCouncilRepository studentCouncilRepository;
 	private final ReviewImageRepository reviewImageRepository;
+	private final PostImageRepository postImageRepository;
 	private final ReviewMapper reviewMapper;
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		log.info("카카오 좌표 기반 검색: lat={}, lng={}, keyword={}", lat, lng, keyword);
 
-		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, lat, lng, 2000, 5);
+		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, lat, lng, 1500);
 		return processSearchResults(kakaoSearchResponse);
 	}
 
 	public List<SearchPlaceInfoResponse> searchByLocationAndKeywordWithInfo(Long userId, double lat, double lng,
-		String keyword, int imageLimit) {
-		List<SavedPlaceInfo> basicResults = searchByLocationAndKeyword(lat, lng, keyword, imageLimit);
+		String keyword) {
+		List<SavedPlaceInfo> basicResults = searchByLocationAndKeyword(lat, lng, keyword, 0);
 
 		if (basicResults.isEmpty()) {
 			return List.of();
@@ -141,25 +143,86 @@ public class PlaceService {
 				})
 			);
 
-		Map<String, List<SearchPartnershipInfoResponse>> partnershipMap = studentCouncilPostRepository
-			.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST)).stream()
-			.collect(Collectors.groupingBy(
-				obj -> (String)obj[0],
-				Collectors.mapping(
-					obj -> new SearchPartnershipInfoResponse((Long)obj[3], (String)obj[1], (String)obj[2]),
-					Collectors.toList()
-				)
-			));
+		Map<String, List<SearchPartnershipInfoResponse>> partnershipMap;
+		if (userId != null) {
+			User user = userRepository.findById(userId)
+				.orElseThrow(UserNotFoundException::new);
+			Long schoolId = user.getSchool() != null ? user.getSchool().getSchoolId() : null;
+			Long collegeId = user.getCollege() != null ? user.getCollege().getCollegeId() : null;
+			Long majorId = user.getMajor() != null ? user.getMajor().getMajorId() : null;
+
+			partnershipMap = studentCouncilPostRepository
+				.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST),
+					majorId, collegeId, schoolId,
+					CouncilType.MAJOR_COUNCIL, CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL)
+				.stream()
+				.collect(Collectors.groupingBy(
+					obj -> (String)obj[0],
+					Collectors.mapping(
+						obj -> new SearchPartnershipInfoResponse((Long)obj[3], (String)obj[1], (String)obj[2]),
+						Collectors.toList()
+					)
+				));
+		} else {
+			partnershipMap = Collections.emptyMap();
+		}
+
+		// 제휴 장소 이미지: postId → List<imageUrl>
+		Set<Long> postIds = partnershipMap.values().stream()
+			.flatMap(List::stream)
+			.map(SearchPartnershipInfoResponse::postId)
+			.collect(Collectors.toSet());
+
+		Map<Long, List<String>> postImageMap = postIds.isEmpty()
+			? Collections.emptyMap()
+			: postImageRepository.findImageUrlsByPostIds(postIds).stream()
+				.collect(Collectors.groupingBy(
+					obj -> (Long)obj[0],
+					Collectors.mapping(obj -> (String)obj[1], Collectors.toList())
+				));
+
+		// 비제휴 DB 장소 이미지: placeId → imageUrl (1장)
+		Set<Long> nonPartnershipPlaceIds = basicResults.stream()
+			.filter(info -> info.placeId() != null && !partnershipMap.containsKey(info.placeKey()))
+			.map(SavedPlaceInfo::placeId)
+			.collect(Collectors.toSet());
+
+		Map<Long, String> reviewImageMap = nonPartnershipPlaceIds.isEmpty()
+			? Collections.emptyMap()
+			: reviewImageRepository.findOldestImageUrlsByPlaceIds(nonPartnershipPlaceIds).stream()
+				.collect(Collectors.toMap(obj -> (Long)obj[0], obj -> (String)obj[1]));
 
 		return basicResults.stream()
-			.map(info -> placeMapper.toSearchPlaceInfoResponse(
-				info, likedKeys.contains(info.placeKey()), partnershipMap.getOrDefault(info.placeKey(), List.of()),
-				Math.round(starMap.getOrDefault(info.placeKey(), 0.0) * 10.0) / 10.0
-			))
+			.map(info -> {
+				List<SearchPartnershipInfoResponse> partnerships = partnershipMap.getOrDefault(info.placeKey(),
+					List.of());
+
+				List<String> imgUrls;
+				if (!partnerships.isEmpty()) {
+					// 제휴 장소 → PostImage 전체
+					imgUrls = partnerships.stream()
+						.map(SearchPartnershipInfoResponse::postId)
+						.flatMap(postId -> postImageMap.getOrDefault(postId, List.of()).stream())
+						.toList();
+				} else if (info.placeId() != null) {
+					// DB 장소 → ReviewImage 1장
+					String reviewImgUrl = reviewImageMap.get(info.placeId());
+					imgUrls = reviewImgUrl != null ? List.of(reviewImgUrl) : List.of();
+				} else {
+					// 미저장 장소 → 빈 배열
+					imgUrls = List.of();
+				}
+
+				return placeMapper.toSearchPlaceInfoResponse(
+					info, likedKeys.contains(info.placeKey()), partnerships,
+					Math.round(starMap.getOrDefault(info.placeKey(), 0.0) * 10.0) / 10.0,
+					imgUrls
+				);
+			})
 			.toList();
 	}
 
-	public List<SavedPlaceInfo> searchByKeyword(String keyword, int imageLimit) {
+	public List<SavedPlaceInfo> searchByKeyword(String keyword) {
 		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, 5);
 
 		return processSearchResults(kakaoSearchResponse);

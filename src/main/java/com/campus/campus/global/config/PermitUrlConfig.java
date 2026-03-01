@@ -30,6 +30,7 @@ public class PermitUrlConfig {
 			"/jwt/token/reissue",
 			"/managers/login",
 			"/places/search",
+			"/places/search/info",
 			"/storage/presigned",
 			"/places",
 			"/api/partnership/list",

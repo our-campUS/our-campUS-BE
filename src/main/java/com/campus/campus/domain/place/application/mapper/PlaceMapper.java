@@ -56,8 +56,9 @@ public class PlaceMapper {
 	}
 
 	public SearchPlaceInfoResponse toSearchPlaceInfoResponse(SavedPlaceInfo savedPlaceInfo, boolean isLiked,
-		List<SearchPartnershipInfoResponse> partnerships, Double averageStar) {
+		List<SearchPartnershipInfoResponse> partnerships, Double averageStar, List<String> imgUrls) {
 		return new SearchPlaceInfoResponse(
+			savedPlaceInfo.placeId(),
 			savedPlaceInfo.placeName(),
 			savedPlaceInfo.placeKey(),
 			savedPlaceInfo.address(),
@@ -65,7 +66,7 @@ public class PlaceMapper {
 			savedPlaceInfo.link(),
 			savedPlaceInfo.telephone(),
 			savedPlaceInfo.coordinate(),
-			savedPlaceInfo.imgUrls(),
+			imgUrls,
 			isLiked,
 			partnerships,
 			averageStar

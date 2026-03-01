@@ -26,7 +26,7 @@ public class KakaoLocalClient {
 	/**
 	 * 좌표 기반 키워드 장소 검색
 	 */
-	public KakaoSearchResponse searchPlaces(String keyword, double lat, double lng, int radius, int count) {
+	public KakaoSearchResponse searchPlaces(String keyword, double lat, double lng, int radius) {
 		KakaoSearchResponse response = restClient.get()
 				.uri(uriBuilder -> uriBuilder.scheme("https")
 						.host("dapi.kakao.com")
@@ -35,7 +35,6 @@ public class KakaoLocalClient {
 						.queryParam("y", lat)
 						.queryParam("x", lng)
 						.queryParam("radius", radius)
-						.queryParam("size", count)
 						.queryParam("sort", "distance")
 						.build())
 				.header("Authorization", "KakaoAK " + apiKey)

@@ -319,14 +319,28 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		    FROM StudentCouncilPost p
 		    JOIN p.writer w
 		    JOIN p.place pl
+		    LEFT JOIN w.school s
+		    LEFT JOIN w.college c
+		    LEFT JOIN w.major m
 		    WHERE pl.placeKey IN :placeKeys
 		      AND p.category = 'PARTNERSHIP'
 		      AND :now BETWEEN p.startDateTime AND p.endDateTime
 		      AND w.deletedAt IS NULL
+		      AND (
+		           (w.councilType = :majorType AND m.majorId = :majorId)
+		        OR (w.councilType = :collegeType AND c.collegeId = :collegeId)
+		        OR (w.councilType = :schoolType AND s.schoolId = :schoolId)
+		      )
 		""")
 	List<Object[]> findActivePartnershipsByPlaceKeys(
 		@Param("placeKeys") List<String> placeKeys,
-		@Param("now") LocalDateTime now
+		@Param("now") LocalDateTime now,
+		@Param("majorId") Long majorId,
+		@Param("collegeId") Long collegeId,
+		@Param("schoolId") Long schoolId,
+		@Param("majorType") CouncilType majorType,
+		@Param("collegeType") CouncilType collegeType,
+		@Param("schoolType") CouncilType schoolType
 	);
 
 	@EntityGraph(attributePaths = {"writer", "writer.school", "writer.college", "writer.major", "place"})
