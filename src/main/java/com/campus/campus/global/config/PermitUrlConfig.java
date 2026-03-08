@@ -34,7 +34,9 @@ public class PermitUrlConfig {
 			"/storage/presigned",
 			"/places",
 			"/api/partnership/list",
-			"/api/partnership/map"
+			"/api/partnership/map",
+			// TODO: main 브랜치 머지 전 반드시 제거 — dev 전용 엔드포인트
+			"/dev/**"
 		};
 	}
 }
