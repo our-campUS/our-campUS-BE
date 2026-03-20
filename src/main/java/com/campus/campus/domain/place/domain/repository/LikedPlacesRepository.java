@@ -32,11 +32,13 @@ public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 	boolean existsByUserAndPlace(User user, Place place);
 
 	@Query("""
-		    SELECT COALESCE(lp.place.placeKey, lp.nonPartnerPlace.placeKey)
+		    SELECT COALESCE(p.placeKey, np.placeKey)
 		    FROM LikedPlace lp
+		    LEFT JOIN lp.place p
+		    LEFT JOIN lp.nonPartnerPlace np
 		    WHERE lp.user.id = :userId
-		      AND (lp.place.placeKey IN :placeKeys
-		           OR lp.nonPartnerPlace.placeKey IN :placeKeys)
+		      AND (p.placeKey IN :placeKeys
+		           OR np.placeKey IN :placeKeys)
 		""")
 	Set<String> findLikedPlaceKeys(@Param("userId") Long userId, @Param("placeKeys") List<String> placeKeys);
 
