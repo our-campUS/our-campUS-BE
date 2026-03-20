@@ -17,6 +17,9 @@ public record PartnershipPinResponse(
 	double latitude,
 
 	@Schema(description = "장소 경도", example = "126.96059")
-	double longitude
+	double longitude,
+
+	@Schema(description = "장소 카테고리", example = "음식점")
+	String placeCategory
 ) {
 }
