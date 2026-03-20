@@ -37,6 +37,8 @@ map:
   naver:
     client-id: dummy
     client-secret: dummy
+  kakao:
+    client-id: dummy
   geocoder:
     api-key: dummy
 

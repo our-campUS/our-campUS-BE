@@ -63,6 +63,8 @@ map:
   naver:
     client-id: ${MAP_CLIENT_ID}
     client-secret: ${MAP_CLIENT_SECRET}
+  kakao:
+    client-id: ${KAKAO_MAP_CLIENT_ID}
   geocoder:
     api-key: ${GEOCODER_API_KEY}
 

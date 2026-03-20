@@ -18,7 +18,7 @@ public class KakaoLocalClient {
 
 	public KakaoLocalClient(
 			RestClient restClient,
-			@Value("${oauth.kakao.client-id}") String apiKey) {
+			@Value("${map.kakao.client-id}") String apiKey) {
 		this.restClient = restClient;
 		this.apiKey = apiKey;
 	}
