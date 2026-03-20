@@ -79,7 +79,8 @@ public class PlaceMapper {
 			place.getPlaceId(),
 			place.getPlaceName(),
 			place.getCoordinate().latitude(),
-			place.getCoordinate().longitude()
+			place.getCoordinate().longitude(),
+			place.getPlaceCategory()
 		);
 	}
 
