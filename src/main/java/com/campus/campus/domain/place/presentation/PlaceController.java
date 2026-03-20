@@ -82,6 +82,15 @@ public class PlaceController {
 		return ResponseEntity.ok(geoCoderClient.getAddress(lat, lng));
 	}
 
+	@GetMapping("/like/check")
+	@Operation(summary = "장소 좋아요 여부 확인")
+	public CommonResponse<LikeResponse> checkLike(
+		@CurrentUserId Long userId,
+		@RequestParam String placeKey) {
+		boolean isLiked = placeService.isPlaceLiked(userId, placeKey);
+		return CommonResponse.success(PlaceResponseCode.LIKE_CHECK_SUCCESS, new LikeResponse(null, isLiked));
+	}
+
 	@PostMapping("/like-place")
 	@Operation(summary = "장소 좋아요 누르기")
 	public CommonResponse<LikeResponse> likePlace(@Valid @RequestBody SavedPlaceInfo request,
