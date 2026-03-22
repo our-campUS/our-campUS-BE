@@ -110,6 +110,12 @@ public class PlaceService {
 	private final PostImageRepository postImageRepository;
 	private final ReviewMapper reviewMapper;
 
+	@Transactional(readOnly = true)
+	public boolean isPlaceLiked(Long userId, String placeKey) {
+		Set<String> result = likedPlacesRepository.findLikedPlaceKeys(userId, List.of(placeKey));
+		return result.contains(placeKey);
+	}
+
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		log.info("카카오 좌표 기반 검색: lat={}, lng={}, keyword={}", lat, lng, keyword);
 
