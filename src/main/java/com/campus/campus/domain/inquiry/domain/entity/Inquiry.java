@@ -81,10 +81,6 @@ public class Inquiry extends BaseEntity {
 		return "알 수 없음";
 	}
 
-	public String getWriterType() {
-		return (this.writer != null) ? this.writerType.name() : null;
-	}
-
 	public void updateAnswer(String answer) {
 		if (this.status == InquiryStatus.COMPLETED) {
 			throw new AlreadyAnsweredInquiry();

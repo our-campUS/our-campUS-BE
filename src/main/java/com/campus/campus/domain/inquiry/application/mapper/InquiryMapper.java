@@ -38,7 +38,7 @@ public class InquiryMapper {
 		return new InquiryCreateResponse(
 			inquiry.getId(),
 			inquiry.getWriterId(),
-			inquiry.getWriterType(),
+			inquiry.getWriterType().toString(),
 			inquiry.getTitle(),
 			inquiry.getContent(),
 			inquiry.getStatus().name(),
@@ -51,7 +51,7 @@ public class InquiryMapper {
 			inquiry.getId(),
 			inquiry.getWriterId(),
 			inquiry.getWriterName(),
-			inquiry.getWriterType(),
+			inquiry.getWriterType().toString(),
 			inquiry.getTitle(),
 			inquiry.getContent(),
 			inquiry.getStatus().name(),
