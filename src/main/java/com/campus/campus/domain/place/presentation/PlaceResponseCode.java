@@ -18,7 +18,8 @@ public enum PlaceResponseCode implements ResponseCodeInterface {
 	GET_RANDOM_PLACE_SUCCESS(200, HttpStatus.OK, "시간대별 랜덤 장소 조회가 완료되었습니다."),
 	PARTNERSHIP_SUGGEST_SUCCESS(200, HttpStatus.OK, "제휴 신청이 완료되었어요."),
 	GET_PLACE_DETAILS_SUCCESS(200, HttpStatus.OK, "장소 단건 상세 조회가 완료되었어요."),
-	LIKE_CHECK_SUCCESS(200, HttpStatus.OK, "좋아요 여부 조회가 완료되었습니다.");
+	LIKE_CHECK_SUCCESS(200, HttpStatus.OK, "좋아요 여부 조회가 완료되었습니다."),
+	CHECK_LIKED_PLACES_SUCCESS(200,HttpStatus.OK, "관심 장소 목록 조회에 성공했습니다.");
 
 	private final int code;
 	private final HttpStatus status;

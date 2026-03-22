@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,11 +28,14 @@ import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
 import com.campus.campus.domain.councilpost.application.exception.AcademicInfoNotSetException;
 import com.campus.campus.domain.councilpost.domain.entity.PostCategory;
+import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
+import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
-// import com.campus.campus.domain.place.application.dto.response.LikedPlacesResponse;
+import com.campus.campus.domain.place.application.dto.response.LikedPlaceDetailResponse;
+import com.campus.campus.domain.place.application.dto.response.LikedPlaceScrollResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
@@ -43,25 +47,20 @@ import com.campus.campus.domain.place.application.dto.response.kakao.KakaoSearch
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
 import com.campus.campus.domain.place.application.exception.CoordinateNotFoundException;
-import com.campus.campus.domain.place.application.exception.ErrorCode;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
-import com.campus.campus.domain.place.domain.entity.NonPartnerPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
-import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.entity.UserPartnershipSuggestion;
 import com.campus.campus.domain.place.domain.repository.CouncilPartnershipSuggestionRepository;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
-import com.campus.campus.domain.place.domain.repository.NonPartnerPlaceRepository;
-import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
-import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.place.infrastructure.kakao.KakaoLocalClient;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
+import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
 import com.campus.campus.domain.review.domain.repository.ReviewImageRepository;
@@ -70,10 +69,6 @@ import com.campus.campus.domain.user.application.exception.UserNotFoundException
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.util.geocoder.GeoUtil;
-import com.campus.campus.global.common.exception.ApplicationException;
-import com.campus.campus.global.oci.application.dto.request.PresignedUrlRequestDto;
-import com.campus.campus.global.oci.application.dto.response.PresignedUrlResponseDto;
-import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,7 +96,6 @@ public class PlaceService {
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final UserRepository userRepository;
 	private final ExecutorService executorService;
-	private final NonPartnerPlaceRepository nonPartnerPlaceRepository;
 	private final ReviewRepository reviewRepository;
 	private final UserPartnershipSuggestionRepository userPartnershipSuggestionRepository;
 	private final CouncilPartnershipSuggestionRepository partnershipSuggestionRepository;
@@ -109,6 +103,7 @@ public class PlaceService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final PostImageRepository postImageRepository;
 	private final ReviewMapper reviewMapper;
+	private final ReviewService reviewService;
 
 	@Transactional(readOnly = true)
 	public boolean isPlaceLiked(Long userId, String placeKey) {
@@ -183,10 +178,10 @@ public class PlaceService {
 		Map<Long, List<String>> postImageMap = postIds.isEmpty()
 			? Collections.emptyMap()
 			: postImageRepository.findImageUrlsByPostIds(postIds).stream()
-				.collect(Collectors.groupingBy(
-					obj -> (Long)obj[0],
-					Collectors.mapping(obj -> (String)obj[1], Collectors.toList())
-				));
+			.collect(Collectors.groupingBy(
+				obj -> (Long)obj[0],
+				Collectors.mapping(obj -> (String)obj[1], Collectors.toList())
+			));
 
 		// 비제휴 DB 장소 이미지: placeId → imageUrl (1장)
 		Set<Long> nonPartnershipPlaceIds = basicResults.stream()
@@ -197,7 +192,7 @@ public class PlaceService {
 		Map<Long, String> reviewImageMap = nonPartnershipPlaceIds.isEmpty()
 			? Collections.emptyMap()
 			: reviewImageRepository.findOldestImageUrlsByPlaceIds(nonPartnershipPlaceIds).stream()
-				.collect(Collectors.toMap(obj -> (Long)obj[0], obj -> (String)obj[1]));
+			.collect(Collectors.toMap(obj -> (Long)obj[0], obj -> (String)obj[1]));
 
 		return basicResults.stream()
 			.map(info -> {
@@ -333,6 +328,108 @@ public class PlaceService {
 			}
 			throw new PlaceCreationException();
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public LikedPlaceScrollResponse getLikedPlaces(
+		Long userId,
+		Long cursor,
+		int size,
+		double userLat,
+		double userLng
+	) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		Pageable pageable = PageRequest.of(0, size + 1);
+
+		List<LikedPlace> likedPlaces = likedPlacesRepository.findLikedPlacesWithCursor(
+			userId,
+			cursor,
+			pageable
+		);
+
+		if (likedPlaces.isEmpty()) {
+			return LikedPlaceScrollResponse.of(List.of(), null, false);
+		}
+
+		boolean hasNext = likedPlaces.size() > size;
+
+		List<LikedPlace> pageContent = hasNext
+			? likedPlaces.subList(0, size)
+			: likedPlaces;
+
+		Set<Long> placeIds = pageContent.stream()
+			.map(likedPlace -> likedPlace.getPlace().getPlaceId())
+			.collect(Collectors.toSet());
+
+		Map<Long, Double> averageStarMap = reviewService.getAverageListOfStars(placeIds);
+
+		LocalDateTime now = LocalDateTime.now();
+		Pageable firstOne = PageRequest.of(0, 1);
+
+		List<LikedPlaceDetailResponse> content = pageContent.stream()
+			.map(likedPlace -> {
+				Place place = likedPlace.getPlace();
+
+				Double distanceMeter = null;
+				if (place.getCoordinate() != null) {
+					double rawDistance = GeoUtil.distanceMeter(
+						userLat,
+						userLng,
+						place.getCoordinate().latitude(),
+						place.getCoordinate().longitude()
+					);
+					distanceMeter = Math.round(rawDistance * 100.0) / 100.0;
+				}
+
+				Double averageStar = null;
+				String partnershipTitle = null;
+				List<String> imageUrls = List.of();
+
+				if (place.isPartnership()) {
+					averageStar = averageStarMap.getOrDefault(place.getPlaceId(), 0.0);
+
+					List<StudentCouncilPost> activePosts =
+						studentCouncilPostRepository.findActiveByPlaceAndUserScope(
+							place,
+							now,
+							CouncilType.MAJOR_COUNCIL,
+							user.getMajor().getMajorId(),
+							CouncilType.COLLEGE_COUNCIL,
+							user.getCollege().getCollegeId(),
+							CouncilType.SCHOOL_COUNCIL,
+							user.getSchool().getSchoolId(),
+							firstOne
+						);
+
+					if (!activePosts.isEmpty()) {
+						StudentCouncilPost post = activePosts.get(0);
+						partnershipTitle = post.getTitle();
+
+						imageUrls = postImageRepository.findAllByPost(post)
+							.stream()
+							.map(PostImage::getImageUrl)
+							.toList();
+					}
+				}
+
+				return placeMapper.toLikedPlaceDetailResponse(
+					likedPlace,
+					place,
+					distanceMeter,
+					averageStar,
+					imageUrls,
+					partnershipTitle
+				);
+			})
+			.toList();
+
+		Long nextCursor = hasNext
+			? pageContent.get(pageContent.size() - 1).getLikedPlaceId()
+			: null;
+
+		return LikedPlaceScrollResponse.of(content, nextCursor, hasNext);
 	}
 
 	@Transactional(readOnly = true)

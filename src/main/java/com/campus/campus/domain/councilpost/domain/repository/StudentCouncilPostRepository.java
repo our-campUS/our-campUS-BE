@@ -385,7 +385,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		      )
 		    ORDER BY p.endDateTime DESC
 		""")
-	Optional<StudentCouncilPost> findActiveByPlaceAndUserScope(
+	List<StudentCouncilPost> findActiveByPlaceAndUserScope(
 		@Param("place") Place place,
 		@Param("now") LocalDateTime now,
 		@Param("majorType") CouncilType majorType,
@@ -393,6 +393,8 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("collegeType") CouncilType collegeType,
 		@Param("collegeId") Long collegeId,
 		@Param("schoolType") CouncilType schoolType,
-		@Param("schoolId") Long schoolId
+		@Param("schoolId") Long schoolId,
+		Pageable pageable
 	);
+
 }

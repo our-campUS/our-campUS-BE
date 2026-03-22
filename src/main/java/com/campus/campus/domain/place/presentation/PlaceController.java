@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.LikedPlaceScrollResponse;
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.PlaceDetailView;
 import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
@@ -98,6 +99,33 @@ public class PlaceController {
 		LikeResponse response = placeService.likePlace(request, userId);
 
 		return CommonResponse.success(PlaceResponseCode.PLACE_SAVE_SUCCESS, response);
+	}
+
+	@GetMapping("/likes")
+	@Operation(summary = "리스트로 관심 장소 전체 조회", description = "무한 스크롤 방식으로 관심 장소 목록을 조회합니다.")
+	public CommonResponse<LikedPlaceScrollResponse> getLikedPlaces(
+		@CurrentUserId Long userId,
+		@Parameter(description = "현재 위치의 위도", example = "37.50415") @RequestParam double lat,
+		@Parameter(description = "현재 위치의 경도", example = "126.9570") @RequestParam double lng,
+		@Parameter(
+			description = """
+				무한 스크롤 커서 값.
+				- 첫 요청 시 null
+				- 다음 요청부터는 이전 응답의 nextCursor 값
+				""",
+			examples = {
+				@ExampleObject(name = "첫 요청", value = "null"),
+				@ExampleObject(name = "다음 요청", value = "120")
+			}
+		)
+		@RequestParam(required = false) Long cursor,
+		@Parameter(description = "한 번에 조회할 개수", example = "5")
+		@RequestParam(defaultValue = "5") int size
+	) {
+		LikedPlaceScrollResponse response =
+			placeService.getLikedPlaces(userId, cursor, size, lat, lng);
+
+		return CommonResponse.success(PlaceResponseCode.CHECK_LIKED_PLACES_SUCCESS, response);
 	}
 
 	@GetMapping("/partnership")

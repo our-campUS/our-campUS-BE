@@ -10,15 +10,17 @@ public record LikedPlaceListResponse(
 	Double longitude,
 	Boolean isLiked,
 	LocalDateTime likedAt,
+	String category,
 	Double averageStar
 ) {
-	public static LikedPlaceListResponse partner(
+	public static LikedPlaceListResponse from(
 		Long likedPlaceId,
 		String placeName,
 		String placeKey,
 		Double latitude,
 		Double longitude,
 		LocalDateTime likedAt,
+		String category,
 		Double averageStar
 	) {
 		return new LikedPlaceListResponse(
@@ -29,27 +31,7 @@ public record LikedPlaceListResponse(
 			longitude,
 			true,
 			likedAt,
-			averageStar
-		);
-	}
-
-	public static LikedPlaceListResponse nonPartner(
-		Long likedPlaceId,
-		String placeName,
-		String placeKey,
-		Double latitude,
-		Double longitude,
-		LocalDateTime likedAt,
-		Double averageStar
-	) {
-		return new LikedPlaceListResponse(
-			likedPlaceId,
-			placeName,
-			placeKey,
-			latitude,
-			longitude,
-			true,
-			likedAt,
+			category,
 			averageStar
 		);
 	}
