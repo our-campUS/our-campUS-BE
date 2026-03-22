@@ -77,6 +77,7 @@ public class StudentCouncilPostService {
 
 		//Place 객체 생성
 		Place place = placeService.findOrCreatePlace(dto.place());
+		place.makePartnershipTrue();
 
 		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
 			writer, place, dto, normalized.startDateTime(), normalized.endDateTime()

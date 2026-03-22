@@ -54,4 +54,10 @@ public class Place {
 	@Embedded
 	private Coordinate coordinate;
 
+	@Column(name = "is_partnership", nullable = false)
+	private boolean isPartnership;
+
+	public void makePartnershipTrue() {
+		this.isPartnership = true;
+	}
 }

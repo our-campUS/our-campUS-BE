@@ -5,7 +5,6 @@ import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -133,7 +132,6 @@ public class PartnershipPlaceService {
 				double averageStar = averageStarMap.getOrDefault(post.getPlace().getPlaceId(), 0.0);
 
 				List<SimpleReviewResponse> reviews = reviewService.getReviewSummaryList(post.getPlace().getPlaceId());
-
 
 				return placeMapper.toPartnershipResponse(
 					user,
@@ -269,7 +267,7 @@ public class PartnershipPlaceService {
 		Place place = placeRepository.findById(placeId)
 			.orElseThrow(PlaceInfoNotFoundException::new);
 
-		Optional<StudentCouncilPost> activePost =
+		List<StudentCouncilPost> activePost =
 			studentCouncilPostRepository.findActiveByPlaceAndUserScope(
 				place,
 				LocalDateTime.now(),
@@ -278,11 +276,12 @@ public class PartnershipPlaceService {
 				CouncilType.COLLEGE_COUNCIL,
 				user.getCollege().getCollegeId(),
 				CouncilType.SCHOOL_COUNCIL,
-				user.getSchool().getSchoolId()
+				user.getSchool().getSchoolId(),
+				PageRequest.of(0, 1)
 			);
 
-		if (activePost.isPresent()) {
-			StudentCouncilPost post = activePost.get();
+		if (activePost.isEmpty()) {
+			StudentCouncilPost post = activePost.get(0);
 			return getPartnershipDetailInternal(post, user, userLat, userLng);
 		} else {
 			return getNormalPlaceDetailInternal(user, place, userLat, userLng);
@@ -320,4 +319,5 @@ public class PartnershipPlaceService {
 			throw new AcademicInfoNotSetException();
 		}
 	}
+
 }

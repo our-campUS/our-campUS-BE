@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
-import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+import com.campus.campus.domain.place.application.dto.response.LikedPlaceDetailResponse;
 import com.campus.campus.domain.place.application.dto.response.PartnershipPinResponse;
 import com.campus.campus.domain.place.application.dto.response.PlaceDetailResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
@@ -21,7 +21,6 @@ import com.campus.campus.domain.place.application.dto.response.kakao.KakaoSearch
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.domain.entity.Coordinate;
 import com.campus.campus.domain.place.domain.entity.LikedPlace;
-import com.campus.campus.domain.place.domain.entity.NonPartnerPlace;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.review.application.dto.response.ReviewPartnerResponse;
@@ -30,11 +29,6 @@ import com.campus.campus.domain.user.domain.entity.User;
 
 @Component
 public class PlaceMapper {
-	public LikeResponse toLikeResponse(Place place) {
-		return new LikeResponse(
-			place.getPlaceId(), true
-		);
-	}
 
 	public SavedPlaceInfo toSavedPlaceInfo(KakaoSearchResponse.Document document, String placeName, String placeKey,
 		String placeUrl, List<String> images, Long placeId) {
@@ -190,14 +184,8 @@ public class PlaceMapper {
 			.phone(savedPlaceInfo.telephone())
 			.address(savedPlaceInfo.address())
 			.naverPlaceUrl(savedPlaceInfo.link())
+			.isPartnership(false)
 			.coordinate(savedPlaceInfo.coordinate())
-			.build();
-	}
-
-	public PlaceImages createPlaceImages(String placeKey, String googleImageUrl) {
-		return PlaceImages.builder()
-			.placeKey(placeKey)
-			.imageUrl(googleImageUrl)
 			.build();
 	}
 
@@ -253,57 +241,31 @@ public class PlaceMapper {
 		);
 	}
 
-	public NonPartnerPlace createNonPartnerPlace(SavedPlaceInfo placeInfo) {
-		return NonPartnerPlace.builder()
-			.placeKey(placeInfo.placeKey())
-			.placeName(stripHtml(placeInfo.placeName()))
-			.address(placeInfo.address())
-			.coordinate(placeInfo.coordinate())
-			.build();
-	}
+	public LikedPlaceDetailResponse toLikedPlaceDetailResponse(
+		LikedPlace likedPlace,
+		Place place,
+		Double distanceMeter,
+		Double averageStar,
+		List<String> imageUrls,
+		String partnershipTitle
+	) {
+		Coordinate coordinate = place.getCoordinate();
 
-	private String stripHtml(String raw) {
-		if (raw == null) return null;
-		return raw.replaceAll("<[^>]*>", "");
-	}
-
-	public LikedPlace createPartnerLikedPlace(User user, Place place) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(place)
-			.nonPartnerPlace(null)
-			.build();
-	}
-
-	public LikedPlace createNonPartnerLikedPlace(User user, NonPartnerPlace nonPartnerPlace) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(null)
-			.nonPartnerPlace(nonPartnerPlace)
-			.build();
-	}
-	public LikedPlace createPlace(User user, Place place) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(place)
-			.nonPartnerPlace(null)
-			.build();
-	}
-
-	public LikedPlace createPlace(User user, NonPartnerPlace nonPartnerPlace) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(null)
-			.nonPartnerPlace(nonPartnerPlace)
-			.build();
-	}
-
-	public NonPartnerPlace createNonPartnerPlace(SavedPlaceInfo placeInfo, String cleanedName) {
-		return NonPartnerPlace.builder()
-			.placeKey(placeInfo.placeKey())
-			.placeName(cleanedName)
-			.address(placeInfo.address())
-			.coordinate(placeInfo.coordinate())
-			.build();
+		return LikedPlaceDetailResponse.of(
+			likedPlace.getLikedPlaceId(),
+			place.getPlaceId(),
+			place.getPlaceName(),
+			place.getPlaceKey(),
+			coordinate != null ? coordinate.latitude() : null,
+			coordinate != null ? coordinate.longitude() : null,
+			true,
+			likedPlace.getCreatedAt(),
+			place.getPlaceCategory(),
+			place.isPartnership(),
+			distanceMeter,
+			averageStar,
+			imageUrls,
+			partnershipTitle
+		);
 	}
 }

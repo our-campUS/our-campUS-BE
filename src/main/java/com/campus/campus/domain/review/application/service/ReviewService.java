@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,7 @@ import com.campus.campus.domain.councilpost.application.exception.PostImageLimit
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
-import com.campus.campus.domain.place.application.service.PlaceService;
+import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
@@ -71,7 +72,6 @@ public class ReviewService {
 	private final UserRepository userRepository;
 	private final ReviewMapper reviewMapper;
 	private final ReviewRepository reviewRepository;
-	private final PlaceService placeService;
 	private final ReviewImageRepository reviewImageRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
@@ -90,7 +90,16 @@ public class ReviewService {
 			throw new PostImageLimitExceededException();
 		}
 
-		Place place = placeService.findOrCreatePlace(request.place());
+		Place place = placeRepository.findByPlaceKey(request.place().placeKey())
+			.orElseGet(() -> {
+				try {
+					return placeRepository.save(placeMapper.createPlace(request.place()));
+				} catch (DataIntegrityViolationException e) {
+					log.info("리뷰 작성 중 장소 동시 생성 감지: {}", request.place().placeKey());
+					return placeRepository.findByPlaceKey(request.place().placeKey())
+						.orElseThrow(PlaceCreationException::new);
+				}
+			});
 
 		Review review = reviewMapper.createPlaceReview(request, user, place);
 		reviewRepository.save(review);
