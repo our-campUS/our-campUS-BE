@@ -16,8 +16,6 @@ public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 
 	Optional<LikedPlace> findByUserIdAndPlace_PlaceKey(Long userId, String placeKey);
 
-	Optional<LikedPlace> findByUserIdAndNonPartnerPlace_PlaceKey(Long userId, String placeKey);
-
 	@Query("""
 			SELECT lp.place.placeId
 			FROM LikedPlace lp
@@ -38,5 +36,4 @@ public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 		      AND lp.place.placeKey IN :placeKeys
 		""")
 	Set<String> findLikedPlaceKeys(@Param("userId") Long userId, @Param("placeKeys") List<String> placeKeys);
-
 }

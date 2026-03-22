@@ -190,6 +190,7 @@ public class PlaceMapper {
 			.phone(savedPlaceInfo.telephone())
 			.address(savedPlaceInfo.address())
 			.naverPlaceUrl(savedPlaceInfo.link())
+			.isPartnership(false)
 			.coordinate(savedPlaceInfo.coordinate())
 			.build();
 	}
@@ -253,57 +254,4 @@ public class PlaceMapper {
 		);
 	}
 
-	public NonPartnerPlace createNonPartnerPlace(SavedPlaceInfo placeInfo) {
-		return NonPartnerPlace.builder()
-			.placeKey(placeInfo.placeKey())
-			.placeName(stripHtml(placeInfo.placeName()))
-			.address(placeInfo.address())
-			.coordinate(placeInfo.coordinate())
-			.build();
-	}
-
-	private String stripHtml(String raw) {
-		if (raw == null) return null;
-		return raw.replaceAll("<[^>]*>", "");
-	}
-
-	public LikedPlace createPartnerLikedPlace(User user, Place place) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(place)
-			.nonPartnerPlace(null)
-			.build();
-	}
-
-	public LikedPlace createNonPartnerLikedPlace(User user, NonPartnerPlace nonPartnerPlace) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(null)
-			.nonPartnerPlace(nonPartnerPlace)
-			.build();
-	}
-	public LikedPlace createPlace(User user, Place place) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(place)
-			.nonPartnerPlace(null)
-			.build();
-	}
-
-	public LikedPlace createPlace(User user, NonPartnerPlace nonPartnerPlace) {
-		return LikedPlace.builder()
-			.user(user)
-			.place(null)
-			.nonPartnerPlace(nonPartnerPlace)
-			.build();
-	}
-
-	public NonPartnerPlace createNonPartnerPlace(SavedPlaceInfo placeInfo, String cleanedName) {
-		return NonPartnerPlace.builder()
-			.placeKey(placeInfo.placeKey())
-			.placeName(cleanedName)
-			.address(placeInfo.address())
-			.coordinate(placeInfo.coordinate())
-			.build();
-	}
 }

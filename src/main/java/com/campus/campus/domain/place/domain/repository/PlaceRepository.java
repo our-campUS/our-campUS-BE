@@ -16,5 +16,4 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
 
 	List<Place> findAllByPlaceKeyIn(List<String> placeKeys);
 
-	boolean existsByPlaceKey(String placeKey);
 }

@@ -43,8 +43,4 @@ public class LikedPlace extends BaseEntity {
 	@JoinColumn(name = "place_id")
 	private Place place;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "non_partner_place_id")
-	private NonPartnerPlace nonPartnerPlace;
-
 }

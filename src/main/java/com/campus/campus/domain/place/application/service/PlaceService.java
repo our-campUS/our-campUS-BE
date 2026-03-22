@@ -31,6 +31,7 @@ import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.entity.ThumbnailIcon;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
 import com.campus.campus.domain.place.application.dto.response.LikeResponse;
+// import com.campus.campus.domain.place.application.dto.response.LikedPlacesResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendNearByPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPartnershipPlaceResponse;
 import com.campus.campus.domain.place.application.dto.response.RecommendPlaceByTimeResponse;
@@ -292,90 +293,39 @@ public class PlaceService {
 
 	}
 
+	@Transactional
 	public LikeResponse likePlace(SavedPlaceInfo request, Long userId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
-		String placeKey = request.placeKey();
-
-		// 1) 제휴면: 기존 place 기반 토글
-		Optional<Place> partnerPlaceOpt = placeRepository.findByPlaceKey(placeKey);
-		if (partnerPlaceOpt.isPresent()) {
-			return togglePartnerLike(user, partnerPlaceOpt.get());
-		}
-
-		// 2) 비제휴면: non_partner_places + liked_places 토글
-		return toggleNonPartnerLike(user, request);
-	}
-
-	private LikeResponse togglePartnerLike(User user, Place place) {
-		Long userId = user.getId();
-		String placeKey = place.getPlaceKey();
-
-		Optional<LikedPlace> liked =
-			likedPlacesRepository.findByUserIdAndPlace_PlaceKey(userId, placeKey);
-
-		if (liked.isPresent()) {
-			likedPlacesRepository.delete(liked.get());
-			return new LikeResponse(null, false);
-		}
-
-		LikedPlace newLiked = placeMapper.createPartnerLikedPlace(user, place);
-		likedPlacesRepository.save(newLiked);
-
-		return placeMapper.toLikeResponse(place);
-	}
-
-	private LikeResponse toggleNonPartnerLike(User user, SavedPlaceInfo request) {
 		if (request.coordinate() == null) {
 			throw new CoordinateNotFoundException();
 		}
 
-		Long userId = user.getId();
-		String placeKey = request.placeKey();
+		Place place = findOrCreatePlace(request);
 
 		Optional<LikedPlace> liked =
-			likedPlacesRepository.findByUserIdAndNonPartnerPlace_PlaceKey(userId, placeKey);
+			likedPlacesRepository.findByUserIdAndPlace_PlaceKey(user.getId(), place.getPlaceKey());
 
 		if (liked.isPresent()) {
 			likedPlacesRepository.delete(liked.get());
-			return new LikeResponse(null, false);
+			return new LikeResponse(place.getPlaceId(), false);
 		}
 
-		NonPartnerPlace nonPartnerPlace = findOrCreateNonPartnerPlace(request);
-
 		try {
-			LikedPlace newLiked =
-				placeMapper.createNonPartnerLikedPlace(user, nonPartnerPlace);
+			LikedPlace newLiked = placeMapper.createLikedPlace(user, place);
 			likedPlacesRepository.save(newLiked);
-
-			return new LikeResponse(null, true);
+			return new LikeResponse(place.getPlaceId(), true);
 
 		} catch (DataIntegrityViolationException e) {
-			// 동시 클릭/중복 요청(unique(user_id, non_partner_place_id))
 			Optional<LikedPlace> again =
-				likedPlacesRepository.findByUserIdAndNonPartnerPlace_PlaceKey(userId, placeKey);
+				likedPlacesRepository.findByUserIdAndPlace_PlaceKey(user.getId(), place.getPlaceKey());
 
 			if (again.isPresent()) {
 				likedPlacesRepository.delete(again.get());
-				return new LikeResponse(null, false);
+				return new LikeResponse(place.getPlaceId(), false);
 			}
-			throw new PlaceCreationException(); // 2605 재사용
-		}
-	}
-
-	private NonPartnerPlace findOrCreateNonPartnerPlace(SavedPlaceInfo request) {
-		String placeKey = request.placeKey();
-
-		try {
-			return nonPartnerPlaceRepository.findByPlaceKey(placeKey)
-				.orElseGet(() -> nonPartnerPlaceRepository.save(
-					placeMapper.createNonPartnerPlace(request)
-				));
-		} catch (DataIntegrityViolationException e) {
-			// 동시 생성(unique(place_key)) -> 재조회
-			return nonPartnerPlaceRepository.findByPlaceKey(placeKey)
-				.orElseThrow(PlaceCreationException::new); // 2605 재사용
+			throw new PlaceCreationException();
 		}
 	}
 
@@ -653,4 +603,11 @@ public class PlaceService {
 
 		}).toList();
 	}
+	// public List<LikedPlacesResponse> getLikedPlaces(User user) {
+	// 	List<LikedPlace> likedPlaces = likedPlacesRepository.findByUserId(userId);
+	//
+	// 	return likedPlaces.stream()
+	// 		.map(placeMapper::toLikedPlacesResponse)
+	// 		.toList();
+	// }
 }
