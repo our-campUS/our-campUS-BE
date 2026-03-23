@@ -40,7 +40,7 @@ oauth:
     client-id: ENC(VeZkeuVX3v1CnstoXOxdOoCvNZrB6H3qv5CaWDKeSQiqvMF2rrR3ADue4fXuwhKh)
     client-secret: ENC(r3djfCpu8OSE0oDh4paEX6eLfP+Mc34t2oHSuhjjxd6/09MmGRUZrJStohbwBhED)
     redirect-uri: "http://158.179.193.224:8080/auth/login/kakao"
-    admin-key: ENC(9UKWct9u8LPS0tNvuWSgqYHNN/2vvqDCYE4hRaqXsHJGCGMQY4/N1IOcbmi4IJTt)
+    admin-key: ENC(y4FEJCqMZI6+wJWYH3KEfguLf88fF9DTTzGoFwGGNTsZqCLzZeOwEgEAnPLEe1XA)
 
 jwt:
   access:
