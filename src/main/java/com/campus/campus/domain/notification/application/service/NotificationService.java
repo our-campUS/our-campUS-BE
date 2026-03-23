@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.councilpost.application.dto.request.CouncilPostCreatedEvent;
 import com.campus.campus.domain.notification.application.dto.CursorResponse;
 import com.campus.campus.domain.notification.application.dto.NextCursor;
@@ -84,13 +85,16 @@ public class NotificationService {
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void savePostCreatedNotification(CouncilPostCreatedEvent event, String title, String body) {
+	public void savePostCreatedNotification(CouncilPostCreatedEvent event, String title, String body,
+		StudentCouncil studentCouncil
+	) {
 
 		List<User> targetUsers = findUsersByTopic(event.topic());
 
 		List<Notification> notifications = targetUsers.stream()
 			.map(user -> notificationMapper.createNotification(
 				user,
+				studentCouncil,
 				NotificationType.COUNCIL_POST_CREATED,
 				title,
 				body,
@@ -106,7 +110,7 @@ public class NotificationService {
 		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
-		Notification notification = notificationMapper.createNotification(user, NotificationType.REWARD_GRANTED, title,
+		Notification notification = notificationMapper.createNotification(user, null, NotificationType.REWARD_GRANTED, title,
 			body, null);
 
 		notificationRepository.save(notification);
@@ -124,6 +128,7 @@ public class NotificationService {
 
 		Notification notification = notificationMapper.createNotification(
 			user,
+			null,
 			NotificationType.SYSTEM_NOTICE,
 			title,
 			body,

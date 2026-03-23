@@ -233,6 +233,7 @@ public class StudentCouncilPostMapper {
 		return new CouncilPostCreatedEvent(
 			post.getId(),
 			writer.getCouncilName(),
+			writer,
 			post.getCategory(),
 			topic
 		);
