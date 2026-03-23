@@ -1,6 +1,7 @@
 package com.campus.campus.domain.notification.application.dto;
 
 import com.campus.campus.domain.notification.domain.entity.NotificationType;
+import com.campus.campus.domain.notification.domain.entity.SenderType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -16,6 +17,12 @@ public record NotificationResponse(
 
 	@Schema(description = "알림 내용", example = "새 행사글이 등록되었습니다.")
 	String body,
+
+	@Schema(description = "보낸 주체 타입", example = "STUDENT_COUNCIL")
+	SenderType senderType,
+
+	@Schema(description = "보낸 주체 프로필 이미지 URL", example = "https://cdn.example.com/council/profile.png")
+	String profileImageUrl,
 
 	@Schema(description = "참조 ID (게시글 ID 등)", example = "123")
 	Long referenceId,

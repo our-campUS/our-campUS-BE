@@ -38,7 +38,7 @@ public class CouncilPostPushListener {
 		log.info("[PUSH] after_commit event received. topic={}, postId={}, category={}",
 			event.topic(), event.postId(), event.category());
 
-		notificationService.savePostCreatedNotification(event, title, body);
+		notificationService.savePostCreatedNotification(event, title, body, event.studentCouncil());
 
 		firebaseCloudMessageService.sendToTopic(
 			event.topic(),
