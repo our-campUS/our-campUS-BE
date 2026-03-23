@@ -12,7 +12,6 @@ public record CouncilPostCreatedEvent(
 	@Schema(description = "학생회 이름", example = "중앙대학교 총학생회")
 	String councilName,
 
-	@Schema(description = "학생회 id", example = "1")
 	StudentCouncil studentCouncil,
 
 	@Schema(description = "게시글 카테고리", example = "EVENT")
