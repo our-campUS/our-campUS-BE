@@ -1,5 +1,6 @@
 package com.campus.campus.domain.notification.application.dto;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.notification.domain.entity.NotificationType;
 import com.campus.campus.domain.notification.domain.entity.SenderType;
 
@@ -20,6 +21,9 @@ public record NotificationResponse(
 
 	@Schema(description = "보낸 주체 타입", example = "STUDENT_COUNCIL")
 	SenderType senderType,
+
+	@Schema(description = "학생회 타입", example = "MAJOR_COUNCIL")
+	CouncilType councilType,
 
 	@Schema(description = "보낸 주체 프로필 이미지 URL", example = "https://cdn.example.com/council/profile.png")
 	String profileImageUrl,
