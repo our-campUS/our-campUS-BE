@@ -1,9 +1,8 @@
 package com.campus.campus.domain.notification.application.mapper;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Component;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.notification.application.dto.NotificationResponse;
 import com.campus.campus.domain.notification.domain.entity.Notification;
@@ -24,13 +23,16 @@ public class NotificationMapper {
 
 		String senderProfileImage;
 		SenderType senderType;
+		CouncilType councilType;
 
 		if (notification.getStudentCouncil() != null) {
 			senderType = SenderType.STUDENT_COUNCIL;
 			senderProfileImage = notification.getStudentCouncil().getCouncilProfileImageUrl();
+			councilType = notification.getStudentCouncil().getCouncilType();
 		} else {
 			senderType = SenderType.SYSTEM;
 			senderProfileImage = null;
+			councilType = null;
 		}
 
 		return new NotificationResponse(
@@ -39,6 +41,7 @@ public class NotificationMapper {
 			notification.getTitle(),
 			notification.getBody(),
 			senderType,
+			councilType,
 			senderProfileImage,
 			notification.getReferenceId(),
 			notification.isRead(),
