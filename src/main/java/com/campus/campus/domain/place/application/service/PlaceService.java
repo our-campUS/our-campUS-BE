@@ -365,6 +365,20 @@ public class PlaceService {
 
 		Map<Long, Double> averageStarMap = reviewService.getAverageListOfStars(placeIds);
 
+		Set<Long> nonPartnershipPlaceIds = pageContent.stream()
+			.map(LikedPlace::getPlace)
+			.filter(place -> !place.isPartnership())
+			.map(Place::getPlaceId)
+			.collect(Collectors.toSet());
+
+		Map<Long, String> reviewImageMap = nonPartnershipPlaceIds.isEmpty()
+			? Collections.emptyMap()
+			: reviewImageRepository.findOldestImageUrlsByPlaceIds(nonPartnershipPlaceIds).stream()
+			.collect(Collectors.toMap(
+				obj -> (Long) obj[0],
+				obj -> (String) obj[1]
+			));
+
 		LocalDateTime now = LocalDateTime.now();
 		Pageable firstOne = PageRequest.of(0, 1);
 
@@ -383,13 +397,11 @@ public class PlaceService {
 					distanceMeter = Math.round(rawDistance * 100.0) / 100.0;
 				}
 
-				Double averageStar = null;
+				Double averageStar = averageStarMap.getOrDefault(place.getPlaceId(), 0.0);
 				String partnershipTitle = null;
 				List<String> imageUrls = List.of();
 
 				if (place.isPartnership()) {
-					averageStar = averageStarMap.getOrDefault(place.getPlaceId(), 0.0);
-
 					List<StudentCouncilPost> activePosts =
 						studentCouncilPostRepository.findActiveByPlaceAndUserScope(
 							place,
@@ -412,6 +424,9 @@ public class PlaceService {
 							.map(PostImage::getImageUrl)
 							.toList();
 					}
+				} else {
+					String reviewImageUrl = reviewImageMap.get(place.getPlaceId());
+					imageUrls = reviewImageUrl != null ? List.of(reviewImageUrl) : List.of();
 				}
 
 				return placeMapper.toLikedPlaceDetailResponse(
