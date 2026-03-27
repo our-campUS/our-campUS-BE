@@ -375,8 +375,8 @@ public class PlaceService {
 			? Collections.emptyMap()
 			: reviewImageRepository.findOldestImageUrlsByPlaceIds(nonPartnershipPlaceIds).stream()
 			.collect(Collectors.toMap(
-				obj -> (Long) obj[0],
-				obj -> (String) obj[1]
+				obj -> (Long)obj[0],
+				obj -> (String)obj[1]
 			));
 
 		LocalDateTime now = LocalDateTime.now();
@@ -522,21 +522,23 @@ public class PlaceService {
 	private List<StudentCouncil> resolveCouncils(User user) {
 		List<StudentCouncil> councils = new ArrayList<>();
 
+		// 학부 학생회
 		if (user.getMajor() != null) {
-			studentCouncilRepository.findByMajor_MajorIdAndDeletedAtIsNull(
-				user.getMajor().getMajorId()
+			studentCouncilRepository.findByMajor_MajorIdAndCouncilTypeAndDeletedAtIsNull(
+				user.getMajor().getMajorId(), CouncilType.MAJOR_COUNCIL
 			).ifPresent(councils::add);
 		}
 
+		// 단과대 학생회
 		if (user.getCollege() != null) {
-			studentCouncilRepository.findByCollege_CollegeIdAndDeletedAtIsNull(
-				user.getCollege().getCollegeId()
+			studentCouncilRepository.findByCollege_CollegeIdAndCouncilTypeAndDeletedAtIsNull(
+				user.getCollege().getCollegeId(), CouncilType.COLLEGE_COUNCIL
 			).ifPresent(councils::add);
 		}
 
 		if (user.getSchool() != null) {
-			studentCouncilRepository.findBySchool_SchoolIdAndDeletedAtIsNull(
-				user.getSchool().getSchoolId()
+			studentCouncilRepository.findBySchool_SchoolIdAndCouncilTypeAndDeletedAtIsNull(
+				user.getSchool().getSchoolId(), CouncilType.SCHOOL_COUNCIL
 			).ifPresent(councils::add);
 		}
 

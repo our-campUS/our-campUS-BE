@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 
 public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, Long> {
@@ -45,11 +46,13 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 
 	boolean existsByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(String loginId);
 
-	Optional<StudentCouncil> findByMajor_MajorIdAndDeletedAtIsNull(Long majorId);
+	Optional<StudentCouncil> findByMajor_MajorIdAndCouncilTypeAndDeletedAtIsNull(Long majorId, CouncilType councilType);
 
-	Optional<StudentCouncil> findByCollege_CollegeIdAndDeletedAtIsNull(Long collegeId);
+	Optional<StudentCouncil> findByCollege_CollegeIdAndCouncilTypeAndDeletedAtIsNull(Long collegeId,
+		CouncilType councilType);
 
-	Optional<StudentCouncil> findBySchool_SchoolIdAndDeletedAtIsNull(Long schoolId);
+	Optional<StudentCouncil> findBySchool_SchoolIdAndCouncilTypeAndDeletedAtIsNull(Long schoolId,
+		CouncilType councilType);
 
 	Optional<StudentCouncil> findByIdAndDeletedAtIsNull(Long councilId);
 
