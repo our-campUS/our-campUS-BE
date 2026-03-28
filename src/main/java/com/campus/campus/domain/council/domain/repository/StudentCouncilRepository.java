@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 
 public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, Long> {
@@ -45,11 +46,19 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 
 	boolean existsByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(String loginId);
 
-	Optional<StudentCouncil> findByMajor_MajorIdAndDeletedAtIsNull(Long majorId);
-
-	Optional<StudentCouncil> findByCollege_CollegeIdAndDeletedAtIsNull(Long collegeId);
-
-	Optional<StudentCouncil> findBySchool_SchoolIdAndDeletedAtIsNull(Long schoolId);
+	@Query("SELECT s FROM StudentCouncil s " +
+		"WHERE s.councilType = :type " +
+		"AND s.managerApproved = true " +
+		"AND s.deletedAt IS NULL " +
+		"AND (" +
+		"  (:type = com.campus.campus.domain.council.domain.entity.CouncilType.MAJOR_COUNCIL AND s.major.majorId = :id) OR "
+		+
+		"  (:type = com.campus.campus.domain.council.domain.entity.CouncilType.COLLEGE_COUNCIL AND s.college.collegeId = :id) OR "
+		+
+		"  (:type = com.campus.campus.domain.council.domain.entity.CouncilType.SCHOOL_COUNCIL AND s.school.schoolId = :id)"
+		+
+		")")
+	Optional<StudentCouncil> findActiveCouncilByTypeAndId(@Param("id") Long id, @Param("type") CouncilType type);
 
 	Optional<StudentCouncil> findByIdAndDeletedAtIsNull(Long councilId);
 
