@@ -46,13 +46,19 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 
 	boolean existsByLoginIdAndManagerApprovedIsTrueAndDeletedAtIsNull(String loginId);
 
-	Optional<StudentCouncil> findByMajor_MajorIdAndCouncilTypeAndDeletedAtIsNull(Long majorId, CouncilType councilType);
-
-	Optional<StudentCouncil> findByCollege_CollegeIdAndCouncilTypeAndDeletedAtIsNull(Long collegeId,
-		CouncilType councilType);
-
-	Optional<StudentCouncil> findBySchool_SchoolIdAndCouncilTypeAndDeletedAtIsNull(Long schoolId,
-		CouncilType councilType);
+	@Query("SELECT s FROM StudentCouncil s " +
+		"WHERE s.councilType = :type " +
+		"AND s.managerApproved = true " +
+		"AND s.deletedAt IS NULL " +
+		"AND (" +
+		"  (:type = com.campus.campus.domain.council.domain.entity.CouncilType.MAJOR_COUNCIL AND s.major.majorId = :id) OR "
+		+
+		"  (:type = com.campus.campus.domain.council.domain.entity.CouncilType.COLLEGE_COUNCIL AND s.college.collegeId = :id) OR "
+		+
+		"  (:type = com.campus.campus.domain.council.domain.entity.CouncilType.SCHOOL_COUNCIL AND s.school.schoolId = :id)"
+		+
+		")")
+	Optional<StudentCouncil> findActiveCouncilByTypeAndId(@Param("id") Long id, @Param("type") CouncilType type);
 
 	Optional<StudentCouncil> findByIdAndDeletedAtIsNull(Long councilId);
 

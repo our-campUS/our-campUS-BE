@@ -524,20 +524,20 @@ public class PlaceService {
 
 		// 학부 학생회
 		if (user.getMajor() != null) {
-			studentCouncilRepository.findByMajor_MajorIdAndCouncilTypeAndDeletedAtIsNull(
+			studentCouncilRepository.findActiveCouncilByTypeAndId(
 				user.getMajor().getMajorId(), CouncilType.MAJOR_COUNCIL
 			).ifPresent(councils::add);
 		}
 
 		// 단과대 학생회
 		if (user.getCollege() != null) {
-			studentCouncilRepository.findByCollege_CollegeIdAndCouncilTypeAndDeletedAtIsNull(
+			studentCouncilRepository.findActiveCouncilByTypeAndId(
 				user.getCollege().getCollegeId(), CouncilType.COLLEGE_COUNCIL
 			).ifPresent(councils::add);
 		}
 
 		if (user.getSchool() != null) {
-			studentCouncilRepository.findBySchool_SchoolIdAndCouncilTypeAndDeletedAtIsNull(
+			studentCouncilRepository.findActiveCouncilByTypeAndId(
 				user.getSchool().getSchoolId(), CouncilType.SCHOOL_COUNCIL
 			).ifPresent(councils::add);
 		}
