@@ -143,7 +143,8 @@ public class ManagerService {
 
 	@Transactional
 	public void approveEmailChange(Long councilId) {
-		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+		StudentCouncil studentCouncil = studentCouncilRepository.
+			findByIdAndPendingEmailIsNotNullAndDeletedAtIsNull(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		if (studentCouncilRepository.existsByEmail(studentCouncil.getPendingEmail())) {

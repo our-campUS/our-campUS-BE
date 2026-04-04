@@ -64,4 +64,6 @@ public interface StudentCouncilRepository extends JpaRepository<StudentCouncil, 
 
 	List<StudentCouncil> findAllByPendingEmailIsNotNullAndDeletedAtIsNull();
 
+	Optional<StudentCouncil> findByIdAndPendingEmailIsNotNullAndDeletedAtIsNull(Long councilId);
+
 }
