@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
@@ -144,6 +145,10 @@ public class ManagerService {
 	public void approveEmailChange(Long councilId) {
 		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
 			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		if (studentCouncilRepository.existsByEmail(studentCouncil.getPendingEmail())) {
+			throw new EmailAlreadyExistsException();
+		}
 
 		studentCouncil.confirmEmailChange();
 
