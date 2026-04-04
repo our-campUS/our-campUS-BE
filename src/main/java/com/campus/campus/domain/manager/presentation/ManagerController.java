@@ -23,6 +23,7 @@ import com.campus.campus.domain.manager.application.dto.response.CertifyRequestC
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
 import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
+import com.campus.campus.domain.manager.application.dto.response.StudentCouncilPendingEmailResponse;
 import com.campus.campus.domain.manager.application.service.ManagerService;
 import com.campus.campus.global.common.response.CommonResponse;
 
@@ -73,6 +74,22 @@ public class ManagerController {
 		List<CertifyRequestCouncilListResponse> responses = managerService.getCertifyRequestCouncils();
 
 		return CommonResponse.success(ManagerResponseCode.CERTIFY_REQUEST_LIST_SUCCESS, responses);
+	}
+
+	@GetMapping("/councils/pending-emails")
+	@PreAuthorize("hasRole('MANAGER')")
+	@Operation(summary = "학생회 이메일 변경 승인 대기 목록 조회")
+	public CommonResponse<List<StudentCouncilPendingEmailResponse>> getPendingEmailChangeRequest() {
+		List<StudentCouncilPendingEmailResponse> responses = managerService.getPendingEmailChangeRequests();
+		return CommonResponse.success(ManagerResponseCode.COUNCIL_PENDING_EMAIL_REQUEST_LIST_SUCCESS, responses);
+	}
+
+	@PatchMapping("/approve/council/{councilId}/email")
+	@PreAuthorize("hasRole('MANAGER')")
+	@Operation(summary = "학생회 이메일 변경 최종 승인")
+	public CommonResponse<Void> approveEmailChange(@PathVariable Long councilId) {
+		managerService.approveEmailChange(councilId);
+		return CommonResponse.success(ManagerResponseCode.COUNCIL_EMAIL_APPROVE_SUCCESS, null);
 	}
 
 	@GetMapping("/rewards/necessary-users")

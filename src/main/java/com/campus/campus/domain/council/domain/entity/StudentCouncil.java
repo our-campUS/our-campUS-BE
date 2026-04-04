@@ -47,6 +47,10 @@ public class StudentCouncil extends BaseEntity {
 	@Column(name = "email")
 	private String email;
 
+	// 승인 대기 중인 새 이메일
+	@Column(name = "pending_email")
+	private String pendingEmail;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "council_type", nullable = false)
 	private CouncilType councilType;
@@ -94,10 +98,6 @@ public class StudentCouncil extends BaseEntity {
 		this.password = newPassword;
 	}
 
-	public void changeEmail(String newEmail) {
-		this.email = newEmail;
-	}
-
 	public void updateCouncilNickname(String nickname) {
 		this.councilNickname = nickname;
 	}
@@ -116,5 +116,17 @@ public class StudentCouncil extends BaseEntity {
 
 	public void managerApprove() {
 		this.managerApproved = true;
+	}
+
+	public void requestEmailChange(String newEmail, String newElectionImageUrl) {
+		this.pendingEmail = newEmail;
+		this.electionImageUrl = newElectionImageUrl;
+	}
+
+	public void confirmEmailChange() {
+		if (this.pendingEmail != null) {
+			this.email = this.pendingEmail;
+			this.pendingEmail = null;
+		}
 	}
 }

@@ -16,7 +16,7 @@ public enum StudentCouncilResponseCode implements ResponseCodeInterface {
 	FIND_ID_SUCCESS(200, HttpStatus.OK, "아이디 찾기에 성공했습니다."),
 	VALIDATE_EMAIL_SUCCESS(200, HttpStatus.OK, "이메일 검증에 성공했습니다."),
 	FIND_PASSWORD_SUCCESS(200, HttpStatus.OK, "비밀번호 재설정에 성공했습니다."),
-	CHANGE_EMAIL_SUCCESS(200, HttpStatus.OK, "이메일 변경에 성공했습니다."),
+	CHANGE_EMAIL_REQUEST_SUCCESS(200, HttpStatus.OK, "이메일 변경 요청에 성공했습니다."),
 	CHANGE_PASSWORD_SUCCESS(200, HttpStatus.OK, "비밀번호 변경에 성공했습니다."),
 	CHANGE_NICKNAME_SUCCESS(200, HttpStatus.OK, "학생회 닉네임 변경에 성공했습니다."),
 	CHANGE_PROFILE_IMAGE_SUCCESS(200, HttpStatus.OK, "학생회 프로필 이미지 변경에 성공했습니다."),

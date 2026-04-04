@@ -30,12 +30,12 @@ public class StudentCouncilController {
 	private final CouncilService councilService;
 
 	@PatchMapping("/change/email")
-	@Operation(summary = "학생회 이메일 변경")
+	@Operation(summary = "학생회 이메일 변경 요청")
 	public CommonResponse<Void> changeEmail(@CurrentCouncilId Long councilId,
 		@Valid @RequestBody StudentCouncilChangeEmailRequest studentCouncilChangeEmailRequest) {
 		councilService.changeEmail(councilId, studentCouncilChangeEmailRequest);
 
-		return CommonResponse.success(StudentCouncilResponseCode.CHANGE_EMAIL_SUCCESS);
+		return CommonResponse.success(StudentCouncilResponseCode.CHANGE_EMAIL_REQUEST_SUCCESS);
 	}
 
 	@PatchMapping("/change/password")
