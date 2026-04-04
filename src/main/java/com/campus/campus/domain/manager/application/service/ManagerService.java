@@ -30,6 +30,7 @@ import com.campus.campus.domain.manager.application.dto.response.CertifyRequestC
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
 import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
+import com.campus.campus.domain.manager.application.dto.response.StudentCouncilPendingEmailResponse;
 import com.campus.campus.domain.manager.application.exception.ManagerNotFoundException;
 import com.campus.campus.domain.manager.application.exception.PasswordNotCorrectException;
 import com.campus.campus.domain.manager.application.mapper.ManagerMapper;
@@ -124,6 +125,29 @@ public class ManagerService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		return managerMapper.toCertifyRequestCouncilResponse(studentCouncil);
+	}
+
+	public List<StudentCouncilPendingEmailResponse> getPendingEmailChangeRequests() {
+		return studentCouncilRepository.findAllByPendingEmailIsNotNullAndDeletedAtIsNull()
+			.stream()
+			.map(council -> new StudentCouncilPendingEmailResponse(
+				council.getId(),
+				council.getCouncilName(),
+				council.getEmail(),
+				council.getPendingEmail(),
+				council.getElectionImageUrl()
+			))
+			.toList();
+	}
+
+	@Transactional
+	public void approveEmailChange(Long councilId) {
+		StudentCouncil studentCouncil = studentCouncilRepository.findById(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		studentCouncil.confirmEmailChange();
+
+		studentCouncilRepository.save(studentCouncil);
 	}
 
 	public List<StampRewardNeededUserListResponse> getStampRewardNeededUserList() {
