@@ -18,6 +18,15 @@ public record MyReviewResponse(
 	@Schema(description = "별점", example = "4.5")
 	Double star,
 
+	@Schema(description = "장소 고유 키", example = "123456789")
+	String placeKey,
+
+	@Schema(description = "장소 위도", example = "37.497942")
+	Double latitude,
+
+	@Schema(description = "장소 경도", example = "127.027621")
+	Double longitude,
+
 	@Schema(description = "리뷰 내용", example = "커피가 맛있고 분위기가 좋아요.")
 	String content,
 
