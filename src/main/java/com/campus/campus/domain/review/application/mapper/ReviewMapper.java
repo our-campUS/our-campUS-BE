@@ -189,6 +189,9 @@ public class ReviewMapper {
 			review.getPlace().getPlaceId(),
 			review.getPlace().getPlaceName(),
 			review.getStar(),
+			review.getPlace().getPlaceKey(),
+			review.getPlace().getCoordinate() != null ? review.getPlace().getCoordinate().latitude() : null,
+			review.getPlace().getCoordinate() != null ? review.getPlace().getCoordinate().longitude() : null,
 			review.getContent(),
 			imageUrls != null ? imageUrls : Collections.emptyList(),
 			review.getCreatedAt()
