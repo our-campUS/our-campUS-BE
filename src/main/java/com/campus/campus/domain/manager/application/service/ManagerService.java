@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.campus.campus.domain.council.application.exception.EmailAlreadyExistsException;
 import com.campus.campus.domain.council.application.exception.StudentCouncilNotFoundException;
 import com.campus.campus.domain.council.domain.entity.StudentCouncil;
 import com.campus.campus.domain.council.domain.repository.StudentCouncilRepository;
@@ -30,6 +31,7 @@ import com.campus.campus.domain.manager.application.dto.response.CertifyRequestC
 import com.campus.campus.domain.manager.application.dto.response.CouncilApproveOrDenyResponse;
 import com.campus.campus.domain.manager.application.dto.response.ManagerLoginResponse;
 import com.campus.campus.domain.manager.application.dto.response.StampRewardNeededUserListResponse;
+import com.campus.campus.domain.manager.application.dto.response.StudentCouncilPendingEmailResponse;
 import com.campus.campus.domain.manager.application.exception.ManagerNotFoundException;
 import com.campus.campus.domain.manager.application.exception.PasswordNotCorrectException;
 import com.campus.campus.domain.manager.application.mapper.ManagerMapper;
@@ -124,6 +126,34 @@ public class ManagerService {
 			.orElseThrow(StudentCouncilNotFoundException::new);
 
 		return managerMapper.toCertifyRequestCouncilResponse(studentCouncil);
+	}
+
+	public List<StudentCouncilPendingEmailResponse> getPendingEmailChangeRequests() {
+		return studentCouncilRepository.findAllByPendingEmailIsNotNullAndDeletedAtIsNull()
+			.stream()
+			.map(council -> new StudentCouncilPendingEmailResponse(
+				council.getId(),
+				council.getCouncilName(),
+				council.getEmail(),
+				council.getPendingEmail(),
+				council.getElectionImageUrl()
+			))
+			.toList();
+	}
+
+	@Transactional
+	public void approveEmailChange(Long councilId) {
+		StudentCouncil studentCouncil = studentCouncilRepository.
+			findByIdAndPendingEmailIsNotNullAndDeletedAtIsNull(councilId)
+			.orElseThrow(StudentCouncilNotFoundException::new);
+
+		if (studentCouncilRepository.existsByEmail(studentCouncil.getPendingEmail())) {
+			throw new EmailAlreadyExistsException();
+		}
+
+		studentCouncil.confirmEmailChange();
+
+		studentCouncilRepository.save(studentCouncil);
 	}
 
 	public List<StampRewardNeededUserListResponse> getStampRewardNeededUserList() {

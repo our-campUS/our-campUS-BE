@@ -6,6 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 public record StudentCouncilChangeEmailRequest(
 	@Schema(description = "변경할 이메일", example = "campus@campus.ac.kr")
 	@NotBlank
-	String email
+	String email,
+
+	@Schema(description = "당선 사진 url", example = "https://www.election.com.png")
+	@NotBlank
+	String electionImageUrl
 ) {
 }

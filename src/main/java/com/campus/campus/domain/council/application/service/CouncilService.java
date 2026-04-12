@@ -50,9 +50,10 @@ public class CouncilService {
 		EmailVerification emailVerification = getVerifiedChangeEmail(councilId,
 			studentCouncilChangeEmailRequest.email());
 
-		studentCouncil.changeEmail(studentCouncilChangeEmailRequest.email());
+		studentCouncil.requestEmailChange(studentCouncilChangeEmailRequest.email(),
+			studentCouncilChangeEmailRequest.electionImageUrl());
+		
 		emailVerification.use();
-		studentCouncilRepository.save(studentCouncil);
 	}
 
 	@Transactional
