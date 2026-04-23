@@ -103,6 +103,8 @@ public class PartnershipPlaceService {
 			.map(post -> post.getPlace().getPlaceId())
 			.collect(Collectors.toSet());
 
+		Map<Long, Long> totalReviewCountMap = reviewService.getReviewCounts(placeIds);
+
 		Map<Long, Double> averageStarMap =
 			reviewService.getAverageListOfStars(placeIds);
 
@@ -131,6 +133,8 @@ public class PartnershipPlaceService {
 
 				double averageStar = averageStarMap.getOrDefault(post.getPlace().getPlaceId(), 0.0);
 
+				int totalReviewCount = totalReviewCountMap.getOrDefault(post.getPlace().getPlaceId(), 0L).intValue();
+
 				List<SimpleReviewResponse> reviews = reviewService.getReviewSummaryList(post.getPlace().getPlaceId());
 
 				return placeMapper.toPartnershipResponse(
@@ -142,7 +146,7 @@ public class PartnershipPlaceService {
 					rounded,
 					averageStar,
 					reviews,
-					size
+					totalReviewCount
 				);
 			})
 			.toList();
