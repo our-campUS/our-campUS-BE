@@ -23,8 +23,8 @@ import com.campus.campus.domain.councilpost.application.exception.PlaceInfoNotFo
 import com.campus.campus.domain.councilpost.application.exception.PostImageLimitExceededException;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
-import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
+import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
@@ -408,7 +408,7 @@ public class ReviewService {
 		}
 
 		return partnerships.stream()
-			.map(post->{
+			.map(post -> {
 				double distance = GeoUtil.distanceMeter(
 					lat, lng,
 					post.getPlace().getCoordinate().latitude(),
@@ -450,6 +450,27 @@ public class ReviewService {
 		return reviewPage.map(review ->
 			reviewMapper.toMyReviewResponse(review, imageMap.get(review.getId()))
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<Long, Long> getReviewCounts(Set<Long> placeIds) {
+		if (placeIds == null || placeIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		List<Object[]> results = reviewRepository.findReviewCountsByPlaceIds(placeIds);
+
+		Map<Long, Long> countMap = results.stream()
+			.collect(Collectors.toMap(
+				res -> (Long)res[0],
+				res -> (Long)res[1]
+			));
+
+		for (Long placeId : placeIds) {
+			countMap.putIfAbsent(placeId, 0L);
+		}
+
+		return countMap;
 	}
 
 	private ReviewCreateResponse createReviewResponse(Review review, Place place, User user, List<String> imageUrls) {
