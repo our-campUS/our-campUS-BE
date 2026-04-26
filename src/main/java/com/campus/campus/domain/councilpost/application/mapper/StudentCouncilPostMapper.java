@@ -41,6 +41,7 @@ public class StudentCouncilPostMapper {
 			post.getId(),
 			post.getCategory(),
 			post.getTitle(),
+			post.getPlace().getPlaceId(),
 			post.getPlace().getPlaceName(),
 			post.getDetailedLocation(),
 			post.isEvent() ? post.getStartDateTime() : post.getEndDateTime(),
