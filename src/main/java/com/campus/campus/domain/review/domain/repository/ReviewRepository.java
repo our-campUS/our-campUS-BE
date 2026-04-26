@@ -18,19 +18,44 @@ import com.campus.campus.domain.user.domain.entity.User;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
+	// 최신순
 	@Query("""
 			SELECT r
 			FROM Review r
 			WHERE r.place.placeId = :placeId
 			  AND (
 			    :cursorCreatedAt IS NULL
+			    OR :cursorId IS NULL
 			    OR r.createdAt < :cursorCreatedAt
 			    OR (r.createdAt = :cursorCreatedAt AND r.id < :cursorId)
 			  )
 			ORDER BY r.createdAt DESC, r.id DESC
 		""")
-	List<Review> findByPlaceIdWithCursor(
+	List<Review> findByPlaceIdWithLatestCursor(
 		@Param("placeId") Long placeId,
+		@Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+		@Param("cursorId") Long cursorId,
+		Pageable pageable
+	);
+
+	// 평점순
+	@Query("""
+			SELECT r
+			FROM Review r
+			WHERE r.place.placeId = :placeId
+			  AND (
+			    :cursorStar IS NULL
+			    OR :cursorCreatedAt IS NULL
+			    OR :cursorId IS NULL
+			    OR r.star < :cursorStar
+			    OR (r.star = :cursorStar AND r.createdAt < :cursorCreatedAt)
+			    OR (r.star = :cursorStar AND r.createdAt = :cursorCreatedAt AND r.id < :cursorId)
+			  )
+			ORDER BY r.star DESC, r.createdAt DESC, r.id DESC
+		""")
+	List<Review> findByPlaceIdWithStarCursor(
+		@Param("placeId") Long placeId,
+		@Param("cursorStar") Integer cursorStar,
 		@Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
 		@Param("cursorId") Long cursorId,
 		Pageable pageable

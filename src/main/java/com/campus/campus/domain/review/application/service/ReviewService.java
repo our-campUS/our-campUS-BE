@@ -257,18 +257,33 @@ public class ReviewService {
 	@Transactional(readOnly = true)
 	public CursorPageReviewResponse<ReviewResponse> getReviewList(
 		Long placeId,
+		String sortType,
+		Integer cursorStar,
 		LocalDateTime cursorCreatedAt,
 		Long cursorId,
 		int size
 	) {
 
-		//size+1로 조회 -> 다음 페이지 여부(hasNext) 판단
 		Pageable pageable = PageRequest.of(0, size + 1);
-		List<Review> fetched = reviewRepository.findByPlaceIdWithCursor(
-			placeId, cursorCreatedAt, cursorId, pageable
-		);
+		List<Review> fetched;
 
-		//다음 페이지가 있는지 판단, 실제로 내려줄 items는 size개만 자름
+		if ("STAR".equalsIgnoreCase(sortType)) {
+			fetched = reviewRepository.findByPlaceIdWithStarCursor(
+				placeId,
+				cursorStar,
+				cursorCreatedAt,
+				cursorId,
+				pageable
+			);
+		} else {
+			fetched = reviewRepository.findByPlaceIdWithLatestCursor(
+				placeId,
+				cursorCreatedAt,
+				cursorId,
+				pageable
+			);
+		}
+
 		boolean hasNext = fetched.size() > size;
 		List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
 
@@ -276,12 +291,10 @@ public class ReviewService {
 			return reviewMapper.toEmptyCursorReviewResponse();
 		}
 
-		//리뷰 ID를 뽑아서 이미지들을 한 번에 조회
 		List<Long> reviewIds = reviews.stream()
 			.map(Review::getId)
 			.toList();
 
-		//reviewId -> imageUrls로 그룹핑
 		Map<Long, List<String>> imageMap = reviewImageRepository
 			.findAllByReviewIdInOrderByIdAsc(reviewIds)
 			.stream()
@@ -291,20 +304,16 @@ public class ReviewService {
 			));
 
 		List<ReviewResponse> items = reviews.stream()
-			.map(review ->
-				reviewMapper.toReviewResponse(
-					review,
-					imageMap.get(review.getId())
-				)
-			)
+			.map(review -> reviewMapper.toReviewResponse(
+				review,
+				imageMap.get(review.getId())
+			))
 			.toList();
 
 		Review last = reviews.getLast();
 
 		return reviewMapper.toCursorReviewResponse(items, last, hasNext);
-
 	}
-
 	@Transactional(readOnly = true)
 	public ReviewPartnerResponse findPartnership(Long placeId, ReceiptResultDto result, Long userId) {
 		User user = userRepository.findById(userId)

@@ -154,15 +154,42 @@ public class ReviewController {
 	}
 
 	@GetMapping("/list/{placeId}")
-	@Operation(summary = "리뷰 목록 조회 - 최신순 (더보기 이후)")
+	@Operation(
+		summary = "리뷰 목록 조회 (최신순 / 평점순)",
+		description = """
+	정렬 방식에 따라 리뷰 목록을 조회합니다.
+
+	[정렬 방식]
+	- LATEST : 최신순
+	- STAR : 평점순
+
+	[페이징 방식]
+	- 최초 요청 시 cursor 값 없이 요청
+	- 다음 페이지 요청 시 마지막 리뷰의 값을 cursor로 전달
+
+	[평점순 요청 시 주의]
+	- cursorStar, cursorCreatedAt, cursorId를 모두 함께 전달해야 합니다.
+	"""
+
+	)
 	public CommonResponse<CursorPageReviewResponse<ReviewResponse>> readAllReviews(
 		@PathVariable Long placeId,
-		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursorCreatedAt,
+		@RequestParam(defaultValue = "LATEST") String sortType,
+		@RequestParam(required = false) Integer cursorStar,
+		@RequestParam(required = false)
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursorCreatedAt,
 		@RequestParam(required = false) Long cursorId,
 		@RequestParam(defaultValue = "10") int size
 	) {
-		CursorPageReviewResponse<ReviewResponse> response = reviewService.getReviewList(placeId, cursorCreatedAt,
-			cursorId, size);
+		CursorPageReviewResponse<ReviewResponse> response = reviewService.getReviewList(
+			placeId,
+			sortType,
+			cursorStar,
+			cursorCreatedAt,
+			cursorId,
+			size
+		);
+
 		return CommonResponse.success(ReviewResponseCode.GET_REVIEW_LIST_SUCCESS, response);
 	}
 
