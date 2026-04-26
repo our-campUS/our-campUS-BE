@@ -11,13 +11,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record PostListItemResponse(
 	@Schema(description = "게시글 id", example = "1")
-	Long id,
+	Long postId,
 
 	@Schema(description = "게시글 카테고리", example = "EVENT")
 	PostCategory category,
 
 	@Schema(description = "게시글 이름", example = "중간고사 간식생사")
 	String title,
+
+	@Schema(description = "장소 id", example = "10")
+	Long placeId,
 
 	@Schema(description = "장소 이름", example = "스타벅스 중앙대점")
 	String placeName,
