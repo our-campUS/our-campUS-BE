@@ -98,11 +98,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	List<Review> findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(Long placeId);
 
 	@Query(value = """
-        SELECT r FROM Review r
-        JOIN FETCH r.place
-        WHERE r.user.id = :userId
-        ORDER BY r.createdAt DESC
-        """,
+		SELECT r FROM Review r
+		JOIN FETCH r.place
+		WHERE r.user.id = :userId
+		ORDER BY r.createdAt DESC
+		""",
 		countQuery = "SELECT count(r) FROM Review r WHERE r.user.id = :userId")
 	Page<Review> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
+
+	@Query("SELECT r.place.placeId, COUNT(r) FROM Review r WHERE r.place.placeId IN :placeIds GROUP BY r.place.placeId")
+	List<Object[]> findReviewCountsByPlaceIds(@Param("placeIds") Set<Long> placeIds);
 }
