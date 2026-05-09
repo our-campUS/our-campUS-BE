@@ -170,7 +170,7 @@ public class StudentCouncilPostForUserService {
 			majorId = user.getMajor().getMajorId();
 		}
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.ASC, "startDateTime"));
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
 
 		LocalDateTime now = LocalDateTime.now(KST);
 		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);

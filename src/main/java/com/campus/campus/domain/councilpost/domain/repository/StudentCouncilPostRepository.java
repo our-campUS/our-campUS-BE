@@ -325,7 +325,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	);
 
 	@Query("""
-		    SELECT p.place.placeKey, w.councilName, p.title, p.id
+		    SELECT p.place.placeKey, w.councilName, w.councilType,p.id, p.title
 		    FROM StudentCouncilPost p
 		    JOIN p.writer w
 		    JOIN p.place pl
@@ -333,7 +333,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		    LEFT JOIN w.college c
 		    LEFT JOIN w.major m
 		    WHERE pl.placeKey IN :placeKeys
-		      AND p.category = 'PARTNERSHIP'
+		      AND p.category = :category
 		      AND :now BETWEEN p.startDateTime AND p.endDateTime
 		      AND w.deletedAt IS NULL
 		      AND (
@@ -344,6 +344,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		""")
 	List<Object[]> findActivePartnershipsByPlaceKeys(
 		@Param("placeKeys") List<String> placeKeys,
+		@Param("category") PostCategory category,
 		@Param("now") LocalDateTime now,
 		@Param("majorId") Long majorId,
 		@Param("collegeId") Long collegeId,
