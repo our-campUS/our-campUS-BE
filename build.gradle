@@ -60,6 +60,9 @@ dependencies {
     // Firebase Admin SDK
     implementation 'com.google.firebase:firebase-admin:9.7.0'
 
+    // JTS - 좌표 point-in-polygon 연산 (서비스 지역 필터)
+    implementation 'org.locationtech.jts:jts-core:1.20.0'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
