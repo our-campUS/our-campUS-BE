@@ -3,7 +3,6 @@ package com.campus.campus.domain.councilpost.application;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,6 +13,7 @@ import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPost
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 
 import lombok.RequiredArgsConstructor;
+
 @Component
 @RequiredArgsConstructor
 public class PartnershipScheduler {

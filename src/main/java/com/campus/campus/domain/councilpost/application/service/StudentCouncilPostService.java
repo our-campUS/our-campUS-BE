@@ -61,7 +61,7 @@ public class StudentCouncilPostService {
 	private final ApplicationEventPublisher eventPublisher;
 	private final PlaceService placeService;
 	private final PlaceRepository placeRepository;
-	private final StudentCouncilPostRepository studentCouncilPostRepository;
+
 
 	@Transactional
 	public GetPostResponse create(Long councilId, PostRequest dto) {
@@ -326,7 +326,7 @@ public class StudentCouncilPostService {
 		Place place = placeRepository.findById(placeId).orElseThrow(PlaceNotFoundException::new);
 
 		boolean hasActivePartnership =
-			studentCouncilPostRepository.existsActivePartnershipByPlaceId(placeId, LocalDateTime.now());
+			postRepository.existsActivePartnershipByPlaceId(placeId, LocalDateTime.now());
 
 		if (hasActivePartnership) {
 			place.makePartnershipTrue();
