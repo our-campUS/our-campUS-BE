@@ -78,7 +78,9 @@ public class UserService {
 		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
 
-		if (userRepository.existsByCampusNicknameAndIdNot(nicknameUpdateRequest.campusNickname(), userId)) {
+		Long schoolId = user.getSchool().getSchoolId();
+		if (userRepository.existsByCampusNicknameAndSchool_SchoolIdAndIdNot(
+			nicknameUpdateRequest.campusNickname(), schoolId, userId)) {
 			throw new NicknameAlreadyExistsException();
 		}
 
