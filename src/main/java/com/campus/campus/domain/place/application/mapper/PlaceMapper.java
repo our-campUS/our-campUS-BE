@@ -70,6 +70,7 @@ public class PlaceMapper {
 	public PartnershipPinResponse toPartnershipPinResponse(StudentCouncilPost post, Place place) {
 		return new PartnershipPinResponse(
 			post.getId(),
+			post.getWriter().getCouncilType(),
 			place.getPlaceId(),
 			place.getPlaceName(),
 			place.getCoordinate().latitude(),
@@ -90,7 +91,7 @@ public class PlaceMapper {
 			place.getAddress(),
 			place.getCoordinate().latitude(),
 			place.getCoordinate().longitude(),
-			resolveTag(post, user),
+			post.getWriter().getCouncilType(),
 			isLiked,
 			averageStar,
 			post.getTitle(),
@@ -218,7 +219,7 @@ public class PlaceMapper {
 		boolean isPartnership = (activePost != null);
 		String partnerTitle = (activePost != null) ? activePost.getTitle() : null;
 		LocalDate endDate = (activePost != null) ? activePost.getDisplayEndDate() : null;
-		String tag = (activePost != null) ? activePost.getWriter().getCouncilName() : null;
+		CouncilType councilType = (activePost != null) ? activePost.getWriter().getCouncilType() : null;
 
 		return new PartnershipDetailResponse(
 			isPartnership,
@@ -229,7 +230,7 @@ public class PlaceMapper {
 			savedPlaceInfo.address(),
 			savedPlaceInfo.coordinate().latitude(),
 			savedPlaceInfo.coordinate().longitude(),
-			tag,
+			councilType,
 			isLiked,
 			(averageStar != null) ? averageStar : 0.0,
 			partnerTitle,
@@ -247,7 +248,8 @@ public class PlaceMapper {
 		Double distanceMeter,
 		Double averageStar,
 		List<String> imageUrls,
-		String partnershipTitle
+		String partnershipTitle,
+		CouncilType councilType
 	) {
 		Coordinate coordinate = place.getCoordinate();
 
@@ -265,7 +267,8 @@ public class PlaceMapper {
 			distanceMeter,
 			averageStar,
 			imageUrls,
-			partnershipTitle
+			partnershipTitle,
+			councilType
 		);
 	}
 }

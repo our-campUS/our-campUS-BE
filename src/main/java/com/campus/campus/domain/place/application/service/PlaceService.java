@@ -153,15 +153,33 @@ public class PlaceService {
 			Long collegeId = user.getCollege() != null ? user.getCollege().getCollegeId() : null;
 			Long majorId = user.getMajor() != null ? user.getMajor().getMajorId() : null;
 
-			partnershipMap = studentCouncilPostRepository
-				.findActivePartnershipsByPlaceKeys(placeKeys, LocalDateTime.now(KST),
-					majorId, collegeId, schoolId,
-					CouncilType.MAJOR_COUNCIL, CouncilType.COLLEGE_COUNCIL, CouncilType.SCHOOL_COUNCIL)
-				.stream()
+			List<Object[]> rows = studentCouncilPostRepository
+				.findActivePartnershipsByPlaceKeys(
+					placeKeys,
+					PostCategory.PARTNERSHIP,
+					LocalDateTime.now(KST),
+					majorId,
+					collegeId,
+					schoolId,
+					CouncilType.MAJOR_COUNCIL,
+					CouncilType.COLLEGE_COUNCIL,
+					CouncilType.SCHOOL_COUNCIL
+				);
+
+			log.info("placeKeys={}", placeKeys);
+			log.info("user schoolId={}, collegeId={}, majorId={}", schoolId, collegeId, majorId);
+			log.info("partnership result size={}", rows.size());
+
+			partnershipMap = rows.stream()
 				.collect(Collectors.groupingBy(
-					obj -> (String)obj[0],
+					obj -> (String) obj[0],
 					Collectors.mapping(
-						obj -> new SearchPartnershipInfoResponse((Long)obj[3], (String)obj[1], (String)obj[2]),
+						obj -> new SearchPartnershipInfoResponse(
+							(Long) obj[3],
+							(String) obj[1],
+							(CouncilType) obj[2],
+							(String) obj[4]
+						),
 						Collectors.toList()
 					)
 				));
@@ -331,13 +349,7 @@ public class PlaceService {
 	}
 
 	@Transactional(readOnly = true)
-	public LikedPlaceScrollResponse getLikedPlaces(
-		Long userId,
-		Long cursor,
-		int size,
-		double userLat,
-		double userLng
-	) {
+	public LikedPlaceScrollResponse getLikedPlaces(Long userId, Long cursor, int size, double userLat, double userLng) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(UserNotFoundException::new);
 
@@ -379,7 +391,7 @@ public class PlaceService {
 				obj -> (String)obj[1]
 			));
 
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(KST);
 		Pageable firstOne = PageRequest.of(0, 1);
 
 		List<LikedPlaceDetailResponse> content = pageContent.stream()
@@ -399,25 +411,31 @@ public class PlaceService {
 
 				Double averageStar = averageStarMap.getOrDefault(place.getPlaceId(), 0.0);
 				String partnershipTitle = null;
+				CouncilType councilType = null;
 				List<String> imageUrls = List.of();
 
 				if (place.isPartnership()) {
+					Long majorId = user.getMajor() != null ? user.getMajor().getMajorId() : null;
+					Long collegeId = user.getCollege() != null ? user.getCollege().getCollegeId() : null;
+					Long schoolId = user.getSchool() != null ? user.getSchool().getSchoolId() : null;
+
 					List<StudentCouncilPost> activePosts =
 						studentCouncilPostRepository.findActiveByPlaceAndUserScope(
 							place,
 							now,
 							CouncilType.MAJOR_COUNCIL,
-							user.getMajor().getMajorId(),
+							majorId,
 							CouncilType.COLLEGE_COUNCIL,
-							user.getCollege().getCollegeId(),
+							collegeId,
 							CouncilType.SCHOOL_COUNCIL,
-							user.getSchool().getSchoolId(),
+							schoolId,
 							firstOne
 						);
 
 					if (!activePosts.isEmpty()) {
-						StudentCouncilPost post = activePosts.get(0);
+						StudentCouncilPost post = activePosts.getFirst();
 						partnershipTitle = post.getTitle();
+						councilType = post.getWriter().getCouncilType();
 
 						imageUrls = postImageRepository.findAllByPost(post)
 							.stream()
@@ -435,7 +453,8 @@ public class PlaceService {
 					distanceMeter,
 					averageStar,
 					imageUrls,
-					partnershipTitle
+					partnershipTitle,
+					councilType
 				);
 			})
 			.toList();

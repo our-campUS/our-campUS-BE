@@ -111,14 +111,23 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		              REPLACE(p.title, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\'
 		              OR REPLACE(pl.placeName, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\'
 		              ))
-		ORDER BY 
-			(CASE
-				 WHEN :keyword IS NULL OR :keyword = '' THEN 3
-				 WHEN REPLACE(p.title, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\' THEN 1
-				 WHEN REPLACE(pl.placeName, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\' THEN 2
-				 ELSE 3
-			END) ASC,
-			p.startDateTime ASC
+		ORDER BY
+		     CASE 
+		  	WHEN (
+				(p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.EVENT AND p.startDateTime IS NOT NULL AND p.startDateTime <= :now)
+				OR
+				(p.category <> com.campus.campus.domain.councilpost.domain.entity.PostCategory.EVENT AND p.endDateTime IS NOT NULL AND p.endDateTime <= :now)
+			)
+		  	THEN 1
+		  	ELSE 0	
+		 END ASC,	 
+		(CASE
+		  WHEN :keyword IS NULL OR :keyword = '' THEN 3
+		  WHEN REPLACE(p.title, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\' THEN 1
+		  WHEN REPLACE(pl.placeName, ' ', '') LIKE CONCAT('%', :keyword, '%') ESCAPE '\\' THEN 2
+		  ELSE 3
+		END) ASC,
+		p.startDateTime ASC
 		""")
 	Page<StudentCouncilPost> findPostsByFilters(
 		@Param("schoolId") Long schoolId,
@@ -128,6 +137,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("category") PostCategory category,
 		@Param("excludePostId") Long excludePostId,
 		@Param("keyword") String keyword,
+		@Param("now") LocalDateTime now,
 		Pageable pageable
 	);
 
@@ -315,7 +325,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 	);
 
 	@Query("""
-		    SELECT p.place.placeKey, w.councilName, p.title, p.id
+		    SELECT p.place.placeKey, w.councilName, w.councilType,p.id, p.title
 		    FROM StudentCouncilPost p
 		    JOIN p.writer w
 		    JOIN p.place pl
@@ -323,7 +333,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		    LEFT JOIN w.college c
 		    LEFT JOIN w.major m
 		    WHERE pl.placeKey IN :placeKeys
-		      AND p.category = 'PARTNERSHIP'
+		      AND p.category = :category
 		      AND :now BETWEEN p.startDateTime AND p.endDateTime
 		      AND w.deletedAt IS NULL
 		      AND (
@@ -334,6 +344,7 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		""")
 	List<Object[]> findActivePartnershipsByPlaceKeys(
 		@Param("placeKeys") List<String> placeKeys,
+		@Param("category") PostCategory category,
 		@Param("now") LocalDateTime now,
 		@Param("majorId") Long majorId,
 		@Param("collegeId") Long collegeId,
@@ -396,5 +407,28 @@ public interface StudentCouncilPostRepository extends JpaRepository<StudentCounc
 		@Param("schoolId") Long schoolId,
 		Pageable pageable
 	);
+
+	@Query("""
+		    SELECT COUNT(p) > 0
+		    FROM StudentCouncilPost p
+		    JOIN p.writer w
+		    WHERE p.place.placeId = :placeId
+		      AND p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.PARTNERSHIP
+		      AND p.startDateTime <= :now
+		      AND p.endDateTime >= :now
+		      AND w.deletedAt IS NULL
+		""")
+	boolean existsActivePartnershipByPlaceId(
+		@Param("placeId") Long placeId,
+		@Param("now") LocalDateTime now
+	);
+
+	@Query("""
+    SELECT DISTINCT p.place.placeId
+    FROM StudentCouncilPost p
+    WHERE p.place IS NOT NULL
+      AND p.category = com.campus.campus.domain.councilpost.domain.entity.PostCategory.PARTNERSHIP
+""")
+	List<Long> findDistinctPartnershipPlaceIds();
 
 }

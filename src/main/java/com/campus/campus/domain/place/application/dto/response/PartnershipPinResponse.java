@@ -1,11 +1,16 @@
 package com.campus.campus.domain.place.application.dto.response;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record PartnershipPinResponse(
 
 	@Schema(description = "제휴글 ID", example = "10")
 	Long postId,
+
+	@Schema(description = "학생회 타입", example = "SCHOOL_COUNCIL")
+	CouncilType councilType,
 
 	@Schema(description = "장소 ID", example = "4")
 	Long placeId,
@@ -21,5 +26,7 @@ public record PartnershipPinResponse(
 
 	@Schema(description = "장소 카테고리", example = "음식점")
 	String placeCategory
+
+
 ) {
 }

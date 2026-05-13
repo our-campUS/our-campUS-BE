@@ -3,6 +3,7 @@ package com.campus.campus.domain.place.application.dto.response.partnership;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
 import com.campus.campus.domain.place.application.dto.response.PlaceDetailView;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 
@@ -33,8 +34,8 @@ public record PartnershipDetailResponse(
 	@Schema(description = "경도", example = "126.9571012")
 	Double longitude,
 
-	@Schema(description = "제휴 주체 (예: 총학생회, 단과대)", example = "총학생회")
-	String tag,
+	@Schema(description = "제휴 주체 (예: 총학생회, 단과대)", example = "SCHOOL_COUNCIL")
+	CouncilType councilType,
 
 	@Schema(description = "찜 여부", example = "true")
 	boolean isLiked,

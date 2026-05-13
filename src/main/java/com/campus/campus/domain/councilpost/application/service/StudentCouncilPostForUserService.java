@@ -141,9 +141,10 @@ public class StudentCouncilPostForUserService {
 
 		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
 
+		LocalDateTime now = LocalDateTime.now(KST);
 		Page<StudentCouncilPost> posts = studentCouncilPostRepository
 			.findPostsByFilters(user.getSchool().getSchoolId(), councilType, collegeId, majorId, category,
-				excludePostId, cleanKeyword, pageable);
+				excludePostId, cleanKeyword, now, pageable);
 
 		return mapPostsWithLikes(posts, userId);
 	}
@@ -169,7 +170,7 @@ public class StudentCouncilPostForUserService {
 			majorId = user.getMajor().getMajorId();
 		}
 
-		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, Sort.by(Sort.Direction.ASC, "startDateTime"));
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size);
 
 		LocalDateTime now = LocalDateTime.now(KST);
 		LocalDateTime limit = now.plusHours(UPCOMING_HOURS);

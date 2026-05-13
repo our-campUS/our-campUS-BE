@@ -1,10 +1,10 @@
 package com.campus.campus.domain.councilpost.application.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,10 +34,12 @@ import com.campus.campus.domain.councilpost.domain.entity.PostImage;
 import com.campus.campus.domain.councilpost.domain.entity.StudentCouncilPost;
 import com.campus.campus.domain.councilpost.domain.repository.PostImageRepository;
 import com.campus.campus.domain.councilpost.domain.repository.StudentCouncilPostRepository;
+import com.campus.campus.domain.place.application.exception.PlaceNotFoundException;
 import com.campus.campus.domain.place.application.service.PlaceService;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.place.domain.entity.PlaceImages;
 import com.campus.campus.domain.place.domain.repository.PlaceImagesRepository;
+import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.global.oci.application.service.PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
@@ -58,6 +60,8 @@ public class StudentCouncilPostService {
 	private final StudentCouncilPostMapper studentCouncilPostMapper;
 	private final ApplicationEventPublisher eventPublisher;
 	private final PlaceService placeService;
+	private final PlaceRepository placeRepository;
+
 
 	@Transactional
 	public GetPostResponse create(Long councilId, PostRequest dto) {
@@ -77,13 +81,16 @@ public class StudentCouncilPostService {
 
 		//Place 객체 생성
 		Place place = placeService.findOrCreatePlace(dto.place());
-		place.makePartnershipTrue();
 
 		StudentCouncilPost post = studentCouncilPostMapper.createStudentCouncilPost(
 			writer, place, dto, normalized.startDateTime(), normalized.endDateTime()
 		);
 
 		StudentCouncilPost saved = postRepository.save(post);
+
+		if (saved.getPlace() != null) {
+			refreshPlacePartnershipStatus(saved.getPlace().getPlaceId());
+		}
 
 		if (dto.imageUrls() != null) {
 			for (String imageUrl : dto.imageUrls()) {
@@ -184,7 +191,12 @@ public class StudentCouncilPostService {
 			.forEach(deleteTargets::add);
 
 		postImageRepository.deleteAll(postImages);
+
+		Long placeId = post.getPlace() != null ? post.getPlace().getPlaceId() : null;
+
 		postRepository.delete(post);
+
+		refreshPlacePartnershipStatus(placeId);
 
 		for (String imageUrl : deleteTargets) {
 			try {
@@ -226,6 +238,8 @@ public class StudentCouncilPostService {
 			place = placeService.findOrCreatePlace(dto.place());
 		}
 
+		Long oldPlaceId = post.getPlace() != null ? post.getPlace().getPlaceId() : null;
+
 		post.update(
 			dto.title(),
 			dto.content(),
@@ -237,6 +251,11 @@ public class StudentCouncilPostService {
 			dto.thumbnailIcon(),
 			dto.category()
 		);
+
+		Long newPlaceId = post.getPlace() != null ? post.getPlace().getPlaceId() : null;
+
+		refreshPlacePartnershipStatus(oldPlaceId);
+		refreshPlacePartnershipStatus(newPlaceId);
 
 		postImageRepository.deleteByPost(post);
 
@@ -297,4 +316,23 @@ public class StudentCouncilPostService {
 			}
 		}
 	}
+
+	@Transactional
+	public void refreshPlacePartnershipStatus(Long placeId) {
+		if (placeId == null) {
+			return;
+		}
+
+		Place place = placeRepository.findById(placeId).orElseThrow(PlaceNotFoundException::new);
+
+		boolean hasActivePartnership =
+			postRepository.existsActivePartnershipByPlaceId(placeId, LocalDateTime.now());
+
+		if (hasActivePartnership) {
+			place.makePartnershipTrue();
+		} else {
+			place.makePartnershipFalse();
+		}
+	}
+
 }

@@ -60,4 +60,8 @@ public class Place {
 	public void makePartnershipTrue() {
 		this.isPartnership = true;
 	}
+
+	public void makePartnershipFalse() {
+		this.isPartnership = false;
+	}
 }

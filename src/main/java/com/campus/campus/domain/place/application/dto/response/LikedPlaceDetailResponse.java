@@ -3,6 +3,8 @@ package com.campus.campus.domain.place.application.dto.response;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.campus.campus.domain.council.domain.entity.CouncilType;
+
 public record LikedPlaceDetailResponse(
 	Long likedPlaceId,
 	Long placeId,
@@ -17,7 +19,8 @@ public record LikedPlaceDetailResponse(
 	Double distanceMeter,
 	Double averageStar,
 	List<String> imageUrls,
-	String partnershipTitle
+	String partnershipTitle,
+	CouncilType councilType
 ) {
 	public static LikedPlaceDetailResponse of(
 		Long likedPlaceId,
@@ -33,7 +36,8 @@ public record LikedPlaceDetailResponse(
 		Double distanceMeter,
 		Double averageStar,
 		List<String> imageUrls,
-		String partnershipTitle
+		String partnershipTitle,
+		CouncilType councilType
 	) {
 		return new LikedPlaceDetailResponse(
 			likedPlaceId,
@@ -49,7 +53,8 @@ public record LikedPlaceDetailResponse(
 			distanceMeter,
 			averageStar,
 			imageUrls,
-			partnershipTitle
+			partnershipTitle,
+			councilType
 		);
 	}
 }
