@@ -33,6 +33,9 @@ public record RecommendNearByPlaceResponse(
 	@Schema(description = "위도/경도")
 	Coordinate coordinate,
 
+	@Schema(description = "리뷰 평균 별점", example = "4.5")
+	Double averageStar,
+
 	@Schema(description = "이미지 url")
 	List<String> imgUrls
 ) {

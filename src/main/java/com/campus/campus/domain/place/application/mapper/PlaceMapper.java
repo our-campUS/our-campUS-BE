@@ -142,19 +142,22 @@ public class PlaceMapper {
 		return new RecommendPlaceByTimeResponse(type, partnershipPosts, nearbyPlaces);
 	}
 
-	public RecommendPartnershipPlaceResponse toRecommendPartnershipPlaceResponse(StudentCouncilPost post) {
+	public RecommendPartnershipPlaceResponse toRecommendPartnershipPlaceResponse(StudentCouncilPost post,
+		Double averageStar) {
 		return new RecommendPartnershipPlaceResponse(
 			post.getPlace().getPlaceId(),
 			post.getPlace().getPlaceName(),
 			post.getWriter().getCouncilName(),
+			post.getWriter().getCouncilType(),
 			post.getTitle(),
 			post.getPlace().getAddress(),
+			averageStar,
 			post.getThumbnailImageUrl()
 		);
 	}
 
 	public RecommendNearByPlaceResponse toRecommendNearByPlaceResponse(SavedPlaceInfo savedPlaceInfo,
-		List<String> imageUrl) {
+		Double averageStar, List<String> imageUrl) {
 		return new RecommendNearByPlaceResponse(
 			savedPlaceInfo.placeName(),
 			savedPlaceInfo.placeKey(),
@@ -163,6 +166,7 @@ public class PlaceMapper {
 			savedPlaceInfo.link(),
 			savedPlaceInfo.telephone(),
 			savedPlaceInfo.coordinate(),
+			averageStar,
 			imageUrl
 		);
 	}
