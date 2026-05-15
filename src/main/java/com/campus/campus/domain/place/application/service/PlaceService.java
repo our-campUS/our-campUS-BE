@@ -58,6 +58,7 @@ import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.place.domain.repository.UserPartnershipSuggestionRepository;
 import com.campus.campus.domain.place.infrastructure.kakao.KakaoLocalClient;
+import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
 import com.campus.campus.domain.review.application.service.ReviewService;
@@ -606,9 +607,25 @@ public class PlaceService {
 		List<StudentCouncilPost> mutablePosts = new ArrayList<>(posts);
 		Collections.shuffle(mutablePosts);
 
-		return mutablePosts.stream()
-			.limit(2)
-			.map(placeMapper::toRecommendPartnershipPlaceResponse)
+		List<StudentCouncilPost> selected = mutablePosts.stream().limit(2).toList();
+
+		Set<Long> placeIds = selected.stream()
+			.map(post -> post.getPlace().getPlaceId())
+			.collect(Collectors.toSet());
+
+		Map<Long, Double> averageStarMap = placeIds.isEmpty()
+			? Collections.emptyMap()
+			: reviewRepository.findAverageStarsByPlaceIds(placeIds).stream()
+				.collect(Collectors.toMap(
+					PlaceStarAvgRow::placeId,
+					row -> roundToOneDecimal(row.avgStar())
+				));
+
+		return selected.stream()
+			.map(post -> placeMapper.toRecommendPartnershipPlaceResponse(
+				post,
+				averageStarMap.getOrDefault(post.getPlace().getPlaceId(), 0.0)
+			))
 			.toList();
 	}
 
@@ -633,16 +650,37 @@ public class PlaceService {
 		List<SavedPlaceInfo> mutableList = new ArrayList<>(searchResults);
 		Collections.shuffle(mutableList);
 
-		return mutableList.stream()
-			.limit(2)
+		List<SavedPlaceInfo> selected = mutableList.stream().limit(2).toList();
+
+		List<String> placeKeys = selected.stream()
+			.map(SavedPlaceInfo::placeKey)
+			.toList();
+
+		Map<String, Double> averageStarMap = placeKeys.isEmpty()
+			? Collections.emptyMap()
+			: reviewRepository.findAverageStarsByPlaceKeys(placeKeys).stream()
+				.collect(Collectors.toMap(
+					obj -> (String)obj[0],
+					obj -> roundToOneDecimal((Double)obj[1])
+				));
+
+		return selected.stream()
 			.map(info -> {
 				List<String> imageUrl = (info.imgUrls() != null && !info.imgUrls().isEmpty())
 					? List.of(info.imgUrls().get(0))
 					: Collections.emptyList();
 
-				return placeMapper.toRecommendNearByPlaceResponse(info, imageUrl);
+				Double averageStar = averageStarMap.getOrDefault(info.placeKey(), 0.0);
+
+				return placeMapper.toRecommendNearByPlaceResponse(info, averageStar, imageUrl);
 			})
 			.toList();
+	}
+
+	private double roundToOneDecimal(Double value) {
+		return BigDecimal.valueOf(value != null ? value : 0.0)
+			.setScale(1, RoundingMode.HALF_UP)
+			.doubleValue();
 	}
 
 	@Transactional(readOnly = true)
