@@ -21,6 +21,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	boolean existsByCampusNicknameAndIdNot(String campusNickname, Long userId);
 
+	boolean existsByCampusNicknameAndSchool_SchoolIdAndIdNot(String campusNickname, Long schoolId, Long userId);
+
 	List<User> findAllByDeletedAtIsNotNullAndDeletedAtBefore(LocalDateTime softDeleteDate);
 
 	@Query("""
