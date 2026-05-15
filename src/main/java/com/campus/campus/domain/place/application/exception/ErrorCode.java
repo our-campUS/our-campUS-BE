@@ -17,7 +17,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 	KAKAO_API_ERROR(2604, HttpStatus.INTERNAL_SERVER_ERROR, "카카오 api 호출에 실패하였습니다."),
 	PLACE_CREATION_ERROR(2605, HttpStatus.INTERNAL_SERVER_ERROR, "Place 생성에 오류가 발생하였습니다."),
 	GEOCODER_ERROR(2606, HttpStatus.INTERNAL_SERVER_ERROR, "좌표 -> 주소 변환 과정에서 오류가 발생하였습니다."),
-	ALREADY_PARTNERSHIP_SUGGESTED(2607, HttpStatus.CONFLICT, "이미 제휴 신청 완료된 장소입니다.");
+	ALREADY_PARTNERSHIP_SUGGESTED(2607, HttpStatus.CONFLICT, "이미 제휴 신청 완료된 장소입니다."),
+	OUT_OF_SERVICE_AREA(2608, HttpStatus.BAD_REQUEST, "서비스 지역(서울/경기) 내에서만 이용 가능해요.");
 
 	private final int code;
 	private final HttpStatus status;

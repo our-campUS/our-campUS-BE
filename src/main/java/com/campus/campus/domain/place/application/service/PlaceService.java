@@ -47,6 +47,7 @@ import com.campus.campus.domain.place.application.dto.response.kakao.KakaoSearch
 import com.campus.campus.domain.place.application.dto.response.partnership.PartnershipDetailResponse;
 import com.campus.campus.domain.place.application.exception.AlreadySuggestedPartnershipException;
 import com.campus.campus.domain.place.application.exception.CoordinateNotFoundException;
+import com.campus.campus.domain.place.application.exception.OutOfServiceAreaException;
 import com.campus.campus.domain.place.application.exception.PlaceCreationException;
 import com.campus.campus.domain.place.application.mapper.PlaceMapper;
 import com.campus.campus.domain.place.domain.entity.CouncilPartnershipSuggestion;
@@ -70,6 +71,7 @@ import com.campus.campus.domain.user.application.exception.UserNotFoundException
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.util.geocoder.GeoUtil;
+import com.campus.campus.global.util.geocoder.ServiceAreaChecker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +107,7 @@ public class PlaceService {
 	private final PostImageRepository postImageRepository;
 	private final ReviewMapper reviewMapper;
 	private final ReviewService reviewService;
+	private final ServiceAreaChecker serviceAreaChecker;
 
 	@Transactional(readOnly = true)
 	public boolean isPlaceLiked(Long userId, String placeKey) {
@@ -114,6 +117,10 @@ public class PlaceService {
 
 	public List<SavedPlaceInfo> searchByLocationAndKeyword(double lat, double lng, String keyword, int imageLimit) {
 		log.info("카카오 좌표 기반 검색: lat={}, lng={}, keyword={}", lat, lng, keyword);
+
+		if (!serviceAreaChecker.isInServiceArea(lat, lng)) {
+			throw new OutOfServiceAreaException();
+		}
 
 		KakaoSearchResponse kakaoSearchResponse = kakaoLocalClient.searchPlaces(keyword, lat, lng, 1500);
 		return processSearchResults(kakaoSearchResponse);
@@ -469,6 +476,10 @@ public class PlaceService {
 
 	@Transactional(readOnly = true)
 	public RecommendPlaceByTimeResponse findRecommendations(Long userId, double lat, double lng) {
+		if (!serviceAreaChecker.isInServiceArea(lat, lng)) {
+			throw new OutOfServiceAreaException();
+		}
+
 		LocalTime now = LocalTime.now(KST);
 		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
 			.orElseThrow(UserNotFoundException::new);
@@ -501,6 +512,7 @@ public class PlaceService {
 				String placeUrl = document.placeUrl();
 				return new SearchCandidateResponse(document, name, address, placeKey, placeUrl);
 			})
+			.filter(candidate -> serviceAreaChecker.isAddressInServiceArea(candidate.address()))
 			.toList();
 
 		List<String> placeKeys = candidates.stream()
