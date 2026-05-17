@@ -25,6 +25,9 @@ public record PostListItemResponse(
 	@Schema(description = "장소 이름", example = "스타벅스 중앙대점")
 	String placeName,
 
+	@Schema(description = "장소 카테고리", example = "카페")
+	String placeCategory,
+
 	@Schema(description = "상세 장소 (예: 310관 B301호)", example = "310관 B301호")
 	String detailedLocation,
 
