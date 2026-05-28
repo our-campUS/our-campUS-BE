@@ -5,12 +5,11 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 public record PartnershipReviewRequest(
-	@NotNull
-	@Size(min = 10, message = "리뷰 내용은 최소 10자 이상이어야 합니다.")
+	@NotBlank
 	@Schema(description = "리뷰 내용", example = "아주 정말 맛있습니다. 저의 완전 짱 또간집. 꼭꼮꼬꼬꼭 가세요.")
 	String content,
 
