@@ -35,6 +35,8 @@ public class PermitUrlConfig {
 			"/places",
 			"/api/partnership/list",
 			"/api/partnership/map",
+			// TODO: 스토어 심사 후 제거
+			"/test/**",
 			// TODO: main 브랜치 머지 전 반드시 제거 — dev 전용 엔드포인트
 			"/dev/**"
 		};

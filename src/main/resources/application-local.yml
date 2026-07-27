@@ -78,3 +78,8 @@ clova:
   ocr:
     invoke-url: https://oprno6zgu9.apigw.ntruss.com/custom/v1/49413/b8f236bbccbb9b0008d8d0485d9028faba366671ac72ccab91d2df2bb9c96001/document/receipt
     secret-key: ${OCR_KEY}
+
+review:
+  login:
+    enabled: true
+    email: ${EMAIL}
