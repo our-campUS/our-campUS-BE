@@ -77,3 +77,7 @@ management:
 firebase:
   enabled: false
 
+review:
+  login:
+    enabled: true
+    email: dummy
