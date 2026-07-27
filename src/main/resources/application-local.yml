@@ -81,5 +81,5 @@ clova:
 
 review:
   login:
-    enabled: true
-    email: ${EMAIL}
+    enabled: ${REVIEW_LOGIN_ENABLED:false}
+    email: ${REVIEW_LOGIN_EMAIL:}
