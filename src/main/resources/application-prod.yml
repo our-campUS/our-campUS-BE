@@ -37,8 +37,8 @@ spring:
 
 oauth:
   kakao:
-    client-id: ENC(G6gZHtP5QYz7+G6herJ1QCSbdVYgjtGnx8MhBSxLDFx26Yh0YQQ+uZ6RQ7wbvS17)
-    client-secret: ENC(CG823WHRi6g4ybTc/VEOfd43c/RxVnIAE+AVpYWqrE/2xnGkvtjKkVSVVOXkXBXo)
+    client-id: ENC(CoJaKYgvNndhnPFSo/AV4nlUguPnELBwNG6ag1i1/519Gwv0YF24WeVehtgEf2XD)
+    client-secret: ENC(rtdZkt08FPrk636edzywvpnM1PJKBisjenGksSHVsDpr0sCVXzGR4fdmHKiIWPwK)
     redirect-uri: "https://138.2.121.208.nip.io/auth/login/kakao"
     admin-key: ENC(9UKWct9u8LPS0tNvuWSgqYHNN/2vvqDCYE4hRaqXsHJGCGMQY4/N1IOcbmi4IJTt)
 
