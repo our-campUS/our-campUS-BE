@@ -17,7 +17,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 	RECEIPT_FILE_CONVERT_ERROR(2703, HttpStatus.UNPROCESSABLE_ENTITY, "영수증 FILE 형태 변형에 실패하였습니다."),
 	RECEIPT_FILE_TYPE_ERROR(2704, HttpStatus.UNPROCESSABLE_ENTITY, "지원하지 않는 이미지 형식입니다."),
 	NOT_PARTNERSHIP_RECEIPT_ERROR(2705, HttpStatus.UNPROCESSABLE_ENTITY, "영수증과 일치하는 제휴 정보를 찾을 수 없어요."),
-	RECEIPT_DATE_PARSE_ERROR(2706, HttpStatus.UNPROCESSABLE_ENTITY, "영수증 결제 일자를 파싱하는 도중 오류가 발생했어요.");
+	RECEIPT_DATE_PARSE_ERROR(2706, HttpStatus.UNPROCESSABLE_ENTITY, "영수증 결제 일자를 파싱하는 도중 오류가 발생했어요."),
+	INAPPROPRIATE_REVIEW_CONTENT(2707, HttpStatus.BAD_REQUEST, "부적절한 표현이 포함되어 있어 리뷰를 등록할 수 없습니다. 내용을 수정해주세요.");
 
 	private final int code;
 	private final HttpStatus status;

@@ -25,6 +25,7 @@ import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptOcrRe
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
+import com.campus.campus.domain.review.domain.entity.ReviewStatus;
 import com.campus.campus.domain.user.domain.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -161,12 +162,12 @@ public class ReviewMapper {
 		);
 	}
 
-	public ReviewCreateResponse toReviewCreateResponse(WriteReviewResponse response, ReviewCreateResult createResult,
-		ReviewRankingResponse rankingResponse) {
+	public ReviewCreateResponse toReviewCreateResponse(WriteReviewResponse response, ReviewCreateResult createResult, ReviewRankingResponse rankingResponse,ReviewStatus status) {
 		return ReviewCreateResponse.builder()
 			.review(response)
 			.result(createResult)
 			.ranking(rankingResponse)
+			.status(status)
 			.build();
 	}
 
@@ -194,7 +195,8 @@ public class ReviewMapper {
 			review.getPlace().getCoordinate() != null ? review.getPlace().getCoordinate().longitude() : null,
 			review.getContent(),
 			imageUrls != null ? imageUrls : Collections.emptyList(),
-			review.getCreatedAt()
+			review.getCreatedAt(),
+			review.getStatus()
 		);
 	}
 }

@@ -43,13 +43,17 @@ import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.SimpleReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
+import com.campus.campus.domain.review.application.exception.InappropriateReviewContentException;
 import com.campus.campus.domain.review.application.exception.NotPartnershipReceiptException;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
+import com.campus.campus.domain.review.application.validator.ProhibitedWordValidator;
+import com.campus.campus.domain.review.domain.ReviewModerationResult;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
 import com.campus.campus.domain.review.domain.entity.ReviewReport;
+import com.campus.campus.domain.review.domain.entity.ReviewStatus;
 import com.campus.campus.domain.review.domain.repository.ReviewImageRepository;
 import com.campus.campus.domain.review.domain.repository.ReviewReportRepository;
 import com.campus.campus.domain.review.domain.repository.ReviewRepository;
@@ -84,6 +88,7 @@ public class ReviewService {
 	private final PlaceMapper placeMapper;
 	private final LikedPlacesRepository likedPlacesRepository;
 	private final PlaceRepository placeRepository;
+	private final ProhibitedWordValidator prohibitedWordValidator;
 
 	@Transactional
 	public ReviewCreateResponse writePlaceReview(PlaceReviewRequest request, Long userId) {
@@ -92,6 +97,12 @@ public class ReviewService {
 
 		if (request.imageUrls() != null && request.imageUrls().size() > 10) {
 			throw new PostImageLimitExceededException();
+		}
+
+		//금칙어 검증
+		ReviewModerationResult moderationResult = prohibitedWordValidator.validate(request.content());
+		if (moderationResult == ReviewModerationResult.BLOCK) {
+			throw new InappropriateReviewContentException();
 		}
 
 		Place place = placeRepository.findByPlaceKey(request.place().placeKey())
@@ -106,6 +117,12 @@ public class ReviewService {
 			});
 
 		Review review = reviewMapper.createPlaceReview(request, user, place);
+
+		//검토 필요 시 비공개 상태로 등록
+		if (moderationResult == ReviewModerationResult.NEEDS_REVIEW) {
+			review.markAsNeedsReview();
+		}
+
 		reviewRepository.save(review);
 
 		if (request.imageUrls() != null) {
@@ -126,10 +143,21 @@ public class ReviewService {
 			throw new PostImageLimitExceededException();
 		}
 
+		//금칙어 검증
+		ReviewModerationResult moderationResult = prohibitedWordValidator.validate(request.content());
+		if (moderationResult == ReviewModerationResult.BLOCK) {
+			throw new InappropriateReviewContentException();
+		}
+
 		Place place = placeRepository.findById(placeId)
 			.orElseThrow(PlaceInfoNotFoundException::new);
 
 		Review review = reviewMapper.createPartnershipReview(request, user, place);
+
+		if (moderationResult == ReviewModerationResult.NEEDS_REVIEW) {
+			review.markAsNeedsReview();
+		}
+
 		reviewRepository.save(review);
 
 		if (request.imageUrls() != null) {
@@ -221,11 +249,24 @@ public class ReviewService {
 			throw new NotUserWriterException();
 		}
 
+		//금칙어 검증
+		ReviewModerationResult moderationResult = prohibitedWordValidator.validate(request.content());
+		if (moderationResult == ReviewModerationResult.BLOCK) {
+			throw new InappropriateReviewContentException();
+		}
+
 		List<ReviewImage> oldImages = reviewImageRepository.findAllByReview(review);
 		review.update(
 			request.content(),
 			request.star()
 		);
+
+		//공개/검토 상태 갱신
+		if (moderationResult == ReviewModerationResult.NEEDS_REVIEW) {
+			review.markAsNeedsReview();
+		} else {
+			review.markAsVisible();
+		}
 
 		reviewImageRepository.deleteByReview(review);
 		if (request.imageUrls() != null) {
@@ -247,7 +288,7 @@ public class ReviewService {
 	public List<SimpleReviewResponse> getReviewSummaryList(Long placeId) {
 
 		List<Review> reviews =
-			reviewRepository.findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(placeId);
+			reviewRepository.findTop3ByPlace_PlaceIdAndStatusOrderByCreatedAtDesc(placeId, ReviewStatus.VISIBLE);
 
 		if (reviews.isEmpty()) {
 			return List.of();
@@ -292,6 +333,7 @@ public class ReviewService {
 		if ("STAR".equalsIgnoreCase(sortType)) {
 			fetched = reviewRepository.findByPlaceIdWithStarCursor(
 				placeId,
+				ReviewStatus.VISIBLE,
 				cursorStar,
 				cursorCreatedAt,
 				cursorId,
@@ -300,6 +342,7 @@ public class ReviewService {
 		} else {
 			fetched = reviewRepository.findByPlaceIdWithLatestCursor(
 				placeId,
+				ReviewStatus.VISIBLE,
 				cursorCreatedAt,
 				cursorId,
 				pageable
@@ -366,13 +409,11 @@ public class ReviewService {
 	}
 
 	public double getAverageOfStars(Long placeId) {
-		return reviewRepository.findAverageStarByPlaceId(placeId).orElse(0.0);
+		return reviewRepository.findAverageStarByPlaceId(placeId, ReviewStatus.VISIBLE).orElse(0.0);
 	}
 
 	@Transactional(readOnly = true)
-	public int getReviewCount(Long placeId) {
-		return (int)reviewRepository.countByPlace_PlaceId(placeId);
-	}
+	public int getReviewCount(Long placeId) {return (int)reviewRepository.countByPlace_PlaceIdAndStatus(placeId, ReviewStatus.VISIBLE);}
 
 	@Transactional(readOnly = true)
 	public Map<Long, Double> getAverageListOfStars(Set<Long> placeIds) {
@@ -382,7 +423,7 @@ public class ReviewService {
 		}
 
 		List<PlaceStarAvgRow> rows =
-			reviewRepository.findAverageStarsByPlaceIds(placeIds);
+			reviewRepository.findAverageStarsByPlaceIds(placeIds, ReviewStatus.VISIBLE);
 
 		// 조회된 placeId → 평균
 		Map<Long, Double> avgMap = rows.stream()
@@ -480,7 +521,7 @@ public class ReviewService {
 			return Collections.emptyMap();
 		}
 
-		List<Object[]> results = reviewRepository.findReviewCountsByPlaceIds(placeIds);
+		List<Object[]> results = reviewRepository.findReviewCountsByPlaceIds(placeIds, ReviewStatus.VISIBLE);
 
 		Map<Long, Long> countMap = results.stream()
 			.collect(Collectors.toMap(
@@ -503,7 +544,7 @@ public class ReviewService {
 		ReviewCreateResult createResult = getCreateResult(place, user);
 		ReviewRankingResponse rankingResponse = getRankingResult(place, user);
 
-		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse);
+		return reviewMapper.toReviewCreateResponse(response, createResult, rankingResponse, review.getStatus());
 	}
 
 	//이미지 삭제
@@ -532,9 +573,10 @@ public class ReviewService {
 	}
 
 	private ReviewCreateResult getCreateResult(Place place, User user) {
-		long totalReviewCountOfPlace = reviewRepository.countByPlace_PlaceId(place.getPlaceId());
+		long totalReviewCountOfPlace = reviewRepository.countByPlace_PlaceIdAndStatus(place.getPlaceId(), ReviewStatus.VISIBLE);
 
-		long count = reviewRepository.countByPlaceAndUser(place, user);
+		long count = reviewRepository.countByPlaceAndUserAndStatus(place, user, ReviewStatus.VISIBLE);
+
 		boolean isFirstReviewOfPlace = totalReviewCountOfPlace == 1;
 		int NumberOfStamp = stampRepository.countByUser(user);
 
@@ -552,19 +594,22 @@ public class ReviewService {
 		Long collegeId = college.getCollegeId();
 		Long schoolId = school.getSchoolId();
 
-		long majorRank = reviewRepository.countByPlace_PlaceIdAndUser_Major_MajorId(
+		long majorRank = reviewRepository.countByPlace_PlaceIdAndUser_Major_MajorIdAndStatus(
 			placeId,
-			majorId
+			majorId,
+			ReviewStatus.VISIBLE
 		);
 
-		long collegeRank = reviewRepository.countByPlace_PlaceIdAndUser_College_CollegeId(
+		long collegeRank = reviewRepository.countByPlace_PlaceIdAndUser_College_CollegeIdAndStatus(
 			placeId,
-			collegeId
+			collegeId,
+			ReviewStatus.VISIBLE
 		);
 
-		long schoolRank = reviewRepository.countByPlace_PlaceIdAndUser_School_SchoolId(
+		long schoolRank = reviewRepository.countByPlace_PlaceIdAndUser_School_SchoolIdAndStatus(
 			placeId,
-			schoolId
+			schoolId,
+			ReviewStatus.VISIBLE
 		);
 
 		return reviewMapper.toReviewRankingResponse(major.getMajorName(), majorRank, college.getCollegeName(),
