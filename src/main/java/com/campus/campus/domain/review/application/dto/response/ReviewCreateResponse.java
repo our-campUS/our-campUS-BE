@@ -1,5 +1,7 @@
 package com.campus.campus.domain.review.application.dto.response;
 
+import com.campus.campus.domain.review.domain.entity.ReviewStatus;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -12,6 +14,9 @@ public record ReviewCreateResponse(
 	ReviewCreateResult result,
 
 	@Schema(description = "리뷰 랭킹 정보")
-	ReviewRankingResponse ranking
+	ReviewRankingResponse ranking,
+
+	@Schema(description = "리뷰 공개 상태", example = "VISIBLE", allowableValues = {"VISIBLE", "PENDING"})
+	ReviewStatus status
 ) {
 }

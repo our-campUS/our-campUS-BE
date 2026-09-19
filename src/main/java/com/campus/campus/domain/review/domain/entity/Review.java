@@ -6,6 +6,8 @@ import com.campus.campus.global.entity.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -39,6 +41,11 @@ public class Review extends BaseEntity {
 	@Column(name = "is_verified")
 	private boolean isVerified;
 
+	@Builder.Default
+	@Enumerated(EnumType.STRING)
+	@Column(name = "status", nullable = false)
+	private ReviewStatus status = ReviewStatus.VISIBLE;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
@@ -58,4 +65,13 @@ public class Review extends BaseEntity {
 	public void verify() {
 		this.isVerified = true;
 	}
+
+	//금칙어 검토 대상으로 표시 (비공개)
+	public void markAsNeedsReview() { this.status = ReviewStatus.PENDING_REVIEW; }
+
+	//정상 공개 상태로 표시
+	public void markAsVisible() { this.status = ReviewStatus.VISIBLE; }
+
+	public boolean isVisible() { return this.status == ReviewStatus.VISIBLE; }
+
 }

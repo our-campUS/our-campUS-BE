@@ -26,6 +26,7 @@ import com.campus.campus.domain.review.application.dto.response.ReviewCreateResp
 import com.campus.campus.domain.review.application.dto.response.ReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
 import com.campus.campus.domain.review.application.service.ReviewService;
+import com.campus.campus.domain.review.domain.entity.ReviewStatus;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.common.response.CommonResponse;
 
@@ -45,7 +46,11 @@ public class ReviewController {
 	@PostMapping
 	@Operation(
 		summary = "리뷰 작성(제휴 없음)",
-		description = "제휴 가게여서 영수증 인증을 마쳤다면 isVerified=true 값으로 넘겨주세요.",
+		description = """
+        제휴 가게여서 영수증 인증을 마쳤다면 isVerified=true 값으로 넘겨주세요.
+        리뷰 내용 검수 결과에 따라 VISIBLE(즉시 공개) 또는 PENDING_REVIEW(검토 후 공개) 상태로 저장됩니다.
+        부적절한 표현이 포함된 경우 리뷰가 등록되지 않습니다.
+        """,
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 			required = true,
 			content = @io.swagger.v3.oas.annotations.media.Content(
@@ -91,7 +96,12 @@ public class ReviewController {
 		@CurrentUserId Long userId
 	) {
 		ReviewCreateResponse response = reviewService.writePlaceReview(request, userId);
-		return CommonResponse.success(ReviewResponseCode.REVIEW_SAVE_SUCCESS, response);
+
+		ReviewResponseCode responseCode = response.status() == ReviewStatus.PENDING_REVIEW
+			? ReviewResponseCode.REVIEW_PENDING_SUCCESS
+			: ReviewResponseCode.REVIEW_SAVE_SUCCESS;
+
+		return CommonResponse.success(responseCode, response);
 	}
 
 	@PostMapping("/partnership/{placeId}")
@@ -169,19 +179,19 @@ public class ReviewController {
 	@Operation(
 		summary = "리뷰 목록 조회 (최신순 / 평점순)",
 		description = """
-	정렬 방식에 따라 리뷰 목록을 조회합니다.
-
-	[정렬 방식]
-	- LATEST : 최신순
-	- STAR : 평점순
-
-	[페이징 방식]
-	- 최초 요청 시 cursor 값 없이 요청
-	- 다음 페이지 요청 시 마지막 리뷰의 값을 cursor로 전달
-
-	[평점순 요청 시 주의]
-	- cursorStar, cursorCreatedAt, cursorId를 모두 함께 전달해야 합니다.
-	"""
+			정렬 방식에 따라 리뷰 목록을 조회합니다.
+			
+			[정렬 방식]
+			- LATEST : 최신순
+			- STAR : 평점순
+			
+			[페이징 방식]
+			- 최초 요청 시 cursor 값 없이 요청
+			- 다음 페이지 요청 시 마지막 리뷰의 값을 cursor로 전달
+			
+			[평점순 요청 시 주의]
+			- cursorStar, cursorCreatedAt, cursorId를 모두 함께 전달해야 합니다.
+			"""
 
 	)
 	public CommonResponse<CursorPageReviewResponse<ReviewResponse>> readAllReviews(

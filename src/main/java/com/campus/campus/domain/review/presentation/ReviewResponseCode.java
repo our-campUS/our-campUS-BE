@@ -12,6 +12,7 @@ import lombok.Getter;
 public enum ReviewResponseCode implements ResponseCodeInterface {
 
 	REVIEW_SAVE_SUCCESS(200, HttpStatus.OK, "리뷰 작성이 완료되었습니다."),
+	REVIEW_PENDING_SUCCESS(200, HttpStatus.OK, "리뷰가 검토 대기 상태로 등록되었습니다."),
 	REVIEW_DELETE_SUCCESS(200, HttpStatus.OK, "리뷰 삭제가 완료되었습니다."),
 	REVIEW_UPDATE_SUCCESS(200, HttpStatus.OK, "리뷰 수정이 완료되었습니다."),
 	GET_REVIEW_LIST_SUCCESS(200, HttpStatus.OK, "리뷰 리스트 조회에 성공하였습니다."),

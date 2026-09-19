@@ -14,47 +14,52 @@ import org.springframework.data.repository.query.Param;
 import com.campus.campus.domain.place.domain.entity.Place;
 import com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow;
 import com.campus.campus.domain.review.domain.entity.Review;
+import com.campus.campus.domain.review.domain.entity.ReviewStatus;
 import com.campus.campus.domain.user.domain.entity.User;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-	// 최신순
+	// 최신순 (공개 리뷰만)
 	@Query("""
-			SELECT r
-			FROM Review r
-			WHERE r.place.placeId = :placeId
-			  AND (
-			    :cursorCreatedAt IS NULL
-			    OR :cursorId IS NULL
-			    OR r.createdAt < :cursorCreatedAt
-			    OR (r.createdAt = :cursorCreatedAt AND r.id < :cursorId)
-			  )
-			ORDER BY r.createdAt DESC, r.id DESC
+		SELECT r
+		FROM Review r
+		WHERE r.place.placeId = :placeId
+		  AND r.status = :status
+		  AND (
+		    :cursorCreatedAt IS NULL
+		    OR :cursorId IS NULL
+		    OR r.createdAt < :cursorCreatedAt
+		    OR (r.createdAt = :cursorCreatedAt AND r.id < :cursorId)
+		  )
+		ORDER BY r.createdAt DESC, r.id DESC
 		""")
 	List<Review> findByPlaceIdWithLatestCursor(
 		@Param("placeId") Long placeId,
+		@Param("status") ReviewStatus status,
 		@Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
 		@Param("cursorId") Long cursorId,
 		Pageable pageable
 	);
 
-	// 평점순
+	// 평점순 (공개 리뷰만)
 	@Query("""
-			SELECT r
-			FROM Review r
-			WHERE r.place.placeId = :placeId
-			  AND (
-			    :cursorStar IS NULL
-			    OR :cursorCreatedAt IS NULL
-			    OR :cursorId IS NULL
-			    OR r.star < :cursorStar
-			    OR (r.star = :cursorStar AND r.createdAt < :cursorCreatedAt)
-			    OR (r.star = :cursorStar AND r.createdAt = :cursorCreatedAt AND r.id < :cursorId)
-			  )
-			ORDER BY r.star DESC, r.createdAt DESC, r.id DESC
+		SELECT r
+		FROM Review r
+		WHERE r.place.placeId = :placeId
+		  AND r.status = :status
+		  AND (
+		    :cursorStar IS NULL
+		    OR :cursorCreatedAt IS NULL
+		    OR :cursorId IS NULL
+		    OR r.star < :cursorStar
+		    OR (r.star = :cursorStar AND r.createdAt < :cursorCreatedAt)
+		    OR (r.star = :cursorStar AND r.createdAt = :cursorCreatedAt AND r.id < :cursorId)
+		  )
+		ORDER BY r.star DESC, r.createdAt DESC, r.id DESC
 		""")
 	List<Review> findByPlaceIdWithStarCursor(
 		@Param("placeId") Long placeId,
+		@Param("status") ReviewStatus status,
 		@Param("cursorStar") Integer cursorStar,
 		@Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
 		@Param("cursorId") Long cursorId,
@@ -62,40 +67,49 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	);
 
 	@Query("""
-			SELECT new com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow(
-				r.place.placeId,
-				AVG(r.star)
-			)
-			FROM Review r
-			WHERE r.place.placeId IN :placeIds
-			GROUP BY r.place.placeId
+		SELECT new com.campus.campus.domain.review.application.dto.response.PlaceStarAvgRow(
+			r.place.placeId,
+			AVG(r.star)
+		)
+		FROM Review r
+		WHERE r.place.placeId IN :placeIds
+		  AND r.status = :status
+		GROUP BY r.place.placeId
 		""")
 	List<PlaceStarAvgRow> findAverageStarsByPlaceIds(
-		@Param("placeIds") Set<Long> placeIds
+		@Param("placeIds") Set<Long> placeIds,
+		@Param("status") ReviewStatus status
 	);
 
-	@Query("SELECT AVG(r.star) FROM Review r WHERE r.place.placeId = :placeId")
-	Optional<Double> findAverageStarByPlaceId(@Param("placeId") Long placeId);
+	@Query("SELECT AVG(r.star) FROM Review r WHERE r.place.placeId = :placeId AND r.status = :status")
+	Optional<Double> findAverageStarByPlaceId(
+		@Param("placeId") Long placeId,
+		@Param("status") ReviewStatus status
+	);
 
 	@Query("""
-		    SELECT r.place.placeKey, AVG(r.star)
-		    FROM Review r
-		    WHERE r.place.placeKey IN :placeKeys
-		    GROUP BY r.place.placeKey
+		SELECT r.place.placeKey, AVG(r.star)
+		FROM Review r
+		WHERE r.place.placeKey IN :placeKeys
+		  AND r.status = :status
+		GROUP BY r.place.placeKey
 		""")
-	List<Object[]> findAverageStarsByPlaceKeys(@Param("placeKeys") List<String> placeKeys);
+	List<Object[]> findAverageStarsByPlaceKeys(
+		@Param("placeKeys") List<String> placeKeys,
+		@Param("status") ReviewStatus status
+	);
 
-	long countByPlace_PlaceId(long placeId);
+	long countByPlace_PlaceIdAndStatus(long placeId, ReviewStatus status);
 
-	long countByPlaceAndUser(Place place, User user);
+	long countByPlaceAndUserAndStatus(Place place, User user, ReviewStatus status);
 
-	long countByPlace_PlaceIdAndUser_Major_MajorId(long placeId, long majorId);
+	long countByPlace_PlaceIdAndUser_Major_MajorIdAndStatus(long placeId, long majorId, ReviewStatus status);
 
-	long countByPlace_PlaceIdAndUser_College_CollegeId(Long placeId, long collegeId);
+	long countByPlace_PlaceIdAndUser_College_CollegeIdAndStatus(Long placeId, long collegeId, ReviewStatus status);
 
-	long countByPlace_PlaceIdAndUser_School_SchoolId(Long placeId, long schoolId);
+	long countByPlace_PlaceIdAndUser_School_SchoolIdAndStatus(Long placeId, long schoolId, ReviewStatus status);
 
-	List<Review> findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(Long placeId);
+	List<Review> findTop3ByPlace_PlaceIdAndStatusOrderByCreatedAtDesc(Long placeId, ReviewStatus status);
 
 	@Query(value = """
 		SELECT r FROM Review r
@@ -106,6 +120,15 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 		countQuery = "SELECT count(r) FROM Review r WHERE r.user.id = :userId")
 	Page<Review> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
 
-	@Query("SELECT r.place.placeId, COUNT(r) FROM Review r WHERE r.place.placeId IN :placeIds GROUP BY r.place.placeId")
-	List<Object[]> findReviewCountsByPlaceIds(@Param("placeIds") Set<Long> placeIds);
+	@Query("""
+		SELECT r.place.placeId, COUNT(r)
+		FROM Review r
+		WHERE r.place.placeId IN :placeIds
+		  AND r.status = :status
+		GROUP BY r.place.placeId
+		""")
+	List<Object[]> findReviewCountsByPlaceIds(
+		@Param("placeIds") Set<Long> placeIds,
+		@Param("status") ReviewStatus status
+	);
 }

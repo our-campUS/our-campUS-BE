@@ -3,6 +3,8 @@ package com.campus.campus.domain.review.application.dto.response;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.campus.campus.domain.review.domain.entity.ReviewStatus;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record MyReviewResponse(
@@ -34,6 +36,9 @@ public record MyReviewResponse(
 	List<String> imageUrls,
 
 	@Schema(description = "작성일자", example = "2026-01-17")
-	LocalDateTime createdAt
+	LocalDateTime createdAt,
+
+	@Schema(description = "리뷰 공개 상태", example = "VISIBLE", allowableValues = {"VISIBLE", "PENDING"})
+	ReviewStatus status
 ) {
 }

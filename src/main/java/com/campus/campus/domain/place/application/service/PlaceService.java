@@ -65,6 +65,7 @@ import com.campus.campus.domain.review.application.mapper.ReviewMapper;
 import com.campus.campus.domain.review.application.service.ReviewService;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
+import com.campus.campus.domain.review.domain.entity.ReviewStatus;
 import com.campus.campus.domain.review.domain.repository.ReviewImageRepository;
 import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
@@ -142,7 +143,7 @@ public class PlaceService {
 			? likedPlacesRepository.findLikedPlaceKeys(userId, placeKeys)
 			: Collections.emptySet();
 
-		Map<String, Double> starMap = reviewRepository.findAverageStarsByPlaceKeys(placeKeys).stream()
+		Map<String, Double> starMap = reviewRepository.findAverageStarsByPlaceKeys(placeKeys, ReviewStatus.VISIBLE).stream()
 			.collect(Collectors.toMap(
 				obj -> (String)obj[0],
 				obj -> {
@@ -627,7 +628,7 @@ public class PlaceService {
 
 		Map<Long, Double> averageStarMap = placeIds.isEmpty()
 			? Collections.emptyMap()
-			: reviewRepository.findAverageStarsByPlaceIds(placeIds).stream()
+			: reviewRepository.findAverageStarsByPlaceIds(placeIds, ReviewStatus.VISIBLE).stream()
 				.collect(Collectors.toMap(
 					PlaceStarAvgRow::placeId,
 					row -> roundToOneDecimal(row.avgStar())
@@ -670,7 +671,7 @@ public class PlaceService {
 
 		Map<String, Double> averageStarMap = placeKeys.isEmpty()
 			? Collections.emptyMap()
-			: reviewRepository.findAverageStarsByPlaceKeys(placeKeys).stream()
+			: reviewRepository.findAverageStarsByPlaceKeys(placeKeys, ReviewStatus.VISIBLE).stream()
 				.collect(Collectors.toMap(
 					obj -> (String)obj[0],
 					obj -> roundToOneDecimal((Double)obj[1])
@@ -739,10 +740,10 @@ public class PlaceService {
 				Long placeId = dbPlace.getPlaceId();
 
 				// 4-1. 평점 조회 (Repository 직접 호출)
-				avgStar = reviewRepository.findAverageStarByPlaceId(placeId).orElse(0.0);
+				avgStar = reviewRepository.findAverageStarByPlaceId(placeId, ReviewStatus.VISIBLE).orElse(0.0);
 
 				// 4-2. 최신 리뷰 3개 조회 (Repository 직접 호출)
-				List<Review> topReviews = reviewRepository.findTop3ByPlace_PlaceIdOrderByCreatedAtDesc(placeId);
+				List<Review> topReviews = reviewRepository.findTop3ByPlace_PlaceIdAndStatusOrderByCreatedAtDesc(placeId, ReviewStatus.VISIBLE);
 
 				if (!topReviews.isEmpty()) {
 					List<Long> reviewIds = topReviews.stream().map(Review::getId).toList();
