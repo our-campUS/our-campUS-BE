@@ -41,6 +41,11 @@ oauth:
     client-secret: ENC(rtdZkt08FPrk636edzywvpnM1PJKBisjenGksSHVsDpr0sCVXzGR4fdmHKiIWPwK)
     redirect-uri: "https://138.2.121.208.nip.io/auth/login/kakao"
     admin-key: ENC(9UKWct9u8LPS0tNvuWSgqYHNN/2vvqDCYE4hRaqXsHJGCGMQY4/N1IOcbmi4IJTt)
+  apple:
+    client-id: ${APPLE_CLIENT_ID}
+    team-id: ${APPLE_TEAM_ID}
+    key-id: ${APPLE_KEY_ID}
+    private-key: ${APPLE_PRIVATE_KEY}
 
 jwt:
   access:
