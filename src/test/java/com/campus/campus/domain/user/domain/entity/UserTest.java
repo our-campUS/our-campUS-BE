@@ -20,6 +20,7 @@ class UserTest {
 		User user = User.builder()
 			.kakaoId(123456789L)
 			.appleId("001234.abcdef")
+			.appleRefreshToken("apple-refresh-token")
 			.nickname("홍길동")
 			.email("hong@example.com")
 			.profileImage("https://example.com/profile.png")
@@ -33,6 +34,7 @@ class UserTest {
 
 		assertThat(user.getKakaoId()).isNull();
 		assertThat(user.getAppleId()).isNull();
+		assertThat(user.getAppleRefreshToken()).isNull();
 		assertThat(user.getEmail()).isNull();
 		assertThat(user.getProfileImage()).isNull();
 		assertThat(user.getNickname()).isEqualTo("---");

@@ -43,6 +43,9 @@ public class User extends BaseEntity {
 	@Column(name = "apple_id", unique = true)
 	private String appleId;
 
+	@Column(name = "apple_refresh_token", length = 2048)
+	private String appleRefreshToken;
+
 	@Column(name = "name")
 	private String nickname;
 
@@ -104,9 +107,14 @@ public class User extends BaseEntity {
 		this.profileImage = profileImage;
 	}
 
+	public void updateAppleRefreshToken(String appleRefreshToken) {
+		this.appleRefreshToken = appleRefreshToken;
+	}
+
 	public void scrubPersonalInfo() {
 		this.kakaoId = null;
 		this.appleId = null;
+		this.appleRefreshToken = null;
 		this.email = null;
 		this.nickname = WITHDRAWN_USER_NICKNAME;
 		this.campusNickname = WITHDRAWN_USER_NICKNAME;

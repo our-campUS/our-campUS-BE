@@ -33,11 +33,12 @@ public class UserMapper {
 			.build();
 	}
 
-	public User createAppleUser(String appleId, String nickname, String email) {
+	public User createAppleUser(String appleId, String nickname, String email, String appleRefreshToken) {
 		return User.builder()
 			.appleId(appleId)
 			.nickname(nickname)
 			.email(email)
+			.appleRefreshToken(appleRefreshToken)
 			.build();
 	}
 
