@@ -30,6 +30,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class User extends BaseEntity {
+	private static final String WITHDRAWN_USER_NICKNAME = "---";
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "user_id")
@@ -97,5 +99,13 @@ public class User extends BaseEntity {
 
 	public void updateProfileImage(String profileImage) {
 		this.profileImage = profileImage;
+	}
+
+	public void scrubPersonalInfo() {
+		this.kakaoId = null;
+		this.email = null;
+		this.nickname = WITHDRAWN_USER_NICKNAME;
+		this.campusNickname = WITHDRAWN_USER_NICKNAME;
+		this.profileImage = null;
 	}
 }
