@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -60,4 +61,8 @@ public interface LikedPlacesRepository extends JpaRepository<LikedPlace, Long> {
 		@Param("cursor") Long cursor,
 		Pageable pageable
 	);
+
+	@Modifying(clearAutomatically = true)
+	@Query("DELETE FROM LikedPlace lp WHERE lp.user.id = :userId")
+	void deleteAllByUserId(@Param("userId") Long userId);
 }

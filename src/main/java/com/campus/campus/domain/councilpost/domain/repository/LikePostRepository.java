@@ -40,4 +40,8 @@ public interface LikePostRepository extends JpaRepository<LikePost, Long> {
 		  AND lp.post.id IN :postIds
 		""")
 	List<Long> findLikedPostIds(@Param("userId") Long userId, @Param("postIds") List<Long> postIds);
+
+	@Modifying(clearAutomatically = true)
+	@Query("DELETE FROM LikePost lp WHERE lp.user.id = :userId")
+	void deleteAllByUserId(@Param("userId") Long userId);
 }
