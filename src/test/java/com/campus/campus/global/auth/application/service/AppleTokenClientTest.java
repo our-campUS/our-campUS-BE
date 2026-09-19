@@ -78,4 +78,36 @@ class AppleTokenClientTest {
 			.isInstanceOf(AppleTokenExchangeException.class);
 		server.verify();
 	}
+
+	@Test
+	void revoke_refresh_token으로_Apple_연결을_해제한다() {
+		when(clientSecretGenerator.generate()).thenReturn("client-secret");
+		server.expect(requestTo("https://appleid.apple.com/auth/revoke"))
+			.andExpect(method(HttpMethod.POST))
+			.andExpect(content().contentType(MediaType.APPLICATION_FORM_URLENCODED))
+			.andExpect(content().string(allOf(
+				containsString("client_id=com.campus.app"),
+				containsString("client_secret=client-secret"),
+				containsString("token=apple-refresh-token"),
+				containsString("token_type_hint=refresh_token")
+			)))
+			.andRespond(withSuccess());
+
+		boolean result = appleTokenClient.revoke("apple-refresh-token");
+
+		assertThat(result).isTrue();
+		server.verify();
+	}
+
+	@Test
+	void revoke_Apple이_오류를_응답하면_false를_반환한다() {
+		when(clientSecretGenerator.generate()).thenReturn("client-secret");
+		server.expect(requestTo("https://appleid.apple.com/auth/revoke"))
+			.andRespond(withBadRequest());
+
+		boolean result = appleTokenClient.revoke("invalid-refresh-token");
+
+		assertThat(result).isFalse();
+		server.verify();
+	}
 }

@@ -48,7 +48,7 @@ public class AuthController {
 	}
 
 	@PatchMapping("/withdraw/users")
-	@Operation(summary = "카카오 유저 회원탈퇴")
+	@Operation(summary = "유저 회원탈퇴")
 	public CommonResponse<Void> withdraw(@CurrentUserId Long userId,
 		@RequestBody @Valid UserWithdrawRequest userWithdrawRequest) {
 		kakaoOauthService.withdraw(userId, userWithdrawRequest.nickname());

@@ -13,11 +13,16 @@ import com.campus.campus.global.auth.application.dto.AppleTokenResponse;
 import com.campus.campus.global.auth.application.property.AppleOauthProperty;
 import com.campus.campus.global.auth.exception.AppleTokenExchangeException;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 public class AppleTokenClient {
 
 	private static final String APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
+	private static final String APPLE_REVOKE_URL = "https://appleid.apple.com/auth/revoke";
 	private static final String AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
+	private static final String REFRESH_TOKEN_TYPE = "refresh_token";
 
 	private final RestClient restClient;
 	private final AppleOauthProperty appleOauthProperty;
@@ -57,6 +62,27 @@ public class AppleTokenClient {
 			return response;
 		} catch (RestClientException e) {
 			throw new AppleTokenExchangeException();
+		}
+	}
+
+	public boolean revoke(String refreshToken) {
+		try {
+			MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+			body.add("client_id", appleOauthProperty.getClientId());
+			body.add("client_secret", clientSecretGenerator.generate());
+			body.add("token", refreshToken);
+			body.add("token_type_hint", REFRESH_TOKEN_TYPE);
+
+			restClient.post()
+				.uri(APPLE_REVOKE_URL)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(body)
+				.retrieve()
+				.toBodilessEntity();
+			return true;
+		} catch (RuntimeException e) {
+			log.warn("Apple 계정 연결 해제에 실패했습니다: {}", e.getMessage());
+			return false;
 		}
 	}
 }

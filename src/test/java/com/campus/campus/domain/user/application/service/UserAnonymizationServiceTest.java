@@ -17,6 +17,7 @@ import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.auth.application.service.AppleTokenClient;
 
 @ExtendWith(MockitoExtension.class)
 class UserAnonymizationServiceTest {
@@ -26,6 +27,9 @@ class UserAnonymizationServiceTest {
 
 	@Mock
 	private KakaoOauthService kakaoOauthService;
+
+	@Mock
+	private AppleTokenClient appleTokenClient;
 
 	@Mock
 	private NotificationRepository notificationRepository;
@@ -79,7 +83,49 @@ class UserAnonymizationServiceTest {
 	}
 
 	@Test
-	void 카카오_연동이_없는_유저는_unlink_없이_바로_스크럽한다() {
+	void Apple_연결_해제에_실패하면_사용자_정보를_유지하고_false를_반환한다() {
+		User user = User.builder()
+			.id(1L)
+			.appleId("apple-user-id")
+			.appleRefreshToken("apple-refresh-token")
+			.nickname("홍길동")
+			.build();
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		when(appleTokenClient.revoke("apple-refresh-token")).thenReturn(false);
+
+		boolean result = userAnonymizationService.anonymize(1L);
+
+		assertThat(result).isFalse();
+		assertThat(user.getNickname()).isEqualTo("홍길동");
+		assertThat(user.getAppleRefreshToken()).isEqualTo("apple-refresh-token");
+		verifyNoInteractions(notificationRepository, likePostRepository, likedPlacesRepository);
+		verify(userRepository, never()).save(any());
+	}
+
+	@Test
+	void Apple_연결_해제에_성공하면_하드삭제_대상을_지우고_유저를_스크럽한다() {
+		User user = User.builder()
+			.id(1L)
+			.appleId("apple-user-id")
+			.appleRefreshToken("apple-refresh-token")
+			.nickname("홍길동")
+			.build();
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		when(appleTokenClient.revoke("apple-refresh-token")).thenReturn(true);
+
+		boolean result = userAnonymizationService.anonymize(1L);
+
+		assertThat(result).isTrue();
+		assertThat(user.getAppleId()).isNull();
+		assertThat(user.getAppleRefreshToken()).isNull();
+		verify(notificationRepository).deleteAllByUserId(1L);
+		verify(likePostRepository).deleteAllByUserId(1L);
+		verify(likedPlacesRepository).deleteAllByUserId(1L);
+		verify(userRepository).save(user);
+	}
+
+	@Test
+	void 소셜_연동이_없는_유저는_연결_해제_없이_바로_스크럽한다() {
 		User user = User.builder().id(1L).kakaoId(null).nickname("홍길동").build();
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
@@ -87,7 +133,7 @@ class UserAnonymizationServiceTest {
 
 		assertThat(result).isTrue();
 		assertThat(user.getNickname()).isEqualTo("---");
-		verifyNoInteractions(kakaoOauthService);
+		verifyNoInteractions(kakaoOauthService, appleTokenClient);
 		verify(userRepository).save(user);
 	}
 }
