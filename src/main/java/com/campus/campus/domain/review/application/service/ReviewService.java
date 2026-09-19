@@ -44,6 +44,7 @@ import com.campus.campus.domain.review.application.dto.response.SimpleReviewResp
 import com.campus.campus.domain.review.application.dto.response.WriteReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.ocr.ReceiptResultDto;
 import com.campus.campus.domain.review.application.exception.InappropriateReviewContentException;
+import com.campus.campus.domain.review.application.exception.AlreadyReportedException;
 import com.campus.campus.domain.review.application.exception.NotPartnershipReceiptException;
 import com.campus.campus.domain.review.application.exception.NotUserWriterException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
@@ -221,6 +222,10 @@ public class ReviewService {
 	public void reportReview(Long userId, Long reviewId, ReviewReportRequest request) {
 		if (!reviewRepository.existsById(reviewId)) {
 			throw new ReviewNotFoundException();
+		}
+
+		if (reviewReportRepository.existsByReporter_IdAndReviewId(userId, reviewId)) {
+			throw new AlreadyReportedException();
 		}
 
 		User reporter = userRepository.findById(userId)
