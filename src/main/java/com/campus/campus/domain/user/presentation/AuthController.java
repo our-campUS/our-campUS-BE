@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.user.application.dto.request.AppleLoginRequest;
 import com.campus.campus.domain.user.application.dto.request.UserWithdrawRequest;
+import com.campus.campus.domain.user.application.service.AppleOauthService;
 import com.campus.campus.domain.user.application.service.KakaoOauthService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
@@ -22,11 +24,25 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/auth")
 public class AuthController {
 	private final KakaoOauthService kakaoOauthService;
+	private final AppleOauthService appleOauthService;
 
 	@PostMapping("/login/kakao")
 	@Operation(summary = "카카오 로그인 (Native App 방식)")
 	public CommonResponse<OauthLoginResponse> kakaoLogin(@RequestParam("token") String kakaoAccessToken) {
 		OauthLoginResponse response = kakaoOauthService.login(kakaoAccessToken);
+
+		return CommonResponse.success(UserResponseCode.LOGIN_SUCCESS, response);
+	}
+
+	@PostMapping("/login/apple")
+	@Operation(summary = "Apple 로그인")
+	public CommonResponse<OauthLoginResponse> appleLogin(
+		@RequestBody @Valid AppleLoginRequest request
+	) {
+		OauthLoginResponse response = appleOauthService.login(
+			request.authorizationCode(),
+			request.nickname()
+		);
 
 		return CommonResponse.success(UserResponseCode.LOGIN_SUCCESS, response);
 	}
