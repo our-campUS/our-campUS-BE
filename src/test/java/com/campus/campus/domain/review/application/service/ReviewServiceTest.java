@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.campus.campus.domain.review.application.dto.request.ReviewReportRequest;
+import com.campus.campus.domain.review.application.exception.AlreadyReportedException;
 import com.campus.campus.domain.review.application.exception.ReviewNotFoundException;
 import com.campus.campus.domain.review.domain.entity.ReviewReport;
 import com.campus.campus.domain.review.domain.repository.ReviewReportRepository;
@@ -51,6 +52,7 @@ class ReviewServiceTest {
 	@Test
 	void 존재하지_않는_유저가_신고하면_예외를_던진다() {
 		when(reviewRepository.existsById(1L)).thenReturn(true);
+		when(reviewReportRepository.existsByReporter_IdAndReviewId(10L, 1L)).thenReturn(false);
 		when(userRepository.findById(10L)).thenReturn(Optional.empty());
 
 		ReviewReportRequest request = new ReviewReportRequest("욕설이 포함되어 있어요");
@@ -58,13 +60,28 @@ class ReviewServiceTest {
 		assertThatThrownBy(() -> reviewService.reportReview(10L, 1L, request))
 			.isInstanceOf(UserNotFoundException.class);
 
-		verifyNoInteractions(reviewReportRepository);
+		verify(reviewReportRepository, never()).save(any());
+	}
+
+	@Test
+	void 이미_신고한_리뷰면_예외를_던진다() {
+		when(reviewRepository.existsById(1L)).thenReturn(true);
+		when(reviewReportRepository.existsByReporter_IdAndReviewId(10L, 1L)).thenReturn(true);
+
+		ReviewReportRequest request = new ReviewReportRequest("욕설이 포함되어 있어요");
+
+		assertThatThrownBy(() -> reviewService.reportReview(10L, 1L, request))
+			.isInstanceOf(AlreadyReportedException.class);
+
+		verifyNoInteractions(userRepository);
+		verify(reviewReportRepository, never()).save(any());
 	}
 
 	@Test
 	void 정상_요청이면_신고내역을_저장한다() {
 		User reporter = User.builder().id(10L).build();
 		when(reviewRepository.existsById(1L)).thenReturn(true);
+		when(reviewReportRepository.existsByReporter_IdAndReviewId(10L, 1L)).thenReturn(false);
 		when(userRepository.findById(10L)).thenReturn(Optional.of(reporter));
 
 		ReviewReportRequest request = new ReviewReportRequest("욕설이 포함되어 있어요");
