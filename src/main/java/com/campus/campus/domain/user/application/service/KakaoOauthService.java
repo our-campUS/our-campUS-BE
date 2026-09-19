@@ -127,7 +127,7 @@ public class KakaoOauthService {
 					throw new UserSignupForbiddenException();
 				}
 
-				User newUser = userMapper.createUser(kakaoId, nickname, email, profileImage);
+				User newUser = userMapper.createKakaoUser(kakaoId, nickname, email, profileImage);
 				return userRepository.save(newUser);
 			});
 	}

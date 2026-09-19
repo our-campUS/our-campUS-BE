@@ -24,12 +24,20 @@ public class UserMapper {
 		);
 	}
 
-	public User createUser(Long kakaoId, String nickname, String email, String profileImage) {
+	public User createKakaoUser(Long kakaoId, String nickname, String email, String profileImage) {
 		return User.builder()
 			.kakaoId(kakaoId)
 			.nickname(nickname)
 			.email(email)
 			.profileImage(profileImage)
+			.build();
+	}
+
+	public User createAppleUser(String appleId, String nickname, String email) {
+		return User.builder()
+			.appleId(appleId)
+			.nickname(nickname)
+			.email(email)
 			.build();
 	}
 

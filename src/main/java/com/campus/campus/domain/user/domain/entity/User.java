@@ -40,6 +40,9 @@ public class User extends BaseEntity {
 	@Column(name = "kakao_id")
 	private Long kakaoId;
 
+	@Column(name = "apple_id", unique = true)
+	private String appleId;
+
 	@Column(name = "name")
 	private String nickname;
 
@@ -103,6 +106,7 @@ public class User extends BaseEntity {
 
 	public void scrubPersonalInfo() {
 		this.kakaoId = null;
+		this.appleId = null;
 		this.email = null;
 		this.nickname = WITHDRAWN_USER_NICKNAME;
 		this.campusNickname = WITHDRAWN_USER_NICKNAME;
