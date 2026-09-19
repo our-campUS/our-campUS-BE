@@ -30,6 +30,7 @@ import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.place.domain.repository.PlaceRepository;
 import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
 import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.ReviewReportRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.MyReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
@@ -48,7 +49,9 @@ import com.campus.campus.domain.review.application.exception.ReviewNotFoundExcep
 import com.campus.campus.domain.review.application.mapper.ReviewMapper;
 import com.campus.campus.domain.review.domain.entity.Review;
 import com.campus.campus.domain.review.domain.entity.ReviewImage;
+import com.campus.campus.domain.review.domain.entity.ReviewReport;
 import com.campus.campus.domain.review.domain.repository.ReviewImageRepository;
+import com.campus.campus.domain.review.domain.repository.ReviewReportRepository;
 import com.campus.campus.domain.review.domain.repository.ReviewRepository;
 import com.campus.campus.domain.school.domain.entity.College;
 import com.campus.campus.domain.school.domain.entity.Major;
@@ -73,6 +76,7 @@ public class ReviewService {
 	private final ReviewMapper reviewMapper;
 	private final ReviewRepository reviewRepository;
 	private final ReviewImageRepository reviewImageRepository;
+	private final ReviewReportRepository reviewReportRepository;
 	private final PresignedUrlService presignedUrlService;
 	private final StudentCouncilPostRepository studentCouncilPostRepository;
 	private final StampService stampService;
@@ -183,6 +187,24 @@ public class ReviewService {
 				log.warn("OCI 파일 삭제 실패: {}", imageUrl, e);
 			}
 		}
+	}
+
+	@Transactional
+	public void reportReview(Long userId, Long reviewId, ReviewReportRequest request) {
+		if (!reviewRepository.existsById(reviewId)) {
+			throw new ReviewNotFoundException();
+		}
+
+		User reporter = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		ReviewReport report = ReviewReport.builder()
+			.reporter(reporter)
+			.reviewId(reviewId)
+			.reason(request.reason())
+			.build();
+
+		reviewReportRepository.save(report);
 	}
 
 	@Transactional

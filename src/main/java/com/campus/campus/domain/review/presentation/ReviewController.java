@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.campus.campus.domain.review.application.dto.request.PartnershipReviewRequest;
 import com.campus.campus.domain.review.application.dto.request.PlaceReviewRequest;
+import com.campus.campus.domain.review.application.dto.request.ReviewReportRequest;
 import com.campus.campus.domain.review.application.dto.response.CursorPageReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.MyReviewResponse;
 import com.campus.campus.domain.review.application.dto.response.PlaceReviewRankResponse;
@@ -140,6 +141,17 @@ public class ReviewController {
 	public CommonResponse<Void> deleteReview(@PathVariable Long reviewId, @CurrentUserId Long userId) {
 		reviewService.delete(userId, reviewId);
 		return CommonResponse.success(ReviewResponseCode.REVIEW_DELETE_SUCCESS);
+	}
+
+	@PostMapping("/{reviewId}/report")
+	@Operation(summary = "리뷰 신고")
+	public CommonResponse<Void> reportReview(
+		@PathVariable Long reviewId,
+		@CurrentUserId Long userId,
+		@Valid @RequestBody ReviewReportRequest request
+	) {
+		reviewService.reportReview(userId, reviewId, request);
+		return CommonResponse.success(ReviewResponseCode.REVIEW_REPORT_SUCCESS);
 	}
 
 	@PatchMapping("/{reviewId}")
