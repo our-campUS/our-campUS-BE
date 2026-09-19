@@ -1,5 +1,6 @@
 package com.campus.campus.domain.user.presentation;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -14,10 +15,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import com.campus.campus.domain.user.application.dto.request.UserWithdrawRequest;
 import com.campus.campus.domain.user.application.service.AppleOauthService;
 import com.campus.campus.domain.user.application.service.KakaoOauthService;
+import com.campus.campus.domain.user.application.service.UserWithdrawalService;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.common.exception.GlobalExceptionHandler;
+import com.campus.campus.global.common.response.CommonResponse;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
@@ -26,7 +30,10 @@ class AuthControllerTest {
 	private KakaoOauthService kakaoOauthService;
 	@Mock
 	private AppleOauthService appleOauthService;
+	@Mock
+	private UserWithdrawalService userWithdrawalService;
 
+	private AuthController authController;
 	private MockMvc mockMvc;
 
 	@BeforeEach
@@ -34,7 +41,11 @@ class AuthControllerTest {
 		LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
 		validator.afterPropertiesSet();
 
-		AuthController authController = new AuthController(kakaoOauthService, appleOauthService);
+		authController = new AuthController(
+			kakaoOauthService,
+			appleOauthService,
+			userWithdrawalService
+		);
 		mockMvc = MockMvcBuilders.standaloneSetup(authController)
 			.setControllerAdvice(new GlobalExceptionHandler())
 			.setValidator(validator)
@@ -87,5 +98,16 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$.code").value(4001));
 
 		verifyNoInteractions(appleOauthService);
+	}
+
+	@Test
+	void withdraw_공통_회원탈퇴_서비스를_호출한다() {
+		CommonResponse<Void> response = authController.withdraw(
+			1L,
+			new UserWithdrawRequest("홍길동")
+		);
+
+		assertThat(response.code()).isEqualTo(200);
+		verify(userWithdrawalService).withdraw(1L, "홍길동");
 	}
 }
