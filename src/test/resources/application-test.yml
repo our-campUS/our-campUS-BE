@@ -86,3 +86,7 @@ review:
   login:
     enabled: true
     email: dummy
+
+security:
+  apple-token:
+    encryption-key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=

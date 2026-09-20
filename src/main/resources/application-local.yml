@@ -88,3 +88,7 @@ review:
   login:
     enabled: ${REVIEW_LOGIN_ENABLED:false}
     email: ${REVIEW_LOGIN_EMAIL:}
+
+security:
+  apple-token:
+    encryption-key: ${APPLE_TOKEN_ENCRYPTION_KEY}

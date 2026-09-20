@@ -88,3 +88,7 @@ review:
   login:
     enabled: true
     email: ENC(B1c6X7CsSDJI7StMRG67FEAy9whwVI41q/3DYBwwhwIpWKr8dH8MGw==)
+
+security:
+  apple-token:
+    encryption-key: ${APPLE_TOKEN_ENCRYPTION_KEY}
