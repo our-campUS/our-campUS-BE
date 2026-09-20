@@ -37,7 +37,6 @@ oauth:
     team-id: test-team-id
     key-id: test-key-id
     private-key: test-private-key
-    redirect-uri: https://test.example.com/auth/apple/callback
 
 map:
   naver:

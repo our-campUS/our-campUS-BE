@@ -13,8 +13,8 @@ import com.campus.campus.domain.user.application.service.AppleOauthService;
 import com.campus.campus.domain.user.application.service.KakaoOauthService;
 import com.campus.campus.domain.user.application.service.UserWithdrawalService;
 import com.campus.campus.global.annotation.CurrentUserId;
-import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.dto.AppleLoginNonceResponse;
+import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.service.AppleNonceService;
 import com.campus.campus.global.common.response.CommonResponse;
 
@@ -40,7 +40,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/login/apple")
-	@Operation(summary = "Apple 로그인")
+	@Operation(summary = "Apple 로그인 (Native App 방식)")
 	public CommonResponse<OauthLoginResponse> appleLogin(
 		@RequestBody @Valid AppleLoginRequest request
 	) {
