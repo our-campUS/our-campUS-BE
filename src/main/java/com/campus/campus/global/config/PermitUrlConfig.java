@@ -12,6 +12,7 @@ public class PermitUrlConfig {
 			"/actuator/health",
 			"/auth/login/kakao",
 			"/auth/login/apple",
+			"/auth/login/apple/nonce",
 			"/auth/council/signup",
 			"/auth/council/signup/validate",
 			"/auth/council/login",

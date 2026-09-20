@@ -22,6 +22,7 @@ import com.campus.campus.global.auth.application.dto.AppleTokenResponse;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.global.auth.application.service.AppleIdTokenVerifier;
+import com.campus.campus.global.auth.application.service.AppleNonceService;
 import com.campus.campus.global.auth.application.service.AppleTokenClient;
 import com.campus.campus.global.auth.application.service.AppleTokenEncryptor;
 import com.campus.campus.global.util.jwt.JwtProvider;
@@ -38,6 +39,8 @@ class AppleOauthServiceTest {
 	private AppleTokenClient appleTokenClient;
 	@Mock
 	private AppleIdTokenVerifier appleIdTokenVerifier;
+	@Mock
+	private AppleNonceService appleNonceService;
 	@Mock
 	private AppleTokenEncryptor appleTokenEncryptor;
 	@Mock
@@ -76,7 +79,7 @@ class AppleOauthServiceTest {
 		when(loginMapper.toOauthLoginResponse(user, "access-token", "refresh-token"))
 			.thenReturn(expected);
 
-		OauthLoginResponse response = appleOauthService.login("authorization-code", null);
+		OauthLoginResponse response = appleOauthService.login("authorization-code", null, "nonce");
 
 		assertThat(response).isSameAs(expected);
 		assertThat(user.encryptedAppleRefreshTokenForRevocation()).isEqualTo(ENCRYPTED_APPLE_REFRESH_TOKEN);
@@ -119,7 +122,7 @@ class AppleOauthServiceTest {
 		when(jwtProvider.createAccessToken(1L)).thenReturn("access-token");
 		when(jwtProvider.createRefreshToken(1L)).thenReturn("refresh-token");
 
-		appleOauthService.login("authorization-code", " ");
+		appleOauthService.login("authorization-code", " ", "nonce");
 
 		verify(appleTokenEncryptor).encrypt(APPLE_REFRESH_TOKEN);
 		verify(userMapper).createAppleUser("apple-user-id", "apple_apple-user-id", "user@example.com",
@@ -137,9 +140,19 @@ class AppleOauthServiceTest {
 		when(userRepository.findByAppleId("apple-user-id"))
 			.thenReturn(Optional.of(withdrawnUser));
 
-		assertThatThrownBy(() -> appleOauthService.login("authorization-code", "홍길동"))
+		assertThatThrownBy(() -> appleOauthService.login("authorization-code", "홍길동", "nonce"))
 			.isInstanceOf(UserSignupForbiddenException.class);
 		verifyNoInteractions(appleTokenEncryptor, jwtProvider, redisTokenService, loginMapper);
+	}
+
+	@Test
+	void login_이미_소비된_nonce면_로그인을_거부한다() {
+		stubAppleAuthentication();
+		when(appleNonceService.consume("nonce")).thenReturn(false);
+
+		assertThatThrownBy(() -> appleOauthService.login("authorization-code", "홍길동", "nonce"))
+			.isInstanceOf(com.campus.campus.global.auth.exception.InvalidAppleIdTokenException.class);
+		verifyNoInteractions(userRepository, appleTokenEncryptor, jwtProvider, redisTokenService, loginMapper);
 	}
 
 	private void stubAppleAuthentication() {
@@ -154,6 +167,7 @@ class AppleOauthServiceTest {
 
 		when(appleTokenClient.exchangeAuthorizationCode("authorization-code"))
 			.thenReturn(appleToken);
-		when(appleIdTokenVerifier.verify("apple-id-token")).thenReturn(appleUser);
+		when(appleIdTokenVerifier.verify("apple-id-token", "nonce")).thenReturn(appleUser);
+		when(appleNonceService.consume("nonce")).thenReturn(true);
 	}
 }

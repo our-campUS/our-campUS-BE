@@ -14,9 +14,11 @@ import com.campus.campus.global.auth.application.dto.AppleTokenResponse;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.global.auth.application.service.AppleIdTokenVerifier;
+import com.campus.campus.global.auth.application.service.AppleNonceService;
 import com.campus.campus.global.auth.application.service.AppleTokenClient;
 import com.campus.campus.global.auth.application.service.AppleTokenEncryptor;
 import com.campus.campus.global.auth.exception.AppleTokenExchangeException;
+import com.campus.campus.global.auth.exception.InvalidAppleIdTokenException;
 import com.campus.campus.global.util.jwt.JwtProvider;
 import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 
@@ -30,6 +32,7 @@ public class AppleOauthService {
 
 	private final AppleTokenClient appleTokenClient;
 	private final AppleIdTokenVerifier appleIdTokenVerifier;
+	private final AppleNonceService appleNonceService;
 	private final AppleTokenEncryptor appleTokenEncryptor;
 	private final UserRepository userRepository;
 	private final JwtProvider jwtProvider;
@@ -41,9 +44,14 @@ public class AppleOauthService {
 	private long refreshTokenExpirationSeconds;
 
 	@Transactional
-	public OauthLoginResponse login(String authorizationCode, String nickname) {
+	public OauthLoginResponse login(String authorizationCode, String nickname, String nonce) {
 		AppleTokenResponse appleToken = appleTokenClient.exchangeAuthorizationCode(authorizationCode);
-		AppleTokenClaims appleUser = appleIdTokenVerifier.verify(appleToken.idToken());
+		AppleTokenClaims appleUser = appleIdTokenVerifier.verify(appleToken.idToken(), nonce);
+
+		if (!appleNonceService.consume(nonce)) {
+			throw new InvalidAppleIdTokenException();
+		}
+
 		User user = findOrCreateUser(appleUser, nickname, appleToken.refreshToken());
 
 		String accessToken = jwtProvider.createAccessToken(user.getId());

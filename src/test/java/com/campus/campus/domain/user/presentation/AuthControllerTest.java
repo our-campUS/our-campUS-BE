@@ -20,6 +20,7 @@ import com.campus.campus.domain.user.application.service.AppleOauthService;
 import com.campus.campus.domain.user.application.service.KakaoOauthService;
 import com.campus.campus.domain.user.application.service.UserWithdrawalService;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
+import com.campus.campus.global.auth.application.service.AppleNonceService;
 import com.campus.campus.global.common.exception.GlobalExceptionHandler;
 import com.campus.campus.global.common.response.CommonResponse;
 
@@ -30,6 +31,8 @@ class AuthControllerTest {
 	private KakaoOauthService kakaoOauthService;
 	@Mock
 	private AppleOauthService appleOauthService;
+	@Mock
+	private AppleNonceService appleNonceService;
 	@Mock
 	private UserWithdrawalService userWithdrawalService;
 
@@ -44,6 +47,7 @@ class AuthControllerTest {
 		authController = new AuthController(
 			kakaoOauthService,
 			appleOauthService,
+			appleNonceService,
 			userWithdrawalService
 		);
 		mockMvc = MockMvcBuilders.standaloneSetup(authController)
@@ -65,7 +69,7 @@ class AuthControllerTest {
 			null,
 			true
 		);
-		when(appleOauthService.login("authorization-code", "홍길동"))
+		when(appleOauthService.login("authorization-code", "홍길동", "nonce"))
 			.thenReturn(loginResponse);
 
 		mockMvc.perform(post("/auth/login/apple")
@@ -73,6 +77,7 @@ class AuthControllerTest {
 				.content("""
 					{
 					  "authorizationCode": "authorization-code",
+					  "nonce": "nonce",
 					  "nickname": "홍길동"
 					}
 					"""))
@@ -81,7 +86,7 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$.data.accessToken").value("access-token"))
 			.andExpect(jsonPath("$.data.userId").value(1L));
 
-		verify(appleOauthService).login("authorization-code", "홍길동");
+		verify(appleOauthService).login("authorization-code", "홍길동", "nonce");
 	}
 
 	@Test
@@ -91,6 +96,7 @@ class AuthControllerTest {
 				.content("""
 					{
 					  "authorizationCode": "",
+					  "nonce": "nonce",
 					  "nickname": "홍길동"
 					}
 					"""))
@@ -98,6 +104,18 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$.code").value(4001));
 
 		verifyNoInteractions(appleOauthService);
+	}
+
+	@Test
+	void issueAppleLoginNonce_일회성_nonce를_발급한다() throws Exception {
+		when(appleNonceService.issue()).thenReturn("issued-nonce");
+
+		mockMvc.perform(post("/auth/login/apple/nonce"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.data.nonce").value("issued-nonce"));
+
+		verify(appleNonceService).issue();
 	}
 
 	@Test

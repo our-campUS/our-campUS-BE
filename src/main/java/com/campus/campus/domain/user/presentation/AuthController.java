@@ -14,6 +14,8 @@ import com.campus.campus.domain.user.application.service.KakaoOauthService;
 import com.campus.campus.domain.user.application.service.UserWithdrawalService;
 import com.campus.campus.global.annotation.CurrentUserId;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
+import com.campus.campus.global.auth.application.dto.AppleLoginNonceResponse;
+import com.campus.campus.global.auth.application.service.AppleNonceService;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 	private final KakaoOauthService kakaoOauthService;
 	private final AppleOauthService appleOauthService;
+	private final AppleNonceService appleNonceService;
 	private final UserWithdrawalService userWithdrawalService;
 
 	@PostMapping("/login/kakao")
@@ -43,10 +46,22 @@ public class AuthController {
 	) {
 		OauthLoginResponse response = appleOauthService.login(
 			request.authorizationCode(),
-			request.nickname()
+			request.nickname(),
+			request.nonce()
 		);
 
 		return CommonResponse.success(UserResponseCode.LOGIN_SUCCESS, response);
+	}
+
+	@PostMapping("/login/apple/nonce")
+	@Operation(summary = "Apple 로그인 nonce 발급")
+	public CommonResponse<AppleLoginNonceResponse> issueAppleLoginNonce() {
+		String nonce = appleNonceService.issue();
+
+		return CommonResponse.success(
+			UserResponseCode.APPLE_LOGIN_NONCE_ISSUED,
+			new AppleLoginNonceResponse(nonce)
+		);
 	}
 
 	@PatchMapping("/withdraw/users")

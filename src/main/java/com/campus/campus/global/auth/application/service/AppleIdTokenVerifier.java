@@ -19,11 +19,13 @@ public class AppleIdTokenVerifier {
 		this.appleIdTokenDecoder = appleIdTokenDecoder;
 	}
 
-	public AppleTokenClaims verify(String identityToken) {
+	public AppleTokenClaims verify(String identityToken, String expectedNonce) {
 		try {
 			Jwt jwt = appleIdTokenDecoder.decode(identityToken);
 
-			if (!StringUtils.hasText(jwt.getSubject())) {
+			if (!StringUtils.hasText(jwt.getSubject())
+				|| !StringUtils.hasText(expectedNonce)
+				|| !expectedNonce.equals(jwt.getClaimAsString("nonce"))) {
 				throw new InvalidAppleIdTokenException();
 			}
 
