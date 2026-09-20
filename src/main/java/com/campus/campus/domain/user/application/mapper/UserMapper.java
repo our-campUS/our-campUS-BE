@@ -4,10 +4,10 @@ import org.springframework.stereotype.Component;
 
 import com.campus.campus.domain.user.application.dto.response.ChangeProfileImageResponse;
 import com.campus.campus.domain.user.application.dto.response.ChangeUserAcademicResponse;
-import com.campus.campus.domain.user.application.dto.response.UserProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserFirstProfileResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoIdsResponse;
 import com.campus.campus.domain.user.application.dto.response.UserInfoResponse;
+import com.campus.campus.domain.user.application.dto.response.UserProfileResponse;
 import com.campus.campus.domain.user.domain.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -33,12 +33,12 @@ public class UserMapper {
 			.build();
 	}
 
-	public User createAppleUser(String appleId, String nickname, String email, String appleRefreshToken) {
+	public User createAppleUser(String appleId, String nickname, String email, String encryptedAppleRefreshToken) {
 		return User.builder()
 			.appleId(appleId)
 			.nickname(nickname)
 			.email(email)
-			.appleRefreshToken(appleRefreshToken)
+			.encryptedAppleRefreshToken(encryptedAppleRefreshToken)
 			.build();
 	}
 
