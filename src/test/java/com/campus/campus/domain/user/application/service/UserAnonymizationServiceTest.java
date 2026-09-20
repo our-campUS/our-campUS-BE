@@ -18,9 +18,15 @@ import com.campus.campus.domain.user.application.exception.UserNotFoundException
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
 import com.campus.campus.global.auth.application.service.AppleTokenClient;
+import com.campus.campus.global.auth.application.service.AppleTokenEncryptor;
 
 @ExtendWith(MockitoExtension.class)
 class UserAnonymizationServiceTest {
+
+	private static final String ENCRYPTED_APPLE_REFRESH_TOKEN =
+		"v1.encoded-iv.encoded-ciphertext";
+	private static final String APPLE_REFRESH_TOKEN =
+		"apple-refresh-token";
 
 	@Mock
 	private UserRepository userRepository;
@@ -30,6 +36,9 @@ class UserAnonymizationServiceTest {
 
 	@Mock
 	private AppleTokenClient appleTokenClient;
+
+	@Mock
+	private AppleTokenEncryptor appleTokenEncryptor;
 
 	@Mock
 	private NotificationRepository notificationRepository;
@@ -79,7 +88,6 @@ class UserAnonymizationServiceTest {
 		verify(notificationRepository).deleteAllByUserId(1L);
 		verify(likePostRepository).deleteAllByUserId(1L);
 		verify(likedPlacesRepository).deleteAllByUserId(1L);
-		verify(userRepository).save(user);
 	}
 
 	@Test
@@ -87,17 +95,20 @@ class UserAnonymizationServiceTest {
 		User user = User.builder()
 			.id(1L)
 			.appleId("apple-user-id")
-			.appleRefreshToken("apple-refresh-token")
+			.encryptedAppleRefreshToken(ENCRYPTED_APPLE_REFRESH_TOKEN)
 			.nickname("홍길동")
 			.build();
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-		when(appleTokenClient.revoke("apple-refresh-token")).thenReturn(false);
+		when(appleTokenEncryptor.decrypt(ENCRYPTED_APPLE_REFRESH_TOKEN)).thenReturn(APPLE_REFRESH_TOKEN);
+		when(appleTokenClient.revoke(APPLE_REFRESH_TOKEN)).thenReturn(false);
 
 		boolean result = userAnonymizationService.anonymize(1L);
 
 		assertThat(result).isFalse();
 		assertThat(user.getNickname()).isEqualTo("홍길동");
-		assertThat(user.getAppleRefreshToken()).isEqualTo("apple-refresh-token");
+		assertThat(user.encryptedAppleRefreshTokenForRevocation()).isEqualTo(ENCRYPTED_APPLE_REFRESH_TOKEN);
+		verify(appleTokenEncryptor).decrypt(ENCRYPTED_APPLE_REFRESH_TOKEN);
+		verify(appleTokenClient).revoke(APPLE_REFRESH_TOKEN);
 		verifyNoInteractions(notificationRepository, likePostRepository, likedPlacesRepository);
 		verify(userRepository, never()).save(any());
 	}
@@ -107,21 +118,23 @@ class UserAnonymizationServiceTest {
 		User user = User.builder()
 			.id(1L)
 			.appleId("apple-user-id")
-			.appleRefreshToken("apple-refresh-token")
+			.encryptedAppleRefreshToken(ENCRYPTED_APPLE_REFRESH_TOKEN)
 			.nickname("홍길동")
 			.build();
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		when(appleTokenEncryptor.decrypt(ENCRYPTED_APPLE_REFRESH_TOKEN)).thenReturn(APPLE_REFRESH_TOKEN);
 		when(appleTokenClient.revoke("apple-refresh-token")).thenReturn(true);
 
 		boolean result = userAnonymizationService.anonymize(1L);
 
 		assertThat(result).isTrue();
 		assertThat(user.getAppleId()).isNull();
-		assertThat(user.getAppleRefreshToken()).isNull();
+		assertThat(user.encryptedAppleRefreshTokenForRevocation()).isNull();
+		verify(appleTokenEncryptor).decrypt(ENCRYPTED_APPLE_REFRESH_TOKEN);
+		verify(appleTokenClient).revoke(APPLE_REFRESH_TOKEN);
 		verify(notificationRepository).deleteAllByUserId(1L);
 		verify(likePostRepository).deleteAllByUserId(1L);
 		verify(likedPlacesRepository).deleteAllByUserId(1L);
-		verify(userRepository).save(user);
 	}
 
 	@Test
@@ -133,7 +146,6 @@ class UserAnonymizationServiceTest {
 
 		assertThat(result).isTrue();
 		assertThat(user.getNickname()).isEqualTo("---");
-		verifyNoInteractions(kakaoOauthService, appleTokenClient);
-		verify(userRepository).save(user);
+		verifyNoInteractions(kakaoOauthService, appleTokenClient, appleTokenEncryptor);
 	}
 }

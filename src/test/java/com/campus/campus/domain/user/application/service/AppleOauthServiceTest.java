@@ -23,6 +23,7 @@ import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
 import com.campus.campus.global.auth.application.mapper.LoginMapper;
 import com.campus.campus.global.auth.application.service.AppleIdTokenVerifier;
 import com.campus.campus.global.auth.application.service.AppleTokenClient;
+import com.campus.campus.global.auth.application.service.AppleTokenEncryptor;
 import com.campus.campus.global.util.jwt.JwtProvider;
 import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 
@@ -30,11 +31,15 @@ import com.campus.campus.global.util.jwt.application.service.RedisTokenService;
 class AppleOauthServiceTest {
 
 	private static final long REFRESH_TOKEN_EXPIRATION_SECONDS = 1_209_600L;
+	private static final String APPLE_REFRESH_TOKEN = "apple-refresh-token";
+	private static final String ENCRYPTED_APPLE_REFRESH_TOKEN = "v1.encoded-iv.encoded-ciphertext";
 
 	@Mock
 	private AppleTokenClient appleTokenClient;
 	@Mock
 	private AppleIdTokenVerifier appleIdTokenVerifier;
+	@Mock
+	private AppleTokenEncryptor appleTokenEncryptor;
 	@Mock
 	private UserRepository userRepository;
 	@Mock
@@ -65,6 +70,7 @@ class AppleOauthServiceTest {
 		stubAppleAuthentication();
 		when(userRepository.findByAppleIdAndDeletedAtIsNull("apple-user-id"))
 			.thenReturn(Optional.of(user));
+		when(appleTokenEncryptor.encrypt(APPLE_REFRESH_TOKEN)).thenReturn(ENCRYPTED_APPLE_REFRESH_TOKEN);
 		when(jwtProvider.createAccessToken(1L)).thenReturn("access-token");
 		when(jwtProvider.createRefreshToken(1L)).thenReturn("refresh-token");
 		when(loginMapper.toOauthLoginResponse(user, "access-token", "refresh-token"))
@@ -73,7 +79,9 @@ class AppleOauthServiceTest {
 		OauthLoginResponse response = appleOauthService.login("authorization-code", null);
 
 		assertThat(response).isSameAs(expected);
-		assertThat(user.getAppleRefreshToken()).isEqualTo("apple-refresh-token");
+		assertThat(user.encryptedAppleRefreshTokenForRevocation()).isEqualTo(ENCRYPTED_APPLE_REFRESH_TOKEN);
+
+		verify(appleTokenEncryptor).encrypt(APPLE_REFRESH_TOKEN);
 		verify(redisTokenService).setRefreshToken(
 			"USER",
 			"1",
@@ -84,17 +92,28 @@ class AppleOauthServiceTest {
 
 	@Test
 	void login_신규_Apple_사용자를_생성한다() {
-		User newUser = User.builder().appleId("apple-user-id").build();
-		User savedUser = User.builder().id(1L).appleId("apple-user-id").build();
+		User newUser = User.builder()
+			.appleId("apple-user-id")
+			.encryptedAppleRefreshToken(ENCRYPTED_APPLE_REFRESH_TOKEN)
+			.build();
+
+		User savedUser = User.builder()
+			.id(1L)
+			.appleId("apple-user-id")
+			.encryptedAppleRefreshToken(ENCRYPTED_APPLE_REFRESH_TOKEN)
+			.build();
+
 		stubAppleAuthentication();
+
 		when(userRepository.findByAppleIdAndDeletedAtIsNull("apple-user-id"))
 			.thenReturn(Optional.empty());
 		when(userRepository.findByAppleId("apple-user-id")).thenReturn(Optional.empty());
+		when(appleTokenEncryptor.encrypt(APPLE_REFRESH_TOKEN)).thenReturn(ENCRYPTED_APPLE_REFRESH_TOKEN);
 		when(userMapper.createAppleUser(
 			"apple-user-id",
 			"apple_apple-user-id",
 			"user@example.com",
-			"apple-refresh-token"
+			ENCRYPTED_APPLE_REFRESH_TOKEN
 		)).thenReturn(newUser);
 		when(userRepository.save(newUser)).thenReturn(savedUser);
 		when(jwtProvider.createAccessToken(1L)).thenReturn("access-token");
@@ -102,6 +121,9 @@ class AppleOauthServiceTest {
 
 		appleOauthService.login("authorization-code", " ");
 
+		verify(appleTokenEncryptor).encrypt(APPLE_REFRESH_TOKEN);
+		verify(userMapper).createAppleUser("apple-user-id", "apple_apple-user-id", "user@example.com",
+			ENCRYPTED_APPLE_REFRESH_TOKEN);
 		verify(userRepository).save(newUser);
 		verify(loginMapper).toOauthLoginResponse(savedUser, "access-token", "refresh-token");
 	}
@@ -117,7 +139,7 @@ class AppleOauthServiceTest {
 
 		assertThatThrownBy(() -> appleOauthService.login("authorization-code", "홍길동"))
 			.isInstanceOf(UserSignupForbiddenException.class);
-		verifyNoInteractions(jwtProvider, redisTokenService, loginMapper);
+		verifyNoInteractions(appleTokenEncryptor, jwtProvider, redisTokenService, loginMapper);
 	}
 
 	private void stubAppleAuthentication() {
