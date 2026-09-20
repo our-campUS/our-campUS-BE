@@ -26,4 +26,7 @@ public class AppleOauthProperty {
 
 	@NotBlank
 	private String privateKey;
+
+	@NotBlank
+	private String redirectUri;
 }

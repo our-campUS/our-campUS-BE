@@ -44,6 +44,7 @@ public class AppleTokenClient {
 		body.add("client_secret", clientSecretGenerator.generate());
 		body.add("code", authorizationCode);
 		body.add("grant_type", AUTHORIZATION_CODE_GRANT_TYPE);
+		body.add("redirect_uri", appleOauthProperty.getRedirectUri());
 
 		try {
 			AppleTokenResponse response = restClient.post()

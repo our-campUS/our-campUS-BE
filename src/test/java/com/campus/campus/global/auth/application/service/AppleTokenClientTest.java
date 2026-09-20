@@ -33,6 +33,7 @@ class AppleTokenClientTest {
 	void setUp() {
 		AppleOauthProperty property = new AppleOauthProperty();
 		property.setClientId("com.campus.app");
+		property.setRedirectUri("https://test.example.com/auth/apple/callback");
 
 		RestClient.Builder restClientBuilder = RestClient.builder();
 		server = MockRestServiceServer.bindTo(restClientBuilder).build();
@@ -49,7 +50,8 @@ class AppleTokenClientTest {
 				containsString("client_id=com.campus.app"),
 				containsString("client_secret=client-secret"),
 				containsString("code=authorization-code"),
-				containsString("grant_type=authorization_code")
+				containsString("grant_type=authorization_code"),
+				containsString("redirect_uri=https%3A%2F%2Ftest.example.com%2Fauth%2Fapple%2Fcallback")
 			)))
 			.andRespond(withSuccess("""
 				{
