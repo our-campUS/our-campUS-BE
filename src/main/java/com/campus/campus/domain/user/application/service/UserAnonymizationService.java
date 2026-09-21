@@ -1,8 +1,11 @@
 package com.campus.campus.domain.user.application.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.campus.campus.domain.councilpost.domain.repository.LikePostRepository;
 import com.campus.campus.domain.notification.domain.repository.NotificationRepository;
@@ -10,6 +13,8 @@ import com.campus.campus.domain.place.domain.repository.LikedPlacesRepository;
 import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.domain.entity.User;
 import com.campus.campus.domain.user.domain.repository.UserRepository;
+import com.campus.campus.global.auth.application.service.AppleTokenClient;
+import com.campus.campus.global.auth.application.service.AppleTokenEncryptor;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,9 +24,11 @@ public class UserAnonymizationService {
 
 	private final UserRepository userRepository;
 	private final KakaoOauthService kakaoOauthService;
+	private final AppleTokenClient appleTokenClient;
 	private final NotificationRepository notificationRepository;
 	private final LikePostRepository likePostRepository;
 	private final LikedPlacesRepository likedPlacesRepository;
+	private final AppleTokenEncryptor appleTokenEncryptor;
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public boolean anonymize(Long userId) {
@@ -35,10 +42,20 @@ public class UserAnonymizationService {
 			}
 		}
 
+		String encryptedRefreshToken = user.encryptedAppleRefreshTokenForRevocation();
+
+		if (StringUtils.hasText(encryptedRefreshToken)) {
+			String refreshToken = appleTokenEncryptor.decrypt(encryptedRefreshToken);
+			boolean revoked = appleTokenClient.revoke(refreshToken);
+			if (!revoked) {
+				return false;
+			}
+		}
+
 		deleteHardDeleteTargets(user.getId());
 
 		user.scrubPersonalInfo();
-		userRepository.save(user);
+		user.delete(LocalDateTime.now());
 		return true;
 	}
 

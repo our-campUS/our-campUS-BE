@@ -7,10 +7,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.campus.domain.user.application.dto.request.AppleLoginRequest;
 import com.campus.campus.domain.user.application.dto.request.UserWithdrawRequest;
+import com.campus.campus.domain.user.application.service.AppleOauthService;
 import com.campus.campus.domain.user.application.service.KakaoOauthService;
+import com.campus.campus.domain.user.application.service.UserWithdrawalService;
 import com.campus.campus.global.annotation.CurrentUserId;
+import com.campus.campus.global.auth.application.dto.AppleLoginNonceResponse;
 import com.campus.campus.global.auth.application.dto.OauthLoginResponse;
+import com.campus.campus.global.auth.application.service.AppleNonceService;
 import com.campus.campus.global.common.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +27,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/auth")
 public class AuthController {
 	private final KakaoOauthService kakaoOauthService;
+	private final AppleOauthService appleOauthService;
+	private final AppleNonceService appleNonceService;
+	private final UserWithdrawalService userWithdrawalService;
 
 	@PostMapping("/login/kakao")
 	@Operation(summary = "카카오 로그인 (Native App 방식)")
@@ -31,11 +39,36 @@ public class AuthController {
 		return CommonResponse.success(UserResponseCode.LOGIN_SUCCESS, response);
 	}
 
+	@PostMapping("/login/apple")
+	@Operation(summary = "Apple 로그인 (Native App 방식)")
+	public CommonResponse<OauthLoginResponse> appleLogin(
+		@RequestBody @Valid AppleLoginRequest request
+	) {
+		OauthLoginResponse response = appleOauthService.login(
+			request.authorizationCode(),
+			request.nickname(),
+			request.nonce()
+		);
+
+		return CommonResponse.success(UserResponseCode.LOGIN_SUCCESS, response);
+	}
+
+	@PostMapping("/login/apple/nonce")
+	@Operation(summary = "Apple 로그인 nonce 발급")
+	public CommonResponse<AppleLoginNonceResponse> issueAppleLoginNonce() {
+		String nonce = appleNonceService.issue();
+
+		return CommonResponse.success(
+			UserResponseCode.APPLE_LOGIN_NONCE_ISSUED,
+			new AppleLoginNonceResponse(nonce)
+		);
+	}
+
 	@PatchMapping("/withdraw/users")
-	@Operation(summary = "카카오 유저 회원탈퇴")
+	@Operation(summary = "유저 회원탈퇴")
 	public CommonResponse<Void> withdraw(@CurrentUserId Long userId,
 		@RequestBody @Valid UserWithdrawRequest userWithdrawRequest) {
-		kakaoOauthService.withdraw(userId, userWithdrawRequest.nickname());
+		userWithdrawalService.withdraw(userId, userWithdrawRequest.nickname());
 
 		return CommonResponse.success(UserResponseCode.WITHDRAW_SUCCESS);
 	}

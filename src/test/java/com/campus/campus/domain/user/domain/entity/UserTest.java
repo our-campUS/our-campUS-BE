@@ -11,6 +11,9 @@ import com.campus.campus.domain.school.domain.entity.School;
 
 class UserTest {
 
+	private static final String ENCRYPTED_APPLE_REFRESH_TOKEN =
+		"v1.encoded-iv.encoded-ciphertext";
+
 	@Test
 	void scrubPersonalInfo_클릭_시_재식별_가능한_필드만_지운다() {
 		School school = mock(School.class);
@@ -19,6 +22,8 @@ class UserTest {
 
 		User user = User.builder()
 			.kakaoId(123456789L)
+			.appleId("001234.abcdef")
+			.encryptedAppleRefreshToken(ENCRYPTED_APPLE_REFRESH_TOKEN)
 			.nickname("홍길동")
 			.email("hong@example.com")
 			.profileImage("https://example.com/profile.png")
@@ -31,6 +36,8 @@ class UserTest {
 		user.scrubPersonalInfo();
 
 		assertThat(user.getKakaoId()).isNull();
+		assertThat(user.getAppleId()).isNull();
+		assertThat(user.encryptedAppleRefreshTokenForRevocation()).isNull();
 		assertThat(user.getEmail()).isNull();
 		assertThat(user.getProfileImage()).isNull();
 		assertThat(user.getNickname()).isEqualTo("---");

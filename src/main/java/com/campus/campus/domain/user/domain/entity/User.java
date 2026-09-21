@@ -37,8 +37,15 @@ public class User extends BaseEntity {
 	@Column(name = "user_id")
 	private Long id;
 
-	@Column(name = "kakao_id")
+	@Column(name = "kakao_id", unique = true)
 	private Long kakaoId;
+
+	@Column(name = "apple_id", unique = true)
+	private String appleId;
+
+	@Getter(AccessLevel.NONE)
+	@Column(name = "apple_refresh_token", length = 4096)
+	private String encryptedAppleRefreshToken;
 
 	@Column(name = "name")
 	private String nickname;
@@ -101,8 +108,18 @@ public class User extends BaseEntity {
 		this.profileImage = profileImage;
 	}
 
+	public void updateEncryptedAppleRefreshToken(String encryptedAppleRefreshToken) {
+		this.encryptedAppleRefreshToken = encryptedAppleRefreshToken;
+	}
+
+	public String encryptedAppleRefreshTokenForRevocation() {
+		return encryptedAppleRefreshToken;
+	}
+
 	public void scrubPersonalInfo() {
 		this.kakaoId = null;
+		this.appleId = null;
+		this.encryptedAppleRefreshToken = null;
 		this.email = null;
 		this.nickname = WITHDRAWN_USER_NICKNAME;
 		this.campusNickname = WITHDRAWN_USER_NICKNAME;

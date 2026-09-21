@@ -1,7 +1,5 @@
 package com.campus.campus.domain.user.application.service;
 
-import java.time.LocalDateTime;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -10,8 +8,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
-import com.campus.campus.domain.user.application.exception.NicknameNotMatchException;
-import com.campus.campus.domain.user.application.exception.UserNotFoundException;
 import com.campus.campus.domain.user.application.exception.UserSignupForbiddenException;
 import com.campus.campus.domain.user.application.mapper.UserMapper;
 import com.campus.campus.domain.user.domain.entity.User;
@@ -57,19 +53,6 @@ public class KakaoOauthService {
 			refreshTokenExpirationSeconds);
 
 		return loginMapper.toOauthLoginResponse(user, accessToken, refreshToken);
-	}
-
-	@Transactional
-	public void withdraw(Long userId, String nickname) {
-		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-			.orElseThrow(UserNotFoundException::new);
-
-		if (user.getNickname() == null || !user.getNickname().equals(nickname)) {
-			throw new NicknameNotMatchException();
-		}
-
-		user.delete(LocalDateTime.now());
-		userRepository.save(user);
 	}
 
 	public boolean unlink(Long kakaoId) {
@@ -127,7 +110,7 @@ public class KakaoOauthService {
 					throw new UserSignupForbiddenException();
 				}
 
-				User newUser = userMapper.createUser(kakaoId, nickname, email, profileImage);
+				User newUser = userMapper.createKakaoUser(kakaoId, nickname, email, profileImage);
 				return userRepository.save(newUser);
 			});
 	}
