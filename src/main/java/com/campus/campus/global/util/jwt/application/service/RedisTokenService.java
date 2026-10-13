@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisTokenService {
 
-	private final RedisTemplate<String, Object> redisTemplate;
+	private final RedisTemplate<String, String> redisTemplate;
 
 	// Refresh Token 저장
 	public void setRefreshToken(String role, String id, String refreshToken, long expirationSeconds) {
@@ -22,7 +22,7 @@ public class RedisTokenService {
 	// Refresh Token 가져오기
 	public String getRefreshToken(String role, String id) {
 		String key = "RT:" + role + ":" + id;
-		return (String) redisTemplate.opsForValue().get(key);
+		return redisTemplate.opsForValue().get(key);
 	}
 
 	// Refresh Token 삭제

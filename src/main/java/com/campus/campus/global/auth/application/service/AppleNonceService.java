@@ -16,8 +16,9 @@ public class AppleNonceService {
 	private static final String NONCE_KEY_PREFIX = "APPLE_LOGIN_NONCE:";
 	private static final int NONCE_TTL_MINUTES = 5;
 	private static final int NONCE_BYTE_LENGTH = 32;
+	private static final String NONCE_VALUE = "issued";
 
-	private final RedisTemplate<String, Object> redisTemplate;
+	private final RedisTemplate<String, String> redisTemplate;
 	private final SecureRandom secureRandom = new SecureRandom();
 
 	public String issue() {
@@ -27,7 +28,7 @@ public class AppleNonceService {
 		String nonce = Base64.getUrlEncoder().withoutPadding().encodeToString(nonceBytes);
 		redisTemplate.opsForValue().set(
 			key(nonce),
-			Boolean.TRUE,
+			NONCE_VALUE,
 			NONCE_TTL_MINUTES,
 			TimeUnit.MINUTES
 		);
