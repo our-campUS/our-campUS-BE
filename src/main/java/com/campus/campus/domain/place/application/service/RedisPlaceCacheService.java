@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class RedisPlaceCacheService {
-	private final RedisTemplate<String, Object> redisTemplate;
+	private final RedisTemplate<String, String> redisTemplate;
 	private final ObjectMapper objectMapper;
 
 	private static final Duration CACHE_TTL = Duration.ofHours(1);
@@ -42,7 +42,7 @@ public class RedisPlaceCacheService {
 	public Optional<List<SavedPlaceInfo>> getCachedPlaces(double lat, double lng, String keyword) {
 		String key = generateKey(lat, lng, keyword);
 
-		Object value = redisTemplate.opsForValue().get(key);
+		String value = redisTemplate.opsForValue().get(key);
 		if (value == null) {
 			return Optional.empty();
 		}

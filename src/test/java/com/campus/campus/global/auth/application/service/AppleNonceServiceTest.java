@@ -17,9 +17,9 @@ import org.springframework.data.redis.core.ValueOperations;
 class AppleNonceServiceTest {
 
 	@Mock
-	private RedisTemplate<String, Object> redisTemplate;
+	private RedisTemplate<String, String> redisTemplate;
 	@Mock
-	private ValueOperations<String, Object> valueOperations;
+	private ValueOperations<String, String> valueOperations;
 
 	@Test
 	void issue_일회성_nonce를_Redis에_5분간_저장한다() {
@@ -31,7 +31,7 @@ class AppleNonceServiceTest {
 		assertThat(nonce).isNotBlank();
 		verify(valueOperations).set(
 			eq("APPLE_LOGIN_NONCE:" + nonce),
-			eq(Boolean.TRUE),
+			eq("issued"),
 			eq(5L),
 			eq(TimeUnit.MINUTES)
 		);
@@ -40,7 +40,7 @@ class AppleNonceServiceTest {
 	@Test
 	void consume_저장된_nonce는_한번만_소비한다() {
 		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.getAndDelete("APPLE_LOGIN_NONCE:nonce")).thenReturn(Boolean.TRUE);
+		when(valueOperations.getAndDelete("APPLE_LOGIN_NONCE:nonce")).thenReturn("issued");
 		AppleNonceService appleNonceService = new AppleNonceService(redisTemplate);
 
 		boolean consumed = appleNonceService.consume("nonce");
